@@ -7,7 +7,7 @@ const AuthPage = () => {
     name: '',
     email: '',
     password: '',
-    role: 'telecaller', // default role dropdown
+    role: 'telecaller',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,7 +18,7 @@ const AuthPage = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError(''); // Clear error on change
+    setError('');
   };
 
   const handleToggle = (mode) => {
@@ -39,7 +39,6 @@ const AuthPage = () => {
     setError('');
     setSuccess('');
 
-    // Basic Validation
     if (!formData.email || !formData.password) {
       setError('Please fill in all required fields.');
       setIsLoading(false);
@@ -77,17 +76,12 @@ const AuthPage = () => {
         throw new Error(data.message || 'Something went wrong. Please try again.');
       }
 
-      // Store JWT token to localStorage
       localStorage.setItem('token', data.token);
-      
-      // Store user info if helpful
       if (data.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
       }
 
       setSuccess(isLogin ? 'Login successful!' : 'Registration successful!');
-      
-      // Optional: redirect or trigger main app refresh
       console.log('Authentication Successful:', data);
     } catch (err) {
       setError(err.message || 'Failed to connect to the server.');
@@ -102,7 +96,7 @@ const AuthPage = () => {
         <div className="auth-header">
           <div className="auth-logo">ictEHub</div>
           <p className="auth-subtitle">
-            {isLogin ? 'Sign in to access your dashboard' : 'Create an account to get started'}
+            {isLogin ? 'Please log in to continue' : 'Create a new account'}
           </p>
         </div>
 
@@ -123,124 +117,73 @@ const AuthPage = () => {
           </button>
         </div>
 
-        {error && (
-          <div className="error-banner">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="success-banner">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <span>{success}</span>
-          </div>
-        )}
+        {error && <div className="error-banner">{error}</div>}
+        {success && <div className="success-banner">{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="form-group">
               <label className="form-label" htmlFor="name">Name</label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="John Doe"
-                  className="form-input"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required={!isLogin}
-                />
-              </div>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="John Doe"
+                className="form-input"
+                value={formData.name}
+                onChange={handleChange}
+                required={!isLogin}
+              />
             </div>
           )}
 
           <div className="form-group">
             <label className="form-label" htmlFor="email">Email Address</label>
-            <div className="input-wrapper">
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="name@company.com"
-                className="form-input"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="name@example.com"
+              className="form-input"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="form-group">
             <label className="form-label" htmlFor="password">Password</label>
-            <div className="input-wrapper">
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="••••••••"
-                className="form-input"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              className="form-input"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           {!isLogin && (
             <div className="form-group">
               <label className="form-label" htmlFor="role">Assign Role</label>
-              <div className="input-wrapper">
-                <select
-                  id="role"
-                  name="role"
-                  className="form-input form-select"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required={!isLogin}
-                >
-                  <option value="telecaller">Telecaller</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
+              <select
+                id="role"
+                name="role"
+                className="form-input form-select"
+                value={formData.role}
+                onChange={handleChange}
+                required={!isLogin}
+              >
+                <option value="telecaller">Telecaller</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
           )}
 
           <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                <span>Processing...</span>
-              </>
-            ) : (
-              <span>{isLogin ? 'Log In' : 'Sign Up'}</span>
-            )}
+            {isLogin ? 'Log In' : 'Sign Up'}
           </button>
         </form>
       </div>
