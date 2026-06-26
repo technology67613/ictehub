@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
 
 const authRoutes = require('./routes/auth');
 const { protect, authorize } = require('./middleware/auth');
@@ -9,26 +9,26 @@ const { protect, authorize } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Hardcoded MONGODB_URI directly
-const MONGODB_URI = 'mongodb+srv://ictehub_user:India%401947@cluster0.1c2pzq.mongodb.net/?retryWrites=true&w=majority&appName=cluster0';
+console.log('Initializing Server with Supabase client...');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Loaded successfully' : 'Not found');
 
-console.log('Using MONGODB_URI:', MONGODB_URI);
+const supabase = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_KEY || ''
+);
+
+app.set('supabase', supabase);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// MongoDB Connection
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB successfully.'))
-  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/auth', authRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ status: 'ok', database: 'supabase' });
 });
 
 // Protected Test Routes (for verification)

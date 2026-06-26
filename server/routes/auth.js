@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
 // Helper to generate JWT token
 const generateToken = (id, role) => {
@@ -13,11 +12,12 @@ const generateToken = (id, role) => {
 
 /**
  * @route   POST /auth/signup
- * @desc    Register a new user (admin/telecaller)
+ * @desc    Register a new user
  * @access  Public
  */
 router.post('/signup', async (req, res) => {
   try {
+    const supabase = req.app.get('supabase');
     const { name, email, password, role } = req.body;
 
     // Validate request body
@@ -31,8 +31,16 @@ router.post('/signup', async (req, res) => {
     }
 
     // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email.toLowerCase());
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
@@ -40,27 +48,34 @@ router.post('/signup', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      passwordHash,
-      role,
-    });
-
-    if (user) {
-      return res.status(201).json({
-        token: generateToken(user._id, user.role),
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
+    // Create user in Supabase
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([
+        {
+          name,
+          email: email.toLowerCase(),
+          password_hash: passwordHash,
+          role,
         },
-      });
-    } else {
-      return res.status(400).json({ message: 'Invalid user data' });
+      ])
+      .select();
+
+    if (insertError) {
+      throw insertError;
     }
+
+    const user = newUser[0];
+
+    return res.status(201).json({
+      token: generateToken(user.id, user.role),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
     console.error('Signup error:', error);
     return res.status(500).json({ message: 'Server error during signup', error: error.message });
@@ -74,6 +89,7 @@ router.post('/signup', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
   try {
+    const supabase = req.app.get('supabase');
     const { email, password } = req.body;
 
     // Validate request body
@@ -81,22 +97,31 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email in Supabase
+    const { data: users, error: findError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase());
+
+    if (findError) {
+      throw findError;
+    }
+
+    const user = users && users[0];
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check password
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     return res.json({
-      token: generateToken(user._id, user.role),
+      token: generateToken(user.id, user.role),
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
