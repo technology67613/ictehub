@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './AuthPage.css';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -91,45 +90,63 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">ictEHub</div>
-          <p className="auth-subtitle">
+    <div className="flex justify-center items-center min-h-[calc(100vh-64px)] bg-academic-bg p-6 font-sans text-slate-600">
+      <div className="w-full max-w-md bg-white border border-academic-border rounded-2xl p-8 shadow-sm">
+        <div className="text-center mb-6">
+          <div className="text-3xl font-serif font-extrabold text-academic-navy tracking-tight mb-2">ictEHub</div>
+          <p className="text-xs text-slate-400 uppercase tracking-widest">
             {isLogin ? 'Please log in to continue' : 'Create a new account'}
           </p>
         </div>
 
-        <div className="auth-toggle-container">
+        <div className="flex border-b border-slate-200 mb-6">
           <button
             type="button"
-            className={`auth-toggle-btn ${isLogin ? 'active' : ''}`}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer text-center ${
+              isLogin
+                ? 'border-b-2 border-academic-gold text-academic-navy font-bold'
+                : 'text-slate-400 hover:text-academic-navy'
+            }`}
             onClick={() => handleToggle('login')}
           >
             Login
           </button>
           <button
             type="button"
-            className={`auth-toggle-btn ${!isLogin ? 'active' : ''}`}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer text-center ${
+              !isLogin
+                ? 'border-b-2 border-academic-gold text-academic-navy font-bold'
+                : 'text-slate-400 hover:text-academic-navy'
+            }`}
             onClick={() => handleToggle('signup')}
           >
             Signup
           </button>
         </div>
 
-        {error && <div className="error-banner">{error}</div>}
-        {success && <div className="success-banner">{success}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg p-3.5 mb-5 font-medium">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-lg p-3.5 mb-5 font-medium">
+            {success}
+          </div>
+        )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="form-group">
-              <label className="form-label" htmlFor="name">Name</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400" htmlFor="name">
+                Name
+              </label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 placeholder="John Doe"
-                className="form-input"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
                 value={formData.name}
                 onChange={handleChange}
                 required={!isLogin}
@@ -137,28 +154,32 @@ const AuthPage = () => {
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">Email Address</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400" htmlFor="email">
+              Email Address
+            </label>
             <input
               type="email"
               id="email"
               name="email"
               placeholder="name@example.com"
-              className="form-input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
               value={formData.email}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400" htmlFor="password">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
               placeholder="••••••••"
-              className="form-input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
               value={formData.password}
               onChange={handleChange}
               required
@@ -166,12 +187,14 @@ const AuthPage = () => {
           </div>
 
           {!isLogin && (
-            <div className="form-group">
-              <label className="form-label" htmlFor="role">Assign Role</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400" htmlFor="role">
+                Assign Role
+              </label>
               <select
                 id="role"
                 name="role"
-                className="form-input form-select"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 bg-white focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm"
                 value={formData.role}
                 onChange={handleChange}
                 required={!isLogin}
@@ -182,7 +205,11 @@ const AuthPage = () => {
             </div>
           )}
 
-          <button type="submit" className="submit-btn" disabled={isLoading}>
+          <button
+            type="submit"
+            className="w-full mt-2 py-3 rounded-xl bg-academic-navy text-white font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 focus:outline-none active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            disabled={isLoading}
+          >
             {isLogin ? 'Log In' : 'Sign Up'}
           </button>
         </form>
