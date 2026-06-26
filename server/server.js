@@ -4,6 +4,7 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
 const authRoutes = require('./routes/auth');
+const collegesRoutes = require('./routes/colleges');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.json());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/colleges', collegesRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {
