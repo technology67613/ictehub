@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const authRoutes = require('./routes/auth');
 const collegesRoutes = require('./routes/colleges');
+const leadsRoutes = require('./routes/leads');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/colleges', collegesRoutes);
+app.use('/leads', leadsRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {
