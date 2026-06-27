@@ -3,6 +3,7 @@ import { Search, RotateCw, Inbox, AlertTriangle, MonitorPlay, MapPin, Grid, Laye
 import { trackModeFilter } from '../utils/tracking';
 import InquiryForm from './InquiryForm';
 import CollegeCard from './CollegeCard';
+import Footer from './Footer';
 
 const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode, setView }) => {
   const [allColleges, setAllColleges] = useState([]);
@@ -69,7 +70,8 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
   };
 
   return (
-    <div className="max-w-[1800px] mx-auto px-6 py-12 lg:py-20 font-sans relative">
+    <div className="min-h-[calc(100vh-64px)] flex flex-col justify-between font-sans">
+      <div className="max-w-[1800px] w-full mx-auto px-6 py-12 lg:py-20 relative flex-1">
       
       {/* Background Glows */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full mix-blend-multiply filter blur-[100px] pointer-events-none -z-10 animate-blob"></div>
@@ -219,10 +221,13 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
           </div>
         )}
       </div>
-      
-      {/* Inquiry Form Modal */}
-      <InquiryForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
     </div>
+
+    <Footer setView={setView} />
+
+    {/* Inquiry Form Modal */}
+    <InquiryForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
+  </div>
   );
 };
 

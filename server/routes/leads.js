@@ -1,16 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+const leadsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: 'Too many requests from this IP. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * @route   POST /leads
  * @desc    Submit a new lead inquiry (Public)
  * @access  Public
  */
-router.post('/', async (req, res) => {
+router.post('/', leadsLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { name, phone, email, interested_college_ids, session_id } = req.body;
+    const { name, phone, email, interested_college_ids, session_id, source } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ message: 'Name and phone are required fields.' });
@@ -25,6 +34,7 @@ router.post('/', async (req, res) => {
           email: email || null,
           interested_college_ids: interested_college_ids || [],
           session_id: session_id || null,
+          source: source || 'direct',
           status: 'new',
         }
       ])
@@ -46,7 +56,7 @@ router.post('/', async (req, res) => {
  * @desc    Check lead inquiry status by phone number (Public)
  * @access  Public
  */
-router.get('/check', async (req, res) => {
+router.get('/check', leadsLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { phone } = req.query;

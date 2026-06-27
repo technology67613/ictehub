@@ -326,6 +326,33 @@ export default function AdminLeads({ token }) {
     setTimeout(() => setSavedFlash(null), 2000);
   };
 
+  const exportToCSV = () => {
+    const headers = ['Name', 'Phone', 'Email', 'Status', 'Assigned Telecaller', 'Created Date'];
+    const rows = filteredLeads.map(lead => {
+      const telecaller = telecallers.find(t => t.id === lead.assigned_telecaller_id);
+      const telecallerName = telecaller ? (telecaller.name || telecaller.email) : 'Unassigned';
+      const createdDate = lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-IN') : '—';
+      return [
+        `"${(lead.name || '').replace(/"/g, '""')}"`,
+        `"${(lead.phone || '').replace(/"/g, '""')}"`,
+        `"${(lead.email || '').replace(/"/g, '""')}"`,
+        `"${(lead.status || '').replace(/"/g, '""')}"`,
+        `"${telecallerName.replace(/"/g, '""')}"`,
+        `"${createdDate}"`
+      ];
+    });
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `leads_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredLeads = useMemo(() => {
     return leads.filter(lead => {
       const matchesSearch = !searchVal ||
@@ -439,6 +466,12 @@ export default function AdminLeads({ token }) {
               </button>
             ))}
           </div>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all outline-none cursor-pointer sm:ml-auto border-none"
+          >
+            Export to CSV
+          </button>
         </div>
 
         {/* ── Leads Table ── */}

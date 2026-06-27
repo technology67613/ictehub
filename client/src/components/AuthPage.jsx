@@ -217,23 +217,7 @@ const AuthPage = ({ onAuthSuccess }) => {
               </div>
             </div>
 
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 ml-1">
-                  Assign Role
-                </label>
-                <select
-                  name="role"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200/60 bg-white/50 focus:bg-white text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all font-medium text-sm shadow-sm appearance-none cursor-pointer"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required={!isLogin}
-                >
-                  <option value="telecaller">Telecaller</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            )}
+
 
             <button
               type="submit"

@@ -2,12 +2,22 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 
+const rateLimit = require('express-rate-limit');
+
+const trackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: 'Too many requests from this IP. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * @route   POST /visitors/track
  * @desc    Track visitor session, college views, and mode filters (Public)
  * @access  Public
  */
-router.post('/track', async (req, res) => {
+router.post('/track', trackLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { session_id, college_id, college_name, mode_filter } = req.body;

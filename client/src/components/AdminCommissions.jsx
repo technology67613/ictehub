@@ -145,6 +145,32 @@ export default function AdminCommissions({ token }) {
     handleUpdateCommission(commission.id, { status: nextStatus });
   };
 
+  const exportToCSV = () => {
+    const headers = ['Lead Name', 'College Name', 'Amount', 'Status', 'Created Date'];
+    const rows = filteredCommissions.map(c => {
+      const leadName = c.lead?.name || leadsMap[c.lead_id] || 'Unknown Student';
+      const collegeName = c.college?.name || collegesMap[c.college_id] || 'Unknown College';
+      const createdDate = c.created_at ? new Date(c.created_at).toLocaleDateString('en-IN') : '—';
+      return [
+        `"${leadName.replace(/"/g, '""')}"`,
+        `"${collegeName.replace(/"/g, '""')}"`,
+        `"${c.amount !== null ? c.amount : 0}"`,
+        `"${(c.status || '').replace(/"/g, '""')}"`,
+        `"${createdDate}"`
+      ];
+    });
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `commissions_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredCommissions = useMemo(() => {
     return commissions.filter(c => {
       const leadName = c.lead?.name || leadsMap[c.lead_id] || '';
@@ -256,6 +282,12 @@ export default function AdminCommissions({ token }) {
               </button>
             ))}
           </div>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all outline-none cursor-pointer sm:ml-auto border-none"
+          >
+            Export to CSV
+          </button>
         </div>
 
         {/* ── Commissions Table ── */}

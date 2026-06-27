@@ -14,6 +14,26 @@ export function getSessionId() {
   return id;
 }
 
+export function getLeadSource() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const urlSource = params.get('source');
+    if (urlSource) {
+      localStorage.setItem('lead_source', urlSource.trim());
+      return urlSource.trim();
+    }
+  } catch (e) {
+    console.error('Error reading URL search params:', e);
+  }
+  
+  let source = localStorage.getItem('lead_source');
+  if (!source) {
+    source = 'direct';
+    localStorage.setItem('lead_source', source);
+  }
+  return source;
+}
+
 export function trackCollegeView(collegeId, collegeName) {
   const sessionId = getSessionId();
   fetch(`${API}/visitors/track`, {

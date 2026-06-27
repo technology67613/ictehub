@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import CollegeCard from './CollegeCard';
 import InquiryForm from './InquiryForm';
+import Footer from './Footer';
+import { getLeadSource } from '../utils/tracking';
 
 const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [colleges, setColleges] = useState([]);
@@ -94,10 +96,11 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
     }
 
     try {
+      const source = getLeadSource();
       const response = await fetch('https://ictehub.onrender.com/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(inlineData),
+        body: JSON.stringify({ ...inlineData, source }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to submit inquiry.');
@@ -522,6 +525,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         </div>
       </section>
 
+      <Footer setView={setView} />
       <InquiryForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
     </div>
   );

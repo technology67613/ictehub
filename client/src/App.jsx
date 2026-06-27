@@ -12,6 +12,11 @@ import AdminUsers from './components/AdminUsers';
 import TelecallerDashboard from './components/TelecallerDashboard';
 import ProfilePage from './components/ProfilePage';
 import CheckStatus from './components/CheckStatus';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
+import Disclaimer from './components/Disclaimer';
+import PartnerWithUs from './components/PartnerWithUs';
+import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import IcteLogo from './components/IcteLogo';
 
 function App() {
@@ -132,7 +137,7 @@ function App() {
                 >
                   Team
                 </button>
-                <button
+                 <button
                   className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                     currentView === 'commissions'
                       ? 'text-[#1E40FF] bg-[#EEF2FF]'
@@ -141,6 +146,16 @@ function App() {
                   onClick={() => setCurrentView('commissions')}
                 >
                   Commissions
+                </button>
+                <button
+                  className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                    currentView === 'partnerInquiries'
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setCurrentView('partnerInquiries')}
+                >
+                  Partner Inquiries
                 </button>
                 <button
                   className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-1 ${
@@ -165,18 +180,6 @@ function App() {
                 onClick={() => setCurrentView('telecallerDashboard')}
               >
                 My Leads
-              </button>
-            )}
-            {user && (
-              <button
-                className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
-                  currentView === 'profile'
-                    ? 'text-indigo-600 bg-indigo-50'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-                onClick={() => setCurrentView('profile')}
-              >
-                Profile
               </button>
             )}
             {!user ? (
@@ -271,6 +274,13 @@ function App() {
               localStorage.setItem('user', JSON.stringify(updatedUser));
             }}
           />
+        )}
+        {currentView === 'privacy' && <PrivacyPolicy />}
+        {currentView === 'terms' && <TermsOfService />}
+        {currentView === 'disclaimer' && <Disclaimer />}
+        {currentView === 'partnerWithUs' && <PartnerWithUs setView={setCurrentView} />}
+        {currentView === 'partnerInquiries' && user && user.role === 'admin' && (
+          <AdminPartnerInquiries token={token} />
         )}
       </main>
     </div>

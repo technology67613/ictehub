@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2 } from 'lucide-react';
-import { linkLeadToSession } from '../utils/tracking';
+import { linkLeadToSession, getLeadSource } from '../utils/tracking';
 
 const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
   const [colleges, setColleges] = useState([]);
@@ -66,10 +66,11 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
     }
 
     try {
+      const source = getLeadSource();
       const response = await fetch('https://ictehub.onrender.com/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, source }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to submit inquiry.');

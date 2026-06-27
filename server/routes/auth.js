@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+
+const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: 'Too many requests from this IP. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Helper to generate JWT token
 const generateToken = (id, role) => {
@@ -15,19 +24,15 @@ const generateToken = (id, role) => {
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
+    const role = 'telecaller'; // Force telecaller role for public signups
 
     // Validate request body
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: 'Please provide email, password, and role' });
-    }
-
-    // Validate role
-    if (!['admin', 'telecaller'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be admin or telecaller' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
     }
 
     // Check if user already exists
