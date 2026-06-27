@@ -93,7 +93,7 @@ const AuthPage = () => {
     <div className="flex justify-center items-center min-h-[calc(100vh-64px)] bg-academic-bg p-6 font-sans text-slate-600">
       <div className="w-full max-w-md bg-white border border-academic-border rounded-2xl p-8 shadow-sm">
         <div className="text-center mb-6">
-          <div className="text-3xl font-serif font-extrabold text-academic-navy tracking-tight mb-2">ictEHub</div>
+          <div className="text-3xl font-extrabold text-academic-navy tracking-tight mb-2">ictEHub</div>
           <p className="text-xs text-slate-400 uppercase tracking-widest">
             {isLogin ? 'Please log in to continue' : 'Create a new account'}
           </p>
@@ -146,7 +146,7 @@ const AuthPage = () => {
                 id="name"
                 name="name"
                 placeholder="John Doe"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-slate-50"
                 value={formData.name}
                 onChange={handleChange}
                 required={!isLogin}
@@ -163,7 +163,7 @@ const AuthPage = () => {
               id="email"
               name="email"
               placeholder="name@example.com"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-slate-50"
               value={formData.email}
               onChange={handleChange}
               required
@@ -179,7 +179,7 @@ const AuthPage = () => {
               id="password"
               name="password"
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-academic-bg/25"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-academic-gold focus:ring-4 focus:ring-academic-gold/10 transition-all duration-150 text-sm bg-slate-50"
               value={formData.password}
               onChange={handleChange}
               required

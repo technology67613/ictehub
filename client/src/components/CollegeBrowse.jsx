@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Globe, Search, RotateCw, Inbox, AlertTriangle } from 'lucide-react';
+import { Search, RotateCw, Inbox, AlertTriangle } from 'lucide-react';
+import InquiryForm from './InquiryForm';
+import CollegeCard from './CollegeCard';
 
-const CollegeBrowse = () => {
+const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode }) => {
   const [allColleges, setAllColleges] = useState([]); // Used for statistics and counts
   const [colleges, setColleges] = useState([]); // Filtered by mode from API
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeMode, setActiveMode] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCards, setExpandedCards] = useState({});
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [preselectedCollegeId, setPreselectedCollegeId] = useState(null);
 
   // Fetch all colleges once to populate initial counts and stat bar
   const fetchAllForStats = async () => {
@@ -63,32 +64,19 @@ const CollegeBrowse = () => {
     college.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getInitials = (name) => {
-    if (!name) return 'UN';
-    const cleanName = name.replace(/(University|College|Institute|Academy|School|of|and|the)/gi, '').trim();
-    const parts = cleanName.split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return cleanName.slice(0, 2).toUpperCase();
-  };
-
-  const toggleExpand = (id, e) => {
-    e.stopPropagation();
-    setExpandedCards((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const handleInquire = (id) => {
+    setPreselectedCollegeId(id);
+    setIsFormOpen(true);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 font-sans text-slate-600">
       {/* Header section */}
       <div className="flex flex-col items-center text-center mb-12">
-        <span className="bg-[#FAF8F3] border border-academic-border text-academic-navy text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4">
+        <span className="bg-section-light border border-academic-border text-academic-navy text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4">
           Partner Network
         </span>
-        <h1 className="text-4xl md:text-5xl font-serif font-extrabold text-academic-navy tracking-tight mb-3">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-academic-navy tracking-tight mb-3">
           Explore Colleges
         </h1>
         <p className="text-slate-500 text-sm max-w-xl mb-4 leading-relaxed">
@@ -102,13 +90,23 @@ const CollegeBrowse = () => {
           </div>
           <div className="w-px h-3 bg-academic-border"></div>
           <div>
-            <span className="text-[#2F6F4E] font-extrabold text-sm">{onlineCount || '0'}</span> Online
+            <span className="text-tag-accent font-extrabold text-sm">{onlineCount || '0'}</span> Online
           </div>
           <div className="w-px h-3 bg-academic-border"></div>
           <div>
-            <span className="text-[#1B2A4A] font-extrabold text-sm">{offlineCount || '0'}</span> Offline
+            <span className="text-academic-navy font-extrabold text-sm">{offlineCount || '0'}</span> Offline
           </div>
         </div>
+
+        <button
+          onClick={() => {
+            setPreselectedCollegeId(null);
+            setIsFormOpen(true);
+          }}
+          className="mt-6 bg-academic-gold text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full shadow-md hover:bg-opacity-95 active:scale-[0.98] transition-all cursor-pointer border-none"
+        >
+          Interested? Get a free consultation
+        </button>
       </div>
 
       {/* Search and Filters Section */}
@@ -137,31 +135,31 @@ const CollegeBrowse = () => {
             className={`px-5 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-2 ${
               activeMode === 'All'
                 ? 'bg-academic-gold border-academic-gold text-white shadow-sm'
-                : 'bg-white border-academic-border text-slate-500 hover:bg-[#FAF8F3]'
+                : 'bg-white border-academic-border text-slate-500 hover:bg-section-light'
             }`}
             onClick={() => setActiveMode('All')}
           >
-            All <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'All' ? 'bg-[#FAF8F3]/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{totalCount}</span>
+            All <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{totalCount}</span>
           </button>
           <button
             className={`px-5 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-2 ${
               activeMode === 'Online'
                 ? 'bg-academic-gold border-academic-gold text-white shadow-sm'
-                : 'bg-white border-academic-border text-slate-500 hover:bg-[#FAF8F3]'
+                : 'bg-white border-academic-border text-slate-500 hover:bg-section-light'
             }`}
             onClick={() => setActiveMode('Online')}
           >
-            Online <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'Online' ? 'bg-[#FAF8F3]/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{onlineCount}</span>
+            Online <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'Online' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{onlineCount}</span>
           </button>
           <button
             className={`px-5 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-2 ${
               activeMode === 'Offline'
                 ? 'bg-academic-gold border-academic-gold text-white shadow-sm'
-                : 'bg-white border-academic-border text-slate-500 hover:bg-[#FAF8F3]'
+                : 'bg-white border-academic-border text-slate-500 hover:bg-section-light'
             }`}
             onClick={() => setActiveMode('Offline')}
           >
-            Offline <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'Offline' ? 'bg-[#FAF8F3]/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{offlineCount}</span>
+            Offline <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMode === 'Offline' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{offlineCount}</span>
           </button>
         </div>
       </div>
@@ -188,7 +186,7 @@ const CollegeBrowse = () => {
           ))}
         </div>
       ) : error ? (
-        <div className="text-center bg-[#FAF8F3] border border-[#E7E2D6] text-red-700 rounded-2xl p-8 max-w-md mx-auto">
+        <div className="text-center bg-section-light border border-academic-border text-red-700 rounded-2xl p-8 max-w-md mx-auto">
           <AlertTriangle className="mx-auto w-10 h-10 text-red-600 mb-3" />
           <h3 className="text-base font-bold mb-1 text-academic-navy">Something went wrong</h3>
           <p className="text-sm mb-4 text-red-600">{error}</p>
@@ -218,84 +216,22 @@ const CollegeBrowse = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredColleges.map((college) => {
-            const hasMoreCourses = college.courses_offered && college.courses_offered.length > 3;
-            const isExpanded = expandedCards[college.id];
-            const coursesToShow = isExpanded
-              ? college.courses_offered
-              : (college.courses_offered || []).slice(0, 3);
-
-            return (
-              <div
-                key={college.id}
-                className={`bg-white border border-academic-border rounded-2xl p-6 shadow-sm hover:-translate-y-1.5 hover:shadow-md transition-all duration-250 flex flex-col justify-between relative overflow-hidden max-w-[380px] w-full mx-auto ${
-                  college.mode === 'Online' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-blue-700'
-                }`}
-              >
-                <div className="mb-4">
-                  <div className="flex items-start gap-4 relative">
-                    {/* Circle initials badge with thin gold ring border (seal) */}
-                    <div className="w-12 h-12 rounded-full border-2 border-academic-gold bg-white flex items-center justify-center font-serif font-extrabold text-academic-navy shadow-sm flex-shrink-0">
-                      {getInitials(college.name)}
-                    </div>
-                    <div className="flex-grow min-w-0 pr-16">
-                      <h3 className="text-base font-serif font-bold text-academic-navy leading-snug">
-                        {college.name}
-                      </h3>
-                      {college.mode === 'Offline' && college.location ? (
-                        <span className="text-[11px] text-slate-500 flex items-center gap-1 mt-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" /> {college.location}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-500 flex items-center gap-1 mt-1">
-                          <Globe className="w-3.5 h-3.5 text-slate-400" /> Fully Virtual
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className={`absolute top-0 right-0 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        college.mode === 'Online'
-                          ? 'bg-[#E8F3EC] text-[#2F6F4E]'
-                          : 'bg-[#E8ECF3] text-[#1B2A4A]'
-                      }`}
-                    >
-                      {college.mode}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="border-t border-slate-100 pt-4 mt-auto">
-                  <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                    Courses Offered
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {coursesToShow.map((course, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-slate-50 text-slate-600 text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-slate-100"
-                      >
-                        {course}
-                      </span>
-                    ))}
-                    {hasMoreCourses && (
-                      <button
-                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors ${
-                          isExpanded
-                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                        }`}
-                        onClick={(e) => toggleExpand(college.id, e)}
-                      >
-                        {isExpanded ? 'Show less' : `+${college.courses_offered.length - 3} more`}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {filteredColleges.map((college) => (
+            <CollegeCard
+              key={college.id}
+              college={college}
+              onInquire={handleInquire}
+            />
+          ))}
         </div>
       )}
+      
+      {/* Inquiry Form Modal */}
+      <InquiryForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        preselectedCollegeId={preselectedCollegeId}
+      />
     </div>
   );
 };
