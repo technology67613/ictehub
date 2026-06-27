@@ -8,6 +8,7 @@ import AdminCommissions from './components/AdminCommissions';
 import AdminHotLeads from './components/AdminHotLeads';
 import AdminColleges from './components/AdminColleges';
 import AdminInstituteCourses from './components/AdminInstituteCourses';
+import AdminUsers from './components/AdminUsers';
 import TelecallerDashboard from './components/TelecallerDashboard';
 import ProfilePage from './components/ProfilePage';
 import IcteLogo from './components/IcteLogo';
@@ -107,6 +108,16 @@ function App() {
                   onClick={() => setCurrentView('instituteCourses')}
                 >
                   Institute Courses
+                </button>
+                <button
+                  className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                    currentView === 'users'
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setCurrentView('users')}
+                >
+                  Team
                 </button>
                 <button
                   className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
@@ -224,6 +235,9 @@ function App() {
         )}
         {currentView === 'commissions' && user && user.role === 'admin' && (
           <AdminCommissions token={token} />
+        )}
+        {currentView === 'users' && user && user.role === 'admin' && (
+          <AdminUsers token={token} />
         )}
         {currentView === 'hotLeads' && user && user.role === 'admin' && (
           <AdminHotLeads token={token} />
