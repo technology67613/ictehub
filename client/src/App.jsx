@@ -6,6 +6,8 @@ import AuthPage from './components/AuthPage';
 import AdminLeads from './components/AdminLeads';
 import AdminCommissions from './components/AdminCommissions';
 import AdminHotLeads from './components/AdminHotLeads';
+import AdminColleges from './components/AdminColleges';
+import AdminInstituteCourses from './components/AdminInstituteCourses';
 import TelecallerDashboard from './components/TelecallerDashboard';
 import IcteLogo from './components/IcteLogo';
 
@@ -87,6 +89,26 @@ function App() {
                 </button>
                 <button
                   className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                    currentView === 'manageColleges'
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setCurrentView('manageColleges')}
+                >
+                  Manage Colleges
+                </button>
+                <button
+                  className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                    currentView === 'instituteCourses'
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setCurrentView('instituteCourses')}
+                >
+                  Institute Courses
+                </button>
+                <button
+                  className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                     currentView === 'commissions'
                       ? 'text-[#1E40FF] bg-[#EEF2FF]'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
@@ -162,6 +184,12 @@ function App() {
         {currentView === 'auth' && <AuthPage onAuthSuccess={handleAuthSuccess} />}
         {currentView === 'leads' && user && user.role === 'admin' && (
           <AdminLeads token={token} />
+        )}
+        {currentView === 'manageColleges' && user && user.role === 'admin' && (
+          <AdminColleges token={token} />
+        )}
+        {currentView === 'instituteCourses' && user && user.role === 'admin' && (
+          <AdminInstituteCourses token={token} />
         )}
         {currentView === 'commissions' && user && user.role === 'admin' && (
           <AdminCommissions token={token} />
