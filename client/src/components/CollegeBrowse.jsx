@@ -4,7 +4,7 @@ import { trackModeFilter } from '../utils/tracking';
 import InquiryForm from './InquiryForm';
 import CollegeCard from './CollegeCard';
 
-const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode }) => {
+const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode, setView }) => {
   const [allColleges, setAllColleges] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -221,7 +221,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode 
       </div>
       
       {/* Inquiry Form Modal */}
-      <InquiryForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} preselectedCollegeId={preselectedCollegeId} />
+      <InquiryForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
     </div>
   );
 };

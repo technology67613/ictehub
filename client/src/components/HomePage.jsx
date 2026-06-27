@@ -522,7 +522,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         </div>
       </section>
 
-      <InquiryForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} preselectedCollegeId={preselectedCollegeId} />
+      <InquiryForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
     </div>
   );
 };

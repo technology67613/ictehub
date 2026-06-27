@@ -79,10 +79,10 @@ function App() {
               Colleges
             </button>
             <button
-              className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+              className={`h-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
                 currentView === 'checkStatus'
-                  ? 'text-indigo-600 bg-indigo-50'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'text-[#1E40FF]'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
               onClick={() => setCurrentView('checkStatus')}
             >
@@ -232,6 +232,7 @@ function App() {
             setSearchQuery={setSearchQuery}
             activeMode={activeMode}
             setActiveMode={setActiveMode}
+            setView={setCurrentView}
           />
         )}
         {currentView === 'checkStatus' && (

@@ -5,7 +5,7 @@ const { protect, authorize } = require('../middleware/auth');
 
 /**
  * @route   GET /users
- * @desc    Get users by role (Admin only)
+ * @desc    Get all users (Admin only)
  * @access  Private/Admin
  */
 router.get('/', protect, authorize('admin'), async (req, res) => {
@@ -13,7 +13,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const supabase = req.app.get('supabase');
     const { role } = req.query;
 
-    let query = supabase.from('users').select('id, name, email, role, profile_picture_url, created_at').order('created_at', { ascending: false });
+    let query = supabase.from('users').select('id, name, email, role, profile_picture_url, is_active, created_at').order('created_at', { ascending: false });
 
     if (role) {
       query = query.eq('role', role);
@@ -74,10 +74,11 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
           name: name ? name.trim() : null,
           email: email.toLowerCase().trim(),
           password_hash: passwordHash,
-          role
+          role,
+          is_active: true
         }
       ])
-      .select('id, name, email, role, profile_picture_url, created_at');
+      .select('id, name, email, role, profile_picture_url, is_active, created_at');
 
     if (insertError) throw insertError;
 
@@ -85,6 +86,126 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
   } catch (error) {
     console.error('Error creating user account:', error);
     return res.status(500).json({ message: 'Server error creating user account', error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /users/:id/toggle-active
+ * @desc    Toggle user active status (Admin only)
+ * @access  Private/Admin
+ */
+router.put('/:id/toggle-active', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+
+    // Fetch existing user state
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('is_active')
+      .eq('id', id)
+      .single();
+
+    if (findError || !user) {
+      return res.status(404).json({ message: 'User account not found' });
+    }
+
+    const nextState = !user.is_active;
+
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update({ is_active: nextState })
+      .eq('id', id)
+      .select('id, name, email, role, profile_picture_url, is_active, created_at')
+      .single();
+
+    if (updateError) throw updateError;
+
+    return res.json(updatedUser);
+  } catch (error) {
+    console.error('Error toggling user account status:', error);
+    return res.status(500).json({ message: 'Server error toggling user account status', error: error.message });
+  }
+});
+
+/**
+ * @route   DELETE /users/:id
+ * @desc    Delete user account (Admin only)
+ * @access  Private/Admin
+ */
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+
+    // Check user exists
+    const { data: user, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete user from Supabase. FKey constraint ON DELETE SET NULL on leads.assigned_telecaller_id
+    // and ON DELETE SET NULL on call_logs.telecaller_id handles cascades correctly.
+    const { error: deleteError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    return res.json({ message: 'User account successfully deleted.' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.status(500).json({ message: 'Server error deleting user', error: error.message });
+  }
+});
+
+/**
+ * @route   GET /users/:id/activity
+ * @desc    Get user activity logs (Admin only)
+ * @access  Private/Admin
+ */
+router.get('/:id/activity', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+
+    // Fetch assigned leads
+    const { data: leads, error: leadsError } = await supabase
+      .from('leads')
+      .select('id, name, status, created_at')
+      .eq('assigned_telecaller_id', id)
+      .order('created_at', { ascending: false });
+
+    if (leadsError) throw leadsError;
+
+    // Fetch call history logs
+    const { data: callLogs, error: logsError } = await supabase
+      .from('call_logs')
+      .select('id, outcome, notes, call_date, leads(name)')
+      .eq('telecaller_id', id)
+      .order('call_date', { ascending: false });
+
+    if (logsError) throw logsError;
+
+    return res.json({
+      leads: leads || [],
+      callLogs: (callLogs || []).map(log => ({
+        id: log.id,
+        outcome: log.outcome,
+        notes: log.notes,
+        call_date: log.call_date,
+        lead_name: log.leads ? log.leads.name : 'Unknown Student'
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching user activity details:', error);
+    return res.status(500).json({ message: 'Server error fetching activity details', error: error.message });
   }
 });
 
@@ -107,7 +228,7 @@ router.put('/me', protect, async (req, res) => {
       .from('users')
       .update(updateData)
       .eq('id', userId)
-      .select('id, name, email, role, profile_picture_url');
+      .select('id, name, email, role, profile_picture_url, is_active, created_at');
 
     if (error) {
       throw error;

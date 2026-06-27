@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2 } from 'lucide-react';
 import { linkLeadToSession } from '../utils/tracking';
 
-const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
+const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
   const [colleges, setColleges] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -124,8 +124,22 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
                 <CheckCircle size={40} className="text-emerald-500" />
               </div>
               <h3 className="text-2xl font-extrabold text-slate-900 mb-3">Inquiry Submitted!</h3>
-              <p className="text-sm font-medium text-slate-500 max-w-sm mb-8">
+              <p className="text-sm font-medium text-slate-500 max-w-sm mb-5">
                 Thank you for showing interest. One of our expert academic counselors will reach out to you shortly.
+              </p>
+              <p className="text-xs text-slate-400 font-semibold mb-6 leading-relaxed">
+                Want to check back later? Use{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setView) setView('checkStatus');
+                    onClose();
+                  }}
+                  className="text-[#1E40FF] hover:underline bg-transparent border-none p-0 cursor-pointer font-bold inline"
+                >
+                  Check Status
+                </button>{' '}
+                with your phone number anytime.
               </p>
               <button
                 onClick={onClose}

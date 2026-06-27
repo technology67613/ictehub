@@ -112,6 +112,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Check if account is active
+    if (user.is_active === false) {
+      return res.status(403).json({ message: 'Your account has been paused. Contact admin.' });
+    }
+
     // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search, ShieldAlert, Loader2, Plus, X, AlertCircle,
-  Users, UserCheck, Shield, Key, Mail, CheckCircle2, UserPlus
+  Users, UserCheck, Shield, Key, Mail, CheckCircle2, UserPlus,
+  PauseCircle, PlayCircle, Trash2, Calendar, PhoneCall, FileText, CheckCircle
 } from 'lucide-react';
 
 const API = 'https://ictehub.onrender.com';
@@ -124,6 +125,219 @@ function UserFormDrawer({ onClose, onSave, saving }) {
   );
 }
 
+// ─── Delete Confirmation Modal ───────────────────────────────────────────────
+function DeleteUserModal({ user, onClose, onDelete, deleting }) {
+  const [confirmText, setConfirmText] = useState('');
+
+  const handleConfirm = (e) => {
+    e.preventDefault();
+    if (confirmText === 'DELETE') {
+      onDelete(user.id);
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[60]" onClick={onClose} />
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-[70] animate-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl max-w-md w-full border border-slate-100 shadow-2xl p-6 space-y-6">
+          <div className="flex items-center gap-3 text-rose-600">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center">
+              <ShieldAlert size={20} />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-base">Confirm Permanent Deletion</h3>
+              <p className="text-xs font-bold text-rose-500 uppercase tracking-wide">Danger Zone</p>
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-slate-500 leading-relaxed">
+            This will permanently delete <strong className="text-slate-800">{user.name || user.email}</strong>'s user credentials. All assigned leads will be unassigned. Historical call logs will be preserved without associated operator names.
+          </p>
+
+          <form onSubmit={handleConfirm} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
+                Type <strong className="text-slate-800">DELETE</strong> to confirm
+              </label>
+              <input
+                type="text"
+                value={confirmText}
+                onChange={e => setConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15 rounded-lg px-3 py-2.5 text-sm font-semibold outline-none transition-all"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={confirmText !== 'DELETE' || deleting}
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-rose-500/20 transition-all outline-none"
+              >
+                {deleting ? <Loader2 size={13} className="animate-spin inline mr-1" /> : <Trash2 size={13} className="inline mr-1" />}
+                Confirm Delete
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Activity Drawer Component ───────────────────────────────────────────────
+function ActivityDrawer({ user, token, onClose }) {
+  const [activity, setActivity] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const res = await fetch(`${API}/users/${user.id}/activity`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setActivity(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchActivity();
+  }, [user.id, token]);
+
+  const initials = (user.name || user.email || 'U')
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40" onClick={onClose} />
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-50 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+        
+        {/* Header */}
+        <div className="bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            {user.profile_picture_url ? (
+              <img src={user.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover bg-slate-50 border border-slate-200 shadow-inner shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E40FF] to-indigo-600 flex items-center justify-center font-bold text-white text-sm shrink-0">
+                {initials}
+              </div>
+            )}
+            <div>
+              <h2 className="font-extrabold text-slate-900 text-sm leading-tight">{user.name || 'Staff Member'}</h2>
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#1E40FF] bg-[#EEF2FF] px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                {user.role}
+              </span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable Timeline */}
+        {loading ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <Loader2 size={24} className="animate-spin text-[#1E40FF]" />
+            <p className="text-xs font-semibold">Loading track record...</p>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+            
+            {/* Assigned Leads */}
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                <Users size={11} /> Assigned Leads ({activity?.leads?.length || 0})
+              </h3>
+              {activity?.leads?.length === 0 ? (
+                <div className="bg-white rounded-2xl p-4 text-center text-xs font-semibold text-slate-400 border border-slate-100">
+                  No active student leads assigned.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-50 overflow-hidden shadow-sm">
+                  {activity?.leads?.map(l => (
+                    <div key={l.id} className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition-colors">
+                      <span className="text-xs font-bold text-slate-800 truncate">{l.name}</span>
+                      <span className="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-100">
+                        {l.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Call History */}
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                <PhoneCall size={11} /> Call History Timeline ({activity?.callLogs?.length || 0})
+              </h3>
+              {activity?.callLogs?.length === 0 ? (
+                <div className="bg-white rounded-2xl p-4 text-center text-xs font-semibold text-slate-400 border border-slate-100">
+                  No telephone logs recorded.
+                </div>
+              ) : (
+                <div className="relative pl-4 border-l border-slate-200 space-y-5 ml-2 pt-1">
+                  {activity?.callLogs?.map(log => {
+                    const formattedDate = new Date(log.call_date).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+
+                    return (
+                      <div key={log.id} className="relative space-y-1">
+                        {/* Dot indicator */}
+                        <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-white ring-2 ring-indigo-100" />
+                        
+                        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-50 pb-1.5">
+                            <span className="text-xs font-extrabold text-slate-900 truncate">To: {log.lead_name}</span>
+                            <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                              {log.outcome}
+                            </span>
+                          </div>
+                          {log.notes && (
+                            <p className="text-xs font-semibold text-slate-500 leading-relaxed italic">
+                              "{log.notes}"
+                            </p>
+                          )}
+                          <span className="text-[9px] font-bold text-slate-400 block text-right mt-1">
+                            {formattedDate}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function AdminUsers({ token }) {
   const [users, setUsers] = useState([]);
@@ -131,10 +345,15 @@ export default function AdminUsers({ token }) {
   const [error, setError] = useState('');
   const [searchVal, setSearchVal] = useState('');
 
-  // Drawer states
-  const [isOpen, setIsOpen] = useState(false);
+  // Modals & drawers
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [activityUser, setActivityUser] = useState(null);
+  const [deleteUser, setDeleteUser] = useState(null);
+
+  // States
   const [saving, setSaving] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
+  const [savedFlash, setSavedFlash] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -176,13 +395,46 @@ export default function AdminUsers({ token }) {
 
       const userData = await response.json();
       setUsers(prev => [userData, ...prev]);
-      setSavedFlash(true);
-      setIsOpen(false);
-      setTimeout(() => setSavedFlash(false), 2500);
+      setSavedFlash('create');
+      setIsAddOpen(false);
+      setTimeout(() => setSavedFlash(''), 2500);
     } catch (err) {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (id) => {
+    try {
+      const response = await fetch(`${API}/users/${id}/toggle-active`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to toggle user status');
+      const updatedUser = await response.json();
+      setUsers(prev => prev.map(u => u.id === id ? updatedUser : u));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`${API}/users/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+      setUsers(prev => prev.filter(u => u.id !== id));
+      setDeleteUser(null);
+      setSavedFlash('delete');
+      setTimeout(() => setSavedFlash(''), 2500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -198,7 +450,9 @@ export default function AdminUsers({ token }) {
     const total = users.length;
     const admins = users.filter(u => u.role === 'admin').length;
     const telecallers = users.filter(u => u.role === 'telecaller').length;
-    return { total, admins, telecallers };
+    const active = users.filter(u => u.is_active !== false).length;
+    const paused = users.filter(u => u.is_active === false).length;
+    return { total, admins, telecallers, active, paused };
   }, [users]);
 
   if (loading) {
@@ -213,7 +467,7 @@ export default function AdminUsers({ token }) {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC] font-sans">
+    <div className="min-h-[calc(100vh-64px)] bg-[#F8FAFC] font-sans pb-12">
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         
@@ -221,22 +475,23 @@ export default function AdminUsers({ token }) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 leading-tight">Team Members</h1>
-            <p className="text-xs font-semibold text-slate-400 mt-0.5">Manage administrative and telecalling operator staff credentials</p>
+            <p className="text-xs font-semibold text-slate-400 mt-0.5">Manage staff activation, deletion, and timeline logs</p>
           </div>
           <button
-            onClick={() => setIsOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#1E40FF]/25 transition-all outline-none"
+            onClick={() => setIsAddOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#1E40FF]/25 transition-all outline-none cursor-pointer"
           >
             <Plus size={14} /> Add Team Member
           </button>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {[
             { label: 'Total Users', value: stats.total, icon: Users, color: '#1E40FF', bg: '#EEF2FF' },
             { label: 'Administrators', value: stats.admins, icon: Shield, color: '#10B981', bg: '#ECFDF5' },
             { label: 'Telecallers', value: stats.telecallers, icon: UserCheck, color: '#8B5CF6', bg: '#F5F3FF' },
+            { label: 'Deactivated', value: stats.paused, icon: PauseCircle, color: '#EF4444', bg: '#FEF2F2' },
           ].map(stat => {
             const Icon = stat.icon;
             return (
@@ -254,9 +509,15 @@ export default function AdminUsers({ token }) {
         </div>
 
         {/* Success Alert */}
-        {savedFlash && (
+        {savedFlash === 'create' && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3 text-xs font-bold animate-in fade-in">
             New staff account successfully created.
+          </div>
+        )}
+
+        {savedFlash === 'delete' && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-3 text-xs font-bold animate-in fade-in">
+            User account has been permanently removed.
           </div>
         )}
 
@@ -284,11 +545,12 @@ export default function AdminUsers({ token }) {
         {/* Table Directory */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
-          <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Name</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Email</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Role</div>
-            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-right">Created On</div>
+            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Created On</div>
+            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-right">Actions</div>
           </div>
 
           {filteredUsers.length === 0 ? (
@@ -314,10 +576,13 @@ export default function AdminUsers({ token }) {
                     })
                   : '—';
 
+                const isPaused = u.is_active === false;
+
                 return (
                   <div
                     key={u.id}
-                    className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors animate-in fade-in"
+                    onClick={() => setActivityUser(u)}
+                    className={`grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors animate-in fade-in cursor-pointer ${isPaused ? 'opacity-70 bg-slate-50/30' : ''}`}
                   >
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -332,8 +597,13 @@ export default function AdminUsers({ token }) {
                           {initials}
                         </div>
                       )}
-                      <div className="font-bold text-slate-900 text-sm truncate">
-                        {u.name || <span className="text-slate-400 font-semibold italic">No name set</span>}
+                      <div className="font-bold text-slate-900 text-sm truncate flex items-center gap-1.5 min-w-0">
+                        <span className="truncate">{u.name || <span className="text-slate-400 font-semibold italic">No name set</span>}</span>
+                        {isPaused && (
+                          <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-red-50 text-red-600 border border-red-100 shrink-0">
+                            Paused
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -356,8 +626,30 @@ export default function AdminUsers({ token }) {
                     </div>
 
                     {/* Created date */}
-                    <div className="text-sm font-semibold text-slate-400 text-right">
+                    <div className="text-sm font-semibold text-slate-400">
                       {formattedDate}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center justify-end gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleToggleActive(u.id)}
+                        className={`p-1.5 rounded border transition-colors ${
+                          isPaused
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                            : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
+                        }`}
+                        title={isPaused ? 'Unpause account' : 'Pause account'}
+                      >
+                        {isPaused ? <PlayCircle size={13} /> : <PauseCircle size={13} />}
+                      </button>
+                      <button
+                        onClick={() => setDeleteUser(u)}
+                        className="p-1.5 rounded bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition-colors"
+                        title="Delete user account"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -375,11 +667,30 @@ export default function AdminUsers({ token }) {
       </div>
 
       {/* Drawer */}
-      {isOpen && (
+      {isAddOpen && (
         <UserFormDrawer
-          onClose={() => setIsOpen(false)}
+          onClose={() => setIsAddOpen(false)}
           onSave={handleCreateUser}
           saving={saving}
+        />
+      )}
+
+      {/* Activity Drawer */}
+      {activityUser && (
+        <ActivityDrawer
+          user={activityUser}
+          token={token}
+          onClose={() => setActivityUser(null)}
+        />
+      )}
+
+      {/* Delete User Modal */}
+      {deleteUser && (
+        <DeleteUserModal
+          user={deleteUser}
+          onClose={() => setDeleteUser(null)}
+          onDelete={handleDeleteUser}
+          deleting={deleting}
         />
       )}
     </div>
