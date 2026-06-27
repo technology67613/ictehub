@@ -177,6 +177,7 @@ const TelecallerDashboard = ({ token, user }) => {
         </div>
       </div>
 
+
       {error && (
         <div className="bg-red-50 border border-red-100 text-red-700 rounded-xl p-4 mb-6 flex items-center gap-3">
           <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
