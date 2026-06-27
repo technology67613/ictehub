@@ -42,6 +42,67 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * @route   GET /leads/check
+ * @desc    Check lead inquiry status by phone number (Public)
+ * @access  Public
+ */
+router.get('/check', async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { phone } = req.query;
+
+    if (!phone) {
+      return res.status(400).json({ message: 'Phone number is required.' });
+    }
+
+    const cleanedPhone = phone.trim();
+
+    // Fetch leads matching the phone number
+    const { data: leads, error: leadsError } = await supabase
+      .from('leads')
+      .select('id, name, status, interested_college_ids, created_at')
+      .eq('phone', cleanedPhone)
+      .order('created_at', { ascending: false });
+
+    if (leadsError) throw leadsError;
+
+    if (!leads || leads.length === 0) {
+      return res.json([]);
+    }
+
+    // Resolve target college names
+    const collegeIds = [...new Set(leads.flatMap(l => l.interested_college_ids || []))];
+    let collegesMap = {};
+
+    if (collegeIds.length > 0) {
+      const { data: colleges, error: colError } = await supabase
+        .from('colleges')
+        .select('id, name')
+        .in('id', collegeIds);
+
+      if (!colError && colleges) {
+        colleges.forEach(c => {
+          collegesMap[c.id] = c.name;
+        });
+      }
+    }
+
+    const result = leads.map(l => ({
+      id: l.id,
+      name: l.name,
+      status: l.status,
+      interested_colleges: (l.interested_college_ids || []).map(id => collegesMap[id]).filter(Boolean),
+      created_at: l.created_at
+    }));
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error checking lead status:', error);
+    return res.status(500).json({ message: 'Server error checking status', error: error.message });
+  }
+});
+
+/**
  * @route   GET /leads
  * @desc    Get all leads (Admin only)
  * @access  Private/Admin

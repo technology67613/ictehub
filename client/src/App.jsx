@@ -11,6 +11,7 @@ import AdminInstituteCourses from './components/AdminInstituteCourses';
 import AdminUsers from './components/AdminUsers';
 import TelecallerDashboard from './components/TelecallerDashboard';
 import ProfilePage from './components/ProfilePage';
+import CheckStatus from './components/CheckStatus';
 import IcteLogo from './components/IcteLogo';
 
 function App() {
@@ -76,6 +77,16 @@ function App() {
               onClick={() => setCurrentView('browse')}
             >
               Colleges
+            </button>
+            <button
+              className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                currentView === 'checkStatus'
+                  ? 'text-indigo-600 bg-indigo-50'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+              onClick={() => setCurrentView('checkStatus')}
+            >
+              Check Status
             </button>
             {user && user.role === 'admin' && (
               <>
@@ -215,13 +226,16 @@ function App() {
             setActiveMode={setActiveMode}
           />
         )}
-        {currentView === 'browse' && (
+         {currentView === 'browse' && (
           <CollegeBrowse
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             activeMode={activeMode}
             setActiveMode={setActiveMode}
           />
+        )}
+        {currentView === 'checkStatus' && (
+          <CheckStatus />
         )}
         {currentView === 'auth' && <AuthPage onAuthSuccess={handleAuthSuccess} />}
         {currentView === 'leads' && user && user.role === 'admin' && (
