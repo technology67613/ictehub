@@ -9,6 +9,7 @@ const leadsRoutes = require('./routes/leads');
 const usersRoutes = require('./routes/users');
 const callLogsRoutes = require('./routes/call_logs');
 const commissionsRoutes = require('./routes/commissions');
+const visitorsRoutes = require('./routes/visitors');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/leads', leadsRoutes);
 app.use('/users', usersRoutes);
 app.use('/call-logs', callLogsRoutes);
 app.use('/commissions', commissionsRoutes);
+app.use('/visitors', visitorsRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {
