@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2 } from 'lucide-react';
+import { linkLeadToSession } from '../utils/tracking';
 
 const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
   const [colleges, setColleges] = useState([]);
@@ -72,6 +73,11 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to submit inquiry.');
+      
+      if (data && data.id) {
+        linkLeadToSession(data.id);
+      }
+
       setSuccess(true);
       setFormData({ name: '', phone: '', email: '', interested_college_ids: [] });
     } catch (err) {

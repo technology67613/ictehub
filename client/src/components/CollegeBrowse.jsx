@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, RotateCw, Inbox, AlertTriangle, MonitorPlay, MapPin, Grid, Layers, X } from 'lucide-react';
+import { trackModeFilter } from '../utils/tracking';
 import InquiryForm from './InquiryForm';
 import CollegeCard from './CollegeCard';
 
@@ -60,6 +61,11 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode 
   const handleInquire = (id) => {
     setPreselectedCollegeId(id);
     setIsFormOpen(true);
+  };
+
+  const handleModeChange = (mode) => {
+    trackModeFilter(mode);
+    setActiveMode(mode);
   };
 
   return (
@@ -134,7 +140,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode 
             className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
               activeMode === 'All' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
-            onClick={() => setActiveMode('All')}
+            onClick={() => handleModeChange('All')}
           >
             All <span className={`px-2 py-0.5 rounded text-[10px] ${activeMode === 'All' ? 'bg-white/20' : 'bg-white shadow-sm'}`}>{totalCount}</span>
           </button>
@@ -142,7 +148,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode 
             className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
               activeMode === 'Online' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
-            onClick={() => setActiveMode('Online')}
+            onClick={() => handleModeChange('Online')}
           >
             Online <span className={`px-2 py-0.5 rounded text-[10px] ${activeMode === 'Online' ? 'bg-white/20' : 'bg-white shadow-sm'}`}>{onlineCount}</span>
           </button>
@@ -150,7 +156,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode 
             className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
               activeMode === 'Offline' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
-            onClick={() => setActiveMode('Offline')}
+            onClick={() => handleModeChange('Offline')}
           >
             Offline <span className={`px-2 py-0.5 rounded text-[10px] ${activeMode === 'Offline' ? 'bg-white/20' : 'bg-white shadow-sm'}`}>{offlineCount}</span>
           </button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Globe, ArrowRight } from 'lucide-react';
+import { trackCollegeView } from '../utils/tracking';
 
 const CollegeCard = ({ college, onInquire }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,6 +22,11 @@ const CollegeCard = ({ college, onInquire }) => {
 
   const isOnline = college.mode === 'Online';
   const colorClass = isOnline ? 'cyan' : 'indigo';
+
+  const handleInquireClick = () => {
+    trackCollegeView(college.id, college.name);
+    onInquire(college.id);
+  };
 
   return (
     <div className="group relative bg-white/90 backdrop-blur-xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-300 flex flex-col overflow-visible h-full w-full">
@@ -89,7 +95,7 @@ const CollegeCard = ({ college, onInquire }) => {
           </div>
           
           <button
-            onClick={() => onInquire(college.id)}
+            onClick={handleInquireClick}
             className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 group/btn outline-none"
           >
             Request Info <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
