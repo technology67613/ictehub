@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const AuthPage = () => {
+const AuthPage = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -82,6 +82,9 @@ const AuthPage = () => {
 
       setSuccess(isLogin ? 'Login successful!' : 'Registration successful!');
       console.log('Authentication Successful:', data);
+      if (onAuthSuccess) {
+        onAuthSuccess(data.user, data.token);
+      }
     } catch (err) {
       setError(err.message || 'Failed to connect to the server.');
     } finally {
