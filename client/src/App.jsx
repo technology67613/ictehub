@@ -78,16 +78,18 @@ function App() {
             >
               Colleges
             </button>
-            <button
-              className={`h-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                currentView === 'checkStatus'
-                  ? 'text-[#1E40FF]'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-              onClick={() => setCurrentView('checkStatus')}
-            >
-              Check Status
-            </button>
+            {!user && (
+              <button
+                className={`h-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
+                  currentView === 'checkStatus'
+                    ? 'text-[#1E40FF]'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                onClick={() => setCurrentView('checkStatus')}
+              >
+                Check Status
+              </button>
+            )}
             {user && user.role === 'admin' && (
               <>
                 <button
