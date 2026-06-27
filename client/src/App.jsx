@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { Flame } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CollegeBrowse from './components/CollegeBrowse';
 import AuthPage from './components/AuthPage';
 import AdminLeads from './components/AdminLeads';
 import AdminCommissions from './components/AdminCommissions';
+import AdminHotLeads from './components/AdminHotLeads';
 import TelecallerDashboard from './components/TelecallerDashboard';
 import IcteLogo from './components/IcteLogo';
 
@@ -93,6 +95,17 @@ function App() {
                 >
                   Commissions
                 </button>
+                <button
+                  className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-1 ${
+                    currentView === 'hotLeads'
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                  onClick={() => setCurrentView('hotLeads')}
+                >
+                  <Flame size={13} className="text-amber-500 animate-pulse" />
+                  Hot Leads
+                </button>
               </>
             )}
             {user && user.role === 'telecaller' && (
@@ -152,6 +165,9 @@ function App() {
         )}
         {currentView === 'commissions' && user && user.role === 'admin' && (
           <AdminCommissions token={token} />
+        )}
+        {currentView === 'hotLeads' && user && user.role === 'admin' && (
+          <AdminHotLeads token={token} />
         )}
         {currentView === 'telecallerDashboard' && user && user.role === 'telecaller' && (
           <TelecallerDashboard token={token} user={user} />
