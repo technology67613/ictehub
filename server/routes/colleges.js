@@ -44,6 +44,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     const supabase = req.app.get('supabase');
     const {
       name,
+      logo_url,
       mode,
       location,
       courses_offered,
@@ -67,6 +68,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       .insert([
         {
           name,
+          logo_url,
           mode,
           location: mode === 'Offline' ? location : null,
           courses_offered: courses_offered || [],
@@ -101,6 +103,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     const { id } = req.params;
     const {
       name,
+      logo_url,
       mode,
       location,
       courses_offered,
@@ -127,6 +130,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
+    if (logo_url !== undefined) updateData.logo_url = logo_url || null;
     if (mode !== undefined) {
       if (!['Online', 'Offline'].includes(mode)) {
         return res.status(400).json({ message: 'Invalid mode. Must be Online or Offline.' });
