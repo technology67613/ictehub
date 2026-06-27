@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, Briefcase, Calculator, Award, Check, 
-  Send, BookOpen, ArrowRight, Search, Sparkles, User, MonitorPlay, MapPin
+  Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin
 } from 'lucide-react';
 import CollegeCard from './CollegeCard';
 import InquiryForm from './InquiryForm';
@@ -102,7 +102,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
     { name: 'BCA', label: 'Computer Applications', icon: MonitorPlay, color: 'blue' },
     { name: 'BBA', label: 'Business Administration', icon: Briefcase, color: 'indigo' },
     { name: 'MBA', label: 'Business Mgmt (Masters)', icon: Award, color: 'purple' },
-    { name: 'BSc', label: 'Science & Technology', icon: Sparkles, color: 'cyan' },
+    { name: 'BSc', label: 'Science & Technology', icon: Atom, color: 'cyan' },
     { name: 'MSc', label: 'Advanced Science', icon: GraduationCap, color: 'emerald' },
     { name: 'BCom', label: 'Commerce & Finance', icon: Calculator, color: 'amber' },
   ];
@@ -120,8 +120,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       {/* 1. HERO SECTION */}
       <section className="relative z-10 max-w-[1800px] mx-auto px-6 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center min-h-[90vh]">
         <div className="lg:col-span-7 flex flex-col items-start relative">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Sparkles size={16} className="text-indigo-500" />
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-700">Welcome to ICTE Hub</span>
           </div>
           

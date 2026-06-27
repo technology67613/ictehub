@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2 } from 'lucide-react';
 
 const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
   const [colleges, setColleges] = useState([]);
@@ -95,7 +95,7 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId }) => {
         <div className="flex justify-between items-center px-8 py-6 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center border border-indigo-100 shadow-inner">
-              <Sparkles size={20} className="text-indigo-500" />
+              <BookOpen size={20} className="text-indigo-500" />
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-slate-900">Request Info</h2>

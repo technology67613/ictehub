@@ -3,7 +3,7 @@ import {
   Search, Phone, Mail, GraduationCap, CheckCircle2, XCircle,
   PhoneCall, MessageSquare, ChevronDown, ChevronUp, ChevronRight,
   ThumbsUp, ThumbsDown, Clock, PhoneOff, Calendar, ShieldAlert,
-  Loader2, Filter, Sparkles, Send, Flame, AlertCircle, TrendingUp,
+  Loader2, Filter, Send, Flame, AlertCircle, TrendingUp,
   Copy, X, Users, BarChart2, Activity
 } from 'lucide-react';
 
@@ -14,8 +14,8 @@ const STATUS_CONFIG = {
   'contacted':         { label: 'Contacted',          color: '#3B82F6', bg: '#EFF6FF', icon: Phone },
   'interested':        { label: 'Interested',         color: '#F59E0B', bg: '#FFFBEB', icon: Flame },
   'not-interested':    { label: 'Not Interested',     color: '#EF4444', bg: '#FEF2F2', icon: XCircle },
-  'enrolled-college':  { label: 'Enrolled (College)', color: '#10B981', bg: '#ECFDF5', icon: Sparkles },
-  'enrolled-institute':{ label: 'Enrolled (Inst.)',   color: '#10B981', bg: '#ECFDF5', icon: Sparkles },
+  'enrolled-college':  { label: 'Enrolled (College)', color: '#10B981', bg: '#ECFDF5', icon: GraduationCap },
+  'enrolled-institute':{ label: 'Enrolled (Inst.)',   color: '#10B981', bg: '#ECFDF5', icon: GraduationCap },
 };
 
 const OUTCOME_CONFIG = {
@@ -441,7 +441,7 @@ export default function TelecallerDashboard() {
           {[
             { label: 'Total Leads',    value: leads.length, icon: Users,     color: '#6366F1', bg: '#EEF2FF' },
             { label: 'Interested',     value: statusCounts['interested'] || 0, icon: Flame, color: '#F59E0B', bg: '#FFFBEB' },
-            { label: 'Enrolled',       value: enrolled,     icon: Sparkles,   color: '#10B981', bg: '#ECFDF5' },
+            { label: 'Enrolled',       value: enrolled,     icon: GraduationCap, color: '#10B981', bg: '#ECFDF5' },
             { label: 'Conversion',     value: `${conversion}%`, icon: TrendingUp, color: '#3B82F6', bg: '#EFF6FF' },
           ].map(stat => {
             const Icon = stat.icon;
