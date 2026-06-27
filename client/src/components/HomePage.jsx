@@ -14,6 +14,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchVal, setSearchVal] = useState('');
   const [modeVal, setModeVal] = useState('All');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [inlineData, setInlineData] = useState({
     name: '',
@@ -208,19 +209,22 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       </section>
 
       <section className="relative z-20 -mt-10 max-w-5xl mx-auto px-6">
-        <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
-          {/* Repeating Dot Grid Background */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-screen z-0">
-            <svg width="100%" height="100%">
-              <defs>
-                <pattern id="dot-grid-search" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="1.5" fill="#ffffff" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#dot-grid-search)" />
-            </svg>
+        <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl relative">
+          {/* Background Decorative Wrapper (clips blur and grid to card boundaries) */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
+            {/* Repeating Dot Grid Background */}
+            <div className="absolute inset-0 opacity-10 mix-blend-screen">
+              <svg width="100%" height="100%">
+                <defs>
+                  <pattern id="dot-grid-search" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1.5" fill="#ffffff" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#dot-grid-search)" />
+              </svg>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-[50px]"></div>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-[50px]"></div>
           <div className="relative z-10">
             <h2 className="text-2xl font-extrabold text-white mb-6 text-center">Smart University Finder</h2>
             <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
@@ -235,16 +239,52 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                 />
               </div>
               <div className="md:w-56 relative">
-                <MonitorPlay size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <select
-                  value={modeVal}
-                  onChange={(e) => setModeVal(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 text-white px-12 py-4 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white/20 focus:ring-4 focus:ring-indigo-500/20 transition-all font-semibold appearance-none cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="w-full bg-white/10 border border-white/20 text-white pl-12 pr-4 py-4 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white/20 focus:ring-4 focus:ring-indigo-500/20 transition-all font-semibold flex items-center justify-between cursor-pointer"
                 >
-                  <option value="All" className="text-slate-900">All Modes</option>
-                  <option value="Online" className="text-slate-900">Online Only</option>
-                  <option value="Offline" className="text-slate-900">Offline Only</option>
-                </select>
+                  <MonitorPlay size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <span>
+                    {modeVal === 'All' ? 'All Modes' : modeVal === 'Online' ? 'Online Only' : 'Offline Only'}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {dropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setDropdownOpen(false)} />
+                    <div className="absolute left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-40 animate-in fade-in slide-in-from-top-2 duration-150">
+                      {[
+                        { label: 'All Modes', value: 'All' },
+                        { label: 'Online Only', value: 'Online' },
+                        { label: 'Offline Only', value: 'Offline' }
+                      ].map((opt) => (
+                        <div
+                          key={opt.value}
+                          onClick={() => {
+                            setModeVal(opt.value);
+                            setDropdownOpen(false);
+                          }}
+                          className={`px-5 py-3.5 text-sm font-semibold cursor-pointer transition-colors ${
+                            modeVal === opt.value
+                              ? 'bg-[#1E40FF]/35 text-white border-l-2 border-[#1E40FF]'
+                              : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               <button
                 type="submit"

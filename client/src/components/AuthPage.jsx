@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Lock, Mail, User as UserIcon } from 'lucide-react';
+import { Loader2, Lock, Mail, User as UserIcon, Shield } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 
 const AuthPage = ({ onAuthSuccess }) => {
