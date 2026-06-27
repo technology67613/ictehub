@@ -8,6 +8,7 @@ const collegesRoutes = require('./routes/colleges');
 const leadsRoutes = require('./routes/leads');
 const usersRoutes = require('./routes/users');
 const callLogsRoutes = require('./routes/call_logs');
+const commissionsRoutes = require('./routes/commissions');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/colleges', collegesRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/users', usersRoutes);
 app.use('/call-logs', callLogsRoutes);
+app.use('/commissions', commissionsRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {

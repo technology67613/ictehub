@@ -153,6 +153,45 @@ router.put('/:id', protect, async (req, res) => {
       throw updateError;
     }
 
+    // Automatic commission generation on enrolling in a college
+    if (status === 'enrolled-college') {
+      let enrolledCollegeId = req.body.enrolled_college_id;
+      if (!enrolledCollegeId && lead.interested_college_ids && lead.interested_college_ids.length > 0) {
+        enrolledCollegeId = lead.interested_college_ids[0];
+      }
+
+      if (enrolledCollegeId) {
+        // Fetch college to make sure it exists
+        const { data: college, error: colError } = await supabase
+          .from('colleges')
+          .select('id, name, commission_percent')
+          .eq('id', enrolledCollegeId)
+          .single();
+
+        if (!colError && college) {
+          // Check if commission record already exists for this lead and college
+          const { data: existingComm } = await supabase
+            .from('commissions')
+            .select('id')
+            .eq('lead_id', id)
+            .eq('college_id', enrolledCollegeId);
+
+          if (!existingComm || existingComm.length === 0) {
+            await supabase
+              .from('commissions')
+              .insert([
+                {
+                  lead_id: id,
+                  college_id: enrolledCollegeId,
+                  amount: null, // to be updated later by admin
+                  status: 'pending'
+                }
+              ]);
+          }
+        }
+      }
+    }
+
     return res.json(updatedLead[0]);
   } catch (error) {
     console.error('Error updating lead:', error);
