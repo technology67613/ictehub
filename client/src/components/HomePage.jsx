@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, Briefcase, Calculator, Award, Check, 
-  Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin
+  Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin, Clock
 } from 'lucide-react';
 import CollegeCard from './CollegeCard';
 import InquiryForm from './InquiryForm';
@@ -24,6 +24,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [inlineLoading, setInlineLoading] = useState(false);
   const [inlineSuccess, setInlineSuccess] = useState(false);
   const [inlineError, setInlineError] = useState('');
+  const [instituteCourses, setInstituteCourses] = useState([]);
 
   useEffect(() => {
     const fetchColleges = async () => {
@@ -36,7 +37,21 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         }
       } catch (err) {}
     };
+
+    const fetchInstituteCourses = async () => {
+      try {
+        const res = await fetch('https://ictehub.onrender.com/institute-courses');
+        if (res.ok) {
+          const data = await res.json();
+          setInstituteCourses(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+        console.error('Error fetching institute courses:', e);
+      }
+    };
+
     fetchColleges();
+    fetchInstituteCourses();
   }, []);
 
   const handleInquire = (id) => {
@@ -192,9 +207,19 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         </div>
       </section>
 
-      {/* 2. SMART SEARCH SECTION */}
       <section className="relative z-20 -mt-10 max-w-5xl mx-auto px-6">
         <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+          {/* Repeating Dot Grid Background */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-screen z-0">
+            <svg width="100%" height="100%">
+              <defs>
+                <pattern id="dot-grid-search" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1.5" fill="#ffffff" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dot-grid-search)" />
+            </svg>
+          </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-[50px]"></div>
           <div className="relative z-10">
             <h2 className="text-2xl font-extrabold text-white mb-6 text-center">Smart University Finder</h2>
@@ -296,8 +321,65 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         </div>
       </section>
 
+      {/* Degree Programs Section */}
+      {instituteCourses.length > 0 && (
+        <section className="max-w-[1800px] mx-auto px-6 py-24 lg:py-32">
+          <div className="text-center mb-16">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-500 mb-2 block">Direct Enrollment</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Our Own Degree Programs</h2>
+            <p className="text-slate-500 font-medium max-w-xl mx-auto">Can't decide on a partner university? Enroll directly with us.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {instituteCourses.map((course) => (
+              <div
+                key={course.id}
+                className="group relative bg-white border border-slate-100 shadow-sm hover:shadow-xl rounded-[2rem] p-8 flex flex-col justify-between hover:-translate-y-2 transition-all duration-300"
+              >
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-[#1E40FF] flex items-center justify-center mb-6">
+                    <GraduationCap size={24} />
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-lg mb-2 leading-snug">{course.name}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mb-6">
+                    <Clock size={12} />
+                    <span>Duration: {course.duration || '2 years'}</span>
+                  </div>
+                </div>
+                
+                <div className="border-t border-slate-100 pt-5 flex items-center justify-between mt-auto">
+                  <div>
+                    <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Program Fees</span>
+                    <span className="text-base font-extrabold text-[#1E40FF]">
+                      {course.fees !== null && course.fees !== undefined ? `₹${course.fees.toLocaleString('en-IN')}` : '—'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { setPreselectedCollegeId(null); setIsModalOpen(true); }}
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-[#1E40FF] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors outline-none"
+                  >
+                    Enroll Now
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 5. INLINE CTA SECTION */}
       <section className="bg-slate-900 text-white py-24 px-6 relative overflow-hidden">
+        {/* Repeating Dot Grid Background */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-screen z-0">
+          <svg width="100%" height="100%">
+            <defs>
+              <pattern id="dot-grid-cta" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.5" fill="#ffffff" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dot-grid-cta)" />
+          </svg>
+        </div>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/10 to-transparent"></div>
         </div>

@@ -11,6 +11,8 @@ const API = 'https://ictehub.onrender.com';
 function CollegeFormDrawer({ college, onClose, onSave, saving }) {
   const isEdit = !!college.id;
   const [name, setName] = useState(college.name || '');
+  const [logoUrl, setLogoUrl] = useState(college.logo_url || '');
+  const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState(college.mode || 'Online');
   const [location, setLocation] = useState(college.location || '');
   const [commissionPercent, setCommissionPercent] = useState(
@@ -54,6 +56,7 @@ function CollegeFormDrawer({ college, onClose, onSave, saving }) {
 
     const payload = {
       name: name.trim(),
+      logo_url: logoUrl || null,
       mode,
       location: mode === 'Offline' ? location.trim() : null,
       courses_offered: courses,
@@ -110,6 +113,57 @@ function CollegeFormDrawer({ college, onClose, onSave, saving }) {
               className="w-full bg-slate-50 border border-slate-200 focus:border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 rounded-lg px-3 py-2.5 text-sm font-semibold outline-none transition-all"
               required
             />
+          </div>
+
+          {/* Logo Upload */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">College Logo</label>
+            <div className="flex items-center gap-4">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo preview" className="w-12 h-12 rounded-lg object-contain bg-slate-50 border border-slate-200" />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-[10px] text-slate-400 font-bold">No Logo</div>
+              )}
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    setUploading(true);
+                    setError('');
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('type', 'college-logo');
+                    try {
+                      const res = await fetch(`${API}/upload`, {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: formData
+                      });
+                      if (!res.ok) throw new Error('Upload failed');
+                      const data = await res.json();
+                      setLogoUrl(data.url);
+                    } catch (err) {
+                      setError('Could not upload logo.');
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                  className="hidden"
+                  id="logo-upload-input"
+                />
+                <label
+                  htmlFor="logo-upload-input"
+                  className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 shadow-sm cursor-pointer transition-colors"
+                >
+                  {uploading ? 'Uploading...' : 'Choose File'}
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Mode */}
@@ -356,6 +410,7 @@ export default function AdminColleges({ token }) {
   const openAddDrawer = () => {
     setSelectedCollege({
       name: '',
+      logo_url: '',
       mode: 'Online',
       location: '',
       courses_offered: [],
@@ -505,8 +560,17 @@ export default function AdminColleges({ token }) {
                     className="grid grid-cols-[1.5fr_0.8fr_1.2fr_1.5fr_1fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
                   >
                     {/* Name */}
-                    <div className="font-semibold text-slate-900 text-sm truncate">
-                      {c.name}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {c.logo_url ? (
+                        <img src={c.logo_url} alt="" className="w-8 h-8 rounded-lg object-contain bg-slate-50 border border-slate-100 shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xs shrink-0">
+                          {c.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="font-semibold text-slate-900 text-sm truncate">
+                        {c.name}
+                      </div>
                     </div>
 
                     {/* Mode Badge */}

@@ -9,6 +9,7 @@ import AdminHotLeads from './components/AdminHotLeads';
 import AdminColleges from './components/AdminColleges';
 import AdminInstituteCourses from './components/AdminInstituteCourses';
 import TelecallerDashboard from './components/TelecallerDashboard';
+import ProfilePage from './components/ProfilePage';
 import IcteLogo from './components/IcteLogo';
 
 function App() {
@@ -130,7 +131,7 @@ function App() {
                 </button>
               </>
             )}
-            {user && user.role === 'telecaller' && (
+             {user && user.role === 'telecaller' && (
               <button
                 className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                   currentView === 'telecallerDashboard'
@@ -140,6 +141,18 @@ function App() {
                 onClick={() => setCurrentView('telecallerDashboard')}
               >
                 My Leads
+              </button>
+            )}
+            {user && (
+              <button
+                className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                  currentView === 'profile'
+                    ? 'text-indigo-600 bg-indigo-50'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+                onClick={() => setCurrentView('profile')}
+              >
+                Profile
               </button>
             )}
             {!user ? (
@@ -154,12 +167,30 @@ function App() {
                 Login
               </button>
             ) : (
-              <button
-                className="ml-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700 hover:bg-red-50 transition-all cursor-pointer"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
+              <div className="flex items-center gap-2.5 ml-2">
+                {user.profile_picture_url ? (
+                  <img
+                    src={user.profile_picture_url}
+                    alt=""
+                    className="w-7 h-7 rounded-full object-cover bg-slate-50 border border-slate-200 shadow-sm shrink-0 cursor-pointer"
+                    onClick={() => setCurrentView('profile')}
+                  />
+                ) : (
+                  <div
+                    className="w-7 h-7 rounded-full bg-[#1E40FF] flex items-center justify-center font-bold text-white text-[10px] shrink-0 cursor-pointer"
+                    onClick={() => setCurrentView('profile')}
+                  >
+                    {(user.name || user.email).slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-[11px] font-bold text-slate-600 hidden md:inline">Logged in as {user.name || user.email.split('@')[0]}</span>
+                <button
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700 hover:bg-red-50 transition-all cursor-pointer border-none"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
             )}
           </nav>
         </div>
@@ -199,6 +230,16 @@ function App() {
         )}
         {currentView === 'telecallerDashboard' && user && user.role === 'telecaller' && (
           <TelecallerDashboard token={token} user={user} />
+        )}
+        {currentView === 'profile' && user && (
+          <ProfilePage
+            user={user}
+            token={token}
+            onProfileUpdate={(updatedUser) => {
+              setUser(updatedUser);
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            }}
+          />
         )}
       </main>
     </div>

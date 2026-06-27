@@ -63,6 +63,28 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
   const [colors] = useState(avatarColor(lead.name));
   const isEnrolled = lead.status === 'enrolled-college' || lead.status === 'enrolled-institute';
 
+  const [instituteCourses, setInstituteCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState(lead.enrolled_institute_course_id || '');
+  const [showPicker, setShowPicker] = useState(lead.status === 'enrolled-institute');
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch('https://ictehub.onrender.com/institute-courses');
+        if (res.ok) {
+          const data = await res.json();
+          setInstituteCourses(data || []);
+        }
+      } catch (err) {}
+    };
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    setSelectedCourseId(lead.enrolled_institute_course_id || '');
+    setShowPicker(lead.status === 'enrolled-institute');
+  }, [lead]);
+
   return (
     <>
       {/* Overlay */}
@@ -165,7 +187,14 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
                 return (
                   <button
                     key={key}
-                    onClick={() => onUpdateStatus(lead.id, key)}
+                    onClick={() => {
+                      if (key === 'enrolled-institute') {
+                        setShowPicker(true);
+                      } else {
+                        setShowPicker(false);
+                        onUpdateStatus(lead.id, key);
+                      }
+                    }}
                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all"
                     style={isSelected
                       ? { backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.color + '40' }
@@ -179,6 +208,25 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
                 );
               })}
             </div>
+            {showPicker && (
+              <div className="mt-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100 animate-in slide-in-from-top-2 duration-200">
+                <label className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest block mb-1.5">Select Institute Course</label>
+                <select
+                  value={selectedCourseId}
+                  onChange={e => {
+                    const cid = e.target.value;
+                    setSelectedCourseId(cid);
+                    onUpdateStatus(lead.id, 'enrolled-institute', cid);
+                  }}
+                  className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-semibold outline-none"
+                >
+                  <option value="">-- Choose Course --</option>
+                  {instituteCourses.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             {savedFlash === lead.id && (
               <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold mt-2">
                 <CheckCircle2 size={13} /> Status updated
@@ -340,16 +388,20 @@ export default function TelecallerDashboard() {
     } catch (err) {}
   };
 
-  const updateStatus = async (leadId, newStatus) => {
+  const updateStatus = async (leadId, newStatus, enrolledInstituteCourseId) => {
     setSavingId(leadId);
     try {
+      const payload = { status: newStatus };
+      if (newStatus === 'enrolled-institute' && enrolledInstituteCourseId) {
+        payload.enrolled_institute_course_id = enrolledInstituteCourseId;
+      }
       const res = await fetch(`${API}/leads/${leadId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to update');
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus, enrolled_institute_course_id: enrolledInstituteCourseId || null } : l));
       setSavedFlash(leadId);
       setTimeout(() => setSavedFlash(null), 2500);
     } catch (err) {

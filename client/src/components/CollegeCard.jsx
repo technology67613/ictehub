@@ -42,9 +42,17 @@ const CollegeCard = ({ college, onInquire }) => {
         {/* Header Area */}
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="relative shrink-0">
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-white flex items-center justify-center font-extrabold text-${colorClass}-600 text-xl shadow-inner border border-slate-200 transform group-hover:rotate-6 transition-transform shrink-0`}>
-              {getInitials(college.name)}
-            </div>
+            {college.logo_url ? (
+              <img
+                src={college.logo_url}
+                alt={`${college.name} Logo`}
+                className="w-14 h-14 rounded-2xl object-contain bg-slate-50 border border-slate-200 shadow-inner p-1 transform group-hover:rotate-6 transition-transform shrink-0"
+              />
+            ) : (
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-white flex items-center justify-center font-extrabold text-${colorClass}-600 text-xl shadow-inner border border-slate-200 transform group-hover:rotate-6 transition-transform shrink-0`}>
+                {getInitials(college.name)}
+              </div>
+            )}
           </div>
           
           <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-${colorClass}-50 text-${colorClass}-700 border border-${colorClass}-100 shrink-0`}>

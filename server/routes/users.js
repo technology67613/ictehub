@@ -31,4 +31,36 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+/**
+ * @route   PUT /users/me
+ * @desc    Update current logged-in user details (Self)
+ * @access  Private
+ */
+router.put('/me', protect, async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { name, profile_picture_url } = req.body;
+    const userId = req.user.id;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (profile_picture_url !== undefined) updateData.profile_picture_url = profile_picture_url || null;
+
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .select('id, name, email, role, profile_picture_url');
+
+    if (error) {
+      throw error;
+    }
+
+    return res.json(updatedUser[0]);
+  } catch (error) {
+    console.error('Error updating current user profile:', error);
+    return res.status(500).json({ message: 'Server error updating profile', error: error.message });
+  }
+});
+
 module.exports = router;

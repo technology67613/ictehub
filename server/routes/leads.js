@@ -99,7 +99,7 @@ router.put('/:id', protect, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { id } = req.params;
-    const { status, assigned_telecaller_id } = req.body;
+    const { status, assigned_telecaller_id, enrolled_institute_course_id } = req.body;
 
     // Fetch the lead first to check authorization
     const { data: existing, error: findError } = await supabase
@@ -141,6 +141,10 @@ router.put('/:id', protect, async (req, res) => {
         return res.status(403).json({ message: 'Only admins can assign telecallers to leads.' });
       }
       updateData.assigned_telecaller_id = assigned_telecaller_id || null;
+    }
+
+    if (enrolled_institute_course_id !== undefined) {
+      updateData.enrolled_institute_course_id = enrolled_institute_course_id || null;
     }
 
     const { data: updatedLead, error: updateError } = await supabase
