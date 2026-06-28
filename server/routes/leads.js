@@ -67,13 +67,14 @@ router.post('/', leadsLimiter, async (req, res) => {
 router.get('/check', checkLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { phone } = req.query;
+    const { phone, name } = req.query;
 
-    if (!phone) {
-      return res.status(400).json({ message: 'Phone number is required.' });
+    if (!phone || !name) {
+      return res.status(400).json({ message: 'Phone number and name are required.' });
     }
 
     const cleanedPhone = phone.trim();
+    const cleanedName = name.trim().toLowerCase();
 
     if (!/^\d{10}$/.test(cleanedPhone)) {
       return res.status(400).json({ message: 'Invalid phone number. Must be exactly 10 digits.' });
@@ -92,8 +93,15 @@ router.get('/check', checkLimiter, async (req, res) => {
       return res.json([]);
     }
 
+    // Filter leads where name matches case-insensitively
+    const matchedLeads = leads.filter(l => (l.name || '').trim().toLowerCase() === cleanedName);
+
+    if (matchedLeads.length === 0) {
+      return res.json([]);
+    }
+
     // Resolve target college names
-    const collegeIds = [...new Set(leads.flatMap(l => l.interested_college_ids || []))];
+    const collegeIds = [...new Set(matchedLeads.flatMap(l => l.interested_college_ids || []))];
     let collegesMap = {};
 
     if (collegeIds.length > 0) {
@@ -109,7 +117,7 @@ router.get('/check', checkLimiter, async (req, res) => {
       }
     }
 
-    const result = leads.map(l => ({
+    const result = matchedLeads.map(l => ({
       id: l.id,
       name: l.name,
       status: l.status,

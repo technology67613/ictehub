@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Loader2, Calendar, BookOpen, AlertCircle, Phone, Info, Award } from 'lucide-react';
+import { Search, Loader2, Calendar, BookOpen, AlertCircle, Phone, Info, Award, User } from 'lucide-react';
 
 const API = 'https://ictehub.onrender.com';
 
@@ -38,6 +38,7 @@ const STATUS_TRANS = {
 
 export default function CheckStatus() {
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [inquiries, setInquiries] = useState(null);
   const [searched, setSearched] = useState(false);
@@ -45,14 +46,14 @@ export default function CheckStatus() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!phone.trim()) return;
+    if (!phone.trim() || !name.trim()) return;
 
     setLoading(true);
     setError('');
     setInquiries(null);
 
     try {
-      const res = await fetch(`${API}/leads/check?phone=${encodeURIComponent(phone.trim())}`);
+      const res = await fetch(`${API}/leads/check?phone=${encodeURIComponent(phone.trim())}&name=${encodeURIComponent(name.trim())}`);
       if (!res.ok) throw new Error('Status lookup failed');
       const data = await res.json();
       setInquiries(Array.isArray(data) ? data : []);
@@ -75,28 +76,41 @@ export default function CheckStatus() {
           </span>
           <h1 className="text-3xl font-extrabold text-slate-900 leading-tight">Check My Status</h1>
           <p className="text-sm font-semibold text-slate-500 max-w-md mx-auto">
-            Enter your mobile number below to retrieve status updates on your college inquiry.
+            Enter your name and mobile number below to retrieve status updates on your college inquiry.
           </p>
         </div>
 
         {/* Search Card */}
         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-6 sm:p-8 space-y-6">
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Enter 10-digit phone number..."
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 focus:border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 outline-none transition-all"
-                required
-              />
+          <form onSubmit={handleSearch} className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Enter full name..."
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 focus:border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="flex-1 relative">
+                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Enter 10-digit phone number..."
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 focus:border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 outline-none transition-all"
+                  required
+                />
+              </div>
             </div>
             <button
               type="submit"
-              disabled={loading}
-              className="bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl shadow-lg shadow-[#1E40FF]/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              disabled={loading || !phone.trim() || !name.trim()}
+              className="bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white font-bold text-xs uppercase tracking-wider w-full sm:w-auto self-end px-8 py-3.5 rounded-xl shadow-lg shadow-[#1E40FF]/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
               Check Status
