@@ -545,7 +545,7 @@ export default function AdminUsers({ token }) {
         {/* Table Directory */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
-          <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Name</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Email</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Role</div>
@@ -559,7 +559,7 @@ export default function AdminUsers({ token }) {
               <p className="font-semibold text-sm">No team members match your criteria</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredUsers.map(u => {
                 const initials = (u.name || u.email || 'U')
                   .split(' ')
@@ -582,10 +582,10 @@ export default function AdminUsers({ token }) {
                   <div
                     key={u.id}
                     onClick={() => setActivityUser(u)}
-                    className={`grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors animate-in fade-in cursor-pointer ${isPaused ? 'opacity-70 bg-slate-50/30' : ''}`}
+                    className={`flex flex-col md:grid md:grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors animate-in fade-in cursor-pointer ${isPaused ? 'opacity-70 bg-slate-50/30' : ''}`}
                   >
                     {/* Avatar + Name */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 w-full md:w-auto">
                       {u.profile_picture_url ? (
                         <img
                           src={u.profile_picture_url}
@@ -597,7 +597,7 @@ export default function AdminUsers({ token }) {
                           {initials}
                         </div>
                       )}
-                      <div className="font-bold text-slate-900 text-sm truncate flex items-center gap-1.5 min-w-0">
+                      <div className="font-bold text-slate-900 text-sm truncate flex items-center gap-1.5 min-w-0 flex-1">
                         <span className="truncate">{u.name || <span className="text-slate-400 font-semibold italic">No name set</span>}</span>
                         {isPaused && (
                           <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-red-50 text-red-600 border border-red-100 shrink-0">
@@ -607,47 +607,64 @@ export default function AdminUsers({ token }) {
                       </div>
                     </div>
 
-                    {/* Email */}
-                    <div className="text-sm font-semibold text-slate-500 truncate" title={u.email}>
-                      {u.email}
-                    </div>
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* Email */}
+                      <div className="flex flex-col gap-0.5 min-w-0" title={u.email}>
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Email</span>
+                        <span className="text-sm font-semibold text-slate-500 truncate">{u.email}</span>
+                      </div>
 
-                    {/* Role Badge */}
-                    <div>
-                      {u.role === 'admin' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-extrabold uppercase tracking-wide">
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[9px] font-extrabold uppercase tracking-wide">
-                          Telecaller
-                        </span>
-                      )}
-                    </div>
+                      {/* Role Badge */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Role</span>
+                        {u.role === 'admin' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-extrabold uppercase tracking-wide">
+                            Admin
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[9px] font-extrabold uppercase tracking-wide">
+                            Telecaller
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Created date */}
-                    <div className="text-sm font-semibold text-slate-400">
-                      {formattedDate}
+                      {/* Created date */}
+                      <div className="flex flex-col gap-0.5 min-w-0 text-sm font-semibold text-slate-400">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Created On</span>
+                        <span>{formattedDate}</span>
+                      </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-end gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100 md:border-none pt-3 md:pt-0 mt-1 md:mt-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => handleToggleActive(u.id)}
-                        className={`p-1.5 rounded border transition-colors ${
+                        className={`flex-1 md:flex-initial p-2 rounded border transition-colors cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold ${
                           isPaused
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
                             : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
                         }`}
                         title={isPaused ? 'Unpause account' : 'Pause account'}
                       >
-                        {isPaused ? <PlayCircle size={13} /> : <PauseCircle size={13} />}
+                        {isPaused ? (
+                          <>
+                            <span className="md:hidden">Activate Account</span>
+                            <PlayCircle size={13} />
+                          </>
+                        ) : (
+                          <>
+                            <span className="md:hidden">Pause Account</span>
+                            <PauseCircle size={13} />
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={() => setDeleteUser(u)}
-                        className="p-1.5 rounded bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition-colors"
+                        className="flex-1 md:flex-initial p-2 rounded bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold"
                         title="Delete user account"
                       >
+                        <span className="md:hidden">Delete User</span>
                         <Trash2 size={13} />
                       </button>
                     </div>

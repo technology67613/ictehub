@@ -241,7 +241,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                   className="w-full bg-white/10 border border-white/20 text-white placeholder-slate-400 px-12 py-4 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white/20 focus:ring-4 focus:ring-indigo-500/20 transition-all font-semibold"
                 />
               </div>
-              <div className="md:w-56 relative">
+              <div className="w-full md:w-56 relative">
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}

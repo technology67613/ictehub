@@ -85,7 +85,8 @@ export default function AdminPartnerInquiries({ token }) {
 
         {/* Table List */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr_1fr] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          {/* Table Header */}
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr_1fr] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Institution</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Contact Person</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</div>
@@ -99,7 +100,7 @@ export default function AdminPartnerInquiries({ token }) {
               <p className="font-semibold text-sm">No partner inquiries found</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredInquiries.map(inq => {
                 const formattedDate = inq.created_at
                   ? new Date(inq.created_at).toLocaleDateString('en-IN', {
@@ -113,13 +114,32 @@ export default function AdminPartnerInquiries({ token }) {
                   <div
                     key={inq.id}
                     onClick={() => setSelectedInquiry(inq)}
-                    className="grid grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr_1fr] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    className="flex flex-col md:grid md:grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr_1fr] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors cursor-pointer"
                   >
-                    <div className="font-bold text-slate-900 text-sm truncate">{inq.college_name}</div>
-                    <div className="text-xs font-semibold text-slate-600 truncate">{inq.contact_person}</div>
-                    <div className="text-xs font-semibold text-slate-500 truncate">{inq.phone}</div>
-                    <div className="text-xs font-semibold text-slate-500 truncate" title={inq.email}>{inq.email}</div>
-                    <div className="text-xs font-semibold text-slate-400 text-right">{formattedDate}</div>
+                    <div className="flex flex-col gap-0.5 min-w-0 w-full md:w-auto">
+                      <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Institution</span>
+                      <div className="font-bold text-slate-900 text-sm truncate">{inq.college_name}</div>
+                    </div>
+                    
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      <div className="flex flex-col gap-0.5 min-w-0 text-xs font-semibold text-slate-600">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Contact Person</span>
+                        <span className="truncate">{inq.contact_person}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 min-w-0 text-xs font-semibold text-slate-500">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</span>
+                        <span className="truncate">{inq.phone}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 min-w-0 text-xs font-semibold text-slate-500" title={inq.email}>
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Email</span>
+                        <span className="truncate">{inq.email}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 min-w-0 text-xs font-semibold text-slate-400 md:text-right w-full md:w-auto">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Submitted</span>
+                        <span>{formattedDate}</span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

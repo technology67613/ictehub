@@ -478,7 +478,7 @@ export default function AdminLeads({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Lead</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">College</div>
@@ -494,7 +494,7 @@ export default function AdminLeads({ token }) {
               <p className="font-semibold text-sm">No leads match your search criteria</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredLeads.map(lead => {
                 const colors = avatarColor(lead.name);
                 const collegeNames = (lead.interested_college_ids || []).map(id => colleges[id]).filter(Boolean);
@@ -506,58 +506,68 @@ export default function AdminLeads({ token }) {
                 return (
                   <div
                     key={lead.id}
-                    className={`grid grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-center px-4 py-3.5 cursor-pointer transition-colors group ${isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-slate-50/80'}`}
+                    className={`flex flex-col md:grid md:grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 cursor-pointer transition-colors group ${isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-slate-50/80'}`}
                     onClick={() => openLead(lead)}
                   >
                     {/* Name + Initials */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 w-full md:w-auto">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0"
                         style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }}
                       >
                         {initials(lead.name)}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-slate-900 truncate">{lead.name}</div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">ID: #{lead.id.substring(0, 6)}</div>
                       </div>
                     </div>
 
-                    {/* Phone */}
-                    <div className="text-sm text-slate-600 font-semibold truncate">
-                      {lead.phone}
-                    </div>
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* Phone */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</span>
+                        <span className="text-sm text-slate-600 font-semibold truncate">{lead.phone}</span>
+                      </div>
 
-                    {/* College */}
-                    <div className="text-sm text-slate-500 font-medium truncate">
-                      {collegeNames.length > 0 ? collegeNames[0] : <span className="text-slate-300">—</span>}
-                    </div>
-
-                    {/* Status badge */}
-                    <div>
-                      <StatusBadge status={lead.status} />
-                    </div>
-
-                    {/* Assigned Telecaller */}
-                    <div className="text-xs font-semibold">
-                      {assignedTC ? (
-                        <span className="text-[#1E40FF] bg-[#EEF2FF] px-2.5 py-1 rounded-lg border border-[#1E40FF]/15">
-                          {assignedName}
+                      {/* College */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">College</span>
+                        <span className="text-sm text-slate-500 font-medium truncate">
+                          {collegeNames.length > 0 ? collegeNames[0] : <span className="text-slate-300">—</span>}
                         </span>
-                      ) : (
-                        <span className="text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                          Unassigned
-                        </span>
-                      )}
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
+                        <StatusBadge status={lead.status} />
+                      </div>
+
+                      {/* Assigned Telecaller */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Assigned Telecaller</span>
+                        {assignedTC ? (
+                          <span className="text-[#1E40FF] bg-[#EEF2FF] px-2.5 py-1 rounded-lg border border-[#1E40FF]/15 inline-block text-xs font-semibold">
+                            {assignedName}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 inline-block text-xs font-semibold">
+                            Unassigned
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-end gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100 md:border-none pt-3 md:pt-0 mt-1 md:mt-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => openLead(lead)}
-                        className="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                        className="w-full md:w-7 h-9 md:h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors text-xs md:text-sm font-bold md:font-normal gap-1 border-none cursor-pointer"
                         title="Manage lead & assignment"
                       >
+                        <span className="md:hidden">View Details</span>
                         <ChevronRight size={14} />
                       </button>
                     </div>

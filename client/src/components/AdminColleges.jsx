@@ -535,7 +535,7 @@ export default function AdminColleges({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[1.5fr_0.8fr_1.2fr_1.5fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[1.5fr_0.8fr_1.2fr_1.5fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">College</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Campus Mode</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Location</div>
@@ -551,16 +551,16 @@ export default function AdminColleges({ token }) {
               <p className="font-semibold text-sm">No colleges match your filters</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredColleges.map(c => {
                 const coursesStr = (c.courses_offered || []).join(', ');
                 return (
                   <div
                     key={c.id}
-                    className="grid grid-cols-[1.5fr_0.8fr_1.2fr_1.5fr_1fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                    className="flex flex-col md:grid md:grid-cols-[1.5fr_0.8fr_1.2fr_1.5fr_1fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors"
                   >
                     {/* Name */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 w-full md:w-auto">
                       {c.logo_url ? (
                         <img src={c.logo_url} alt="" className="w-8 h-8 rounded-lg object-contain bg-slate-50 border border-slate-100 shrink-0" />
                       ) : (
@@ -568,58 +568,73 @@ export default function AdminColleges({ token }) {
                           {c.name.slice(0, 2).toUpperCase()}
                         </div>
                       )}
-                      <div className="font-semibold text-slate-900 text-sm truncate">
+                      <div className="font-semibold text-slate-900 text-sm truncate flex-1">
                         {c.name}
                       </div>
                     </div>
 
-                    {/* Mode Badge */}
-                    <div>
-                      {c.mode === 'Online' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200 text-cyan-700 text-[10px] font-extrabold uppercase tracking-wide">
-                          Online
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-extrabold uppercase tracking-wide">
-                          Offline
-                        </span>
-                      )}
-                    </div>
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* Mode Badge */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Campus Mode</span>
+                        {c.mode === 'Online' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200 text-cyan-700 text-[10px] font-extrabold uppercase tracking-wide">
+                            Online
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-extrabold uppercase tracking-wide">
+                            Offline
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Location */}
-                    <div className="text-sm font-semibold text-slate-500 truncate">
-                      {c.location || <span className="text-slate-300">—</span>}
-                    </div>
-
-                    {/* Courses list */}
-                    <div className="text-xs font-semibold text-slate-600 truncate max-w-xs" title={coursesStr}>
-                      {coursesStr || <span className="text-slate-300">—</span>}
-                    </div>
-
-                    {/* Commission % */}
-                    <div className="text-sm font-bold text-slate-800">
-                      {c.commission_percent !== undefined && c.commission_percent !== null ? `${c.commission_percent}%` : '0%'}
-                      {c.commission_structure && (
-                        <span className="block text-[9px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
-                          {c.commission_structure}
+                      {/* Location */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Location</span>
+                        <span className="text-sm font-semibold text-slate-500 truncate">
+                          {c.location || <span className="text-slate-300">—</span>}
                         </span>
-                      )}
+                      </div>
+
+                      {/* Courses list */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Courses</span>
+                        <span className="text-xs font-semibold text-slate-606 truncate max-w-xs" title={coursesStr}>
+                          {coursesStr || <span className="text-slate-300">—</span>}
+                        </span>
+                      </div>
+
+                      {/* Commission % */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Commission %</span>
+                        <div className="text-sm font-bold text-slate-800">
+                          {c.commission_percent !== undefined && c.commission_percent !== null ? `${c.commission_percent}%` : '0%'}
+                          {c.commission_structure && (
+                            <span className="block text-[9px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
+                              {c.commission_structure}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-end gap-1.5 shrink-0">
+                    <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100 md:border-none pt-3 md:pt-0 mt-1 md:mt-0">
                       <button
                         onClick={() => openEditDrawer(c)}
-                        className="p-1.5 rounded hover:bg-slate-100 text-slate-600 transition-colors border border-slate-200"
+                        className="flex-1 md:flex-initial p-2 rounded hover:bg-slate-100 text-slate-600 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold"
                         title="Edit College Details"
                       >
+                        <span className="md:hidden">Edit Details</span>
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={() => handleDelete(c.id)}
-                        className="p-1.5 rounded hover:bg-red-50 text-red-600 transition-colors border border-slate-200"
+                        className="flex-1 md:flex-initial p-2 rounded hover:bg-red-50 text-red-600 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold"
                         title="Delete College"
                       >
+                        <span className="md:hidden">Delete College</span>
                         <Trash2 size={13} />
                       </button>
                     </div>

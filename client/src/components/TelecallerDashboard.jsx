@@ -560,7 +560,7 @@ export default function TelecallerDashboard() {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table header */}
-          <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1fr_auto] gap-3 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[2fr_1.5fr_1.5fr_1fr_auto] gap-3 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Lead</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">College</div>
@@ -575,7 +575,7 @@ export default function TelecallerDashboard() {
               <p className="font-semibold text-sm">No leads match your filters</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredLeads.map(lead => {
                 const colors = avatarColor(lead.name);
                 const collegeNames = (lead.interested_college_ids || []).map(id => colleges[id]).filter(Boolean);
@@ -585,18 +585,18 @@ export default function TelecallerDashboard() {
                 return (
                   <div
                     key={lead.id}
-                    className={`grid grid-cols-[2fr_1.5fr_1.5fr_1fr_auto] gap-3 items-center px-4 py-3 cursor-pointer transition-colors group ${isSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                    className={`flex flex-col md:grid md:grid-cols-[2fr_1.5fr_1.5fr_1fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3 cursor-pointer transition-colors group ${isSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
                     onClick={() => openLead(lead)}
                   >
                     {/* Lead name + initials */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 w-full md:w-auto">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0"
                         style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }}
                       >
                         {initials(lead.name)}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-slate-900 truncate">{lead.name}</div>
                         {historyCount > 0 && (
                           <div className="text-[10px] text-slate-400 font-medium">{historyCount} call{historyCount > 1 ? 's' : ''} logged</div>
@@ -604,49 +604,60 @@ export default function TelecallerDashboard() {
                       </div>
                     </div>
 
-                    {/* Phone */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm text-slate-600 font-medium truncate">{lead.phone}</span>
-                      <button
-                        onClick={e => { e.stopPropagation(); copyToClipboard(lead.phone, 'phone-row', lead.id); }}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-slate-200 text-slate-400 transition-all shrink-0"
-                      >
-                        {savedFlash === `${lead.id}-copy-phone-row` ? <CheckCircle2 size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                      </button>
-                    </div>
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* Phone */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</span>
+                        <div className="flex items-center gap-1.5 text-sm text-slate-600 font-semibold truncate">
+                          <span>{lead.phone}</span>
+                          <button
+                            onClick={e => { e.stopPropagation(); copyToClipboard(lead.phone, 'phone-row', lead.id); }}
+                            className="p-1 rounded hover:bg-slate-200 text-slate-400 transition-all shrink-0 md:opacity-0 group-hover:opacity-100 border-none cursor-pointer bg-transparent"
+                          >
+                            {savedFlash === `${lead.id}-copy-phone-row` ? <CheckCircle2 size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                          </button>
+                        </div>
+                      </div>
 
-                    {/* College */}
-                    <div className="text-sm text-slate-500 font-medium truncate">
-                      {collegeNames.length > 0 ? collegeNames[0] : <span className="text-slate-300">—</span>}
-                    </div>
+                      {/* College */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">College</span>
+                        <span className="text-sm text-slate-500 font-medium truncate">
+                          {collegeNames.length > 0 ? collegeNames[0] : <span className="text-slate-300">—</span>}
+                        </span>
+                      </div>
 
-                    {/* Status badge */}
-                    <div>
-                      <StatusBadge status={lead.status} />
+                      {/* Status badge */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
+                        <StatusBadge status={lead.status} />
+                      </div>
                     </div>
 
                     {/* Quick action buttons */}
-                    <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100/50 md:border-none pt-3 md:pt-0 mt-1 md:mt-0" onClick={e => e.stopPropagation()}>
                       <a
                         href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`}
                         target="_blank" rel="noreferrer"
-                        className="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
                         title="WhatsApp"
                       >
                         <MessageSquare size={13} />
                       </a>
                       <a
                         href={`tel:${lead.phone}`}
-                        className="w-7 h-7 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                         title="Call"
                       >
                         <PhoneCall size={13} />
                       </a>
                       <button
                         onClick={() => openLead(lead)}
-                        className="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                        className="flex-1 md:flex-initial h-9 md:h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border-none cursor-pointer text-xs md:text-sm font-bold md:font-normal px-3 md:px-0 gap-1"
                         title="Open detail"
                       >
+                        <span className="md:hidden">View Details</span>
                         <ChevronRight size={13} />
                       </button>
                     </div>

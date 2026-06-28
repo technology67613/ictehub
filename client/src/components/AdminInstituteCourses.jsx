@@ -317,7 +317,7 @@ export default function AdminInstituteCourses({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[2fr_1.2fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[2fr_1.2fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Program Name</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Clock size={11} /> Duration</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1"><DollarSign size={11} /> Fees (INR)</div>
@@ -331,41 +331,49 @@ export default function AdminInstituteCourses({ token }) {
               <p className="font-semibold text-sm">No courses matching search query</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredCourses.map(course => (
                 <div
                   key={course.id}
-                  className="grid grid-cols-[2fr_1.2fr_1.2fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                  className="flex flex-col md:grid md:grid-cols-[2fr_1.2fr_1.2fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors"
                 >
                   {/* Name */}
-                  <div className="font-semibold text-slate-900 text-sm truncate">
-                    {course.name}
+                  <div className="flex flex-col gap-0.5 min-w-0 w-full md:w-auto">
+                    <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Program Name</span>
+                    <div className="font-semibold text-slate-900 text-sm truncate">{course.name}</div>
                   </div>
 
-                  {/* Duration */}
-                  <div className="text-sm font-semibold text-slate-600">
-                    {course.duration}
-                  </div>
+                  {/* Mobile Grid Details */}
+                  <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                    {/* Duration */}
+                    <div className="flex flex-col gap-0.5 min-w-0 text-sm font-semibold text-slate-606">
+                      <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Duration</span>
+                      <span>{course.duration}</span>
+                    </div>
 
-                  {/* Fees */}
-                  <div className="text-sm font-bold text-slate-800">
-                    {course.fees !== null && course.fees !== undefined ? `₹${course.fees.toLocaleString('en-IN')}` : <span className="text-slate-300">—</span>}
+                    {/* Fees */}
+                    <div className="flex flex-col gap-0.5 min-w-0 text-sm font-bold text-slate-800">
+                      <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Fees (INR)</span>
+                      <span>{course.fees !== null && course.fees !== undefined ? `₹${course.fees.toLocaleString('en-IN')}` : <span className="text-slate-300">—</span>}</span>
+                    </div>
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex items-center justify-end gap-1.5 shrink-0">
+                  <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100 md:border-none pt-3 md:pt-0 mt-1 md:mt-0">
                     <button
                       onClick={() => openEditDrawer(course)}
-                      className="p-1.5 rounded hover:bg-slate-100 text-slate-600 transition-colors border border-slate-200"
+                      className="flex-1 md:flex-initial p-2 rounded hover:bg-slate-100 text-slate-600 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold"
                       title="Edit Course"
                     >
+                      <span className="md:hidden">Edit Course</span>
                       <Edit2 size={13} />
                     </button>
                     <button
                       onClick={() => handleDelete(course.id)}
-                      className="p-1.5 rounded hover:bg-red-50 text-red-600 transition-colors border border-slate-200"
+                      className="flex-1 md:flex-initial p-2 rounded hover:bg-red-50 text-red-600 transition-colors border border-slate-200 cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold"
                       title="Delete Course"
                     >
+                      <span className="md:hidden">Delete Course</span>
                       <Trash2 size={13} />
                     </button>
                   </div>

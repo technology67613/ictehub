@@ -154,7 +154,7 @@ export default function AdminHotLeads({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[1fr_2.5fr_1.5fr_1fr_1.5fr] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[1fr_2.5fr_1.5fr_1fr_1.5fr] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Session ID</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Colleges Viewed</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Mode Filters</div>
@@ -169,7 +169,7 @@ export default function AdminHotLeads({ token }) {
               <p className="font-semibold text-sm">No hot sessions matching filters</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredSessions.map(session => {
                 const viewsStr = (session.viewed_colleges || [])
                   .map(c => `${c.college_name} (${c.count}x)`)
@@ -178,54 +178,70 @@ export default function AdminHotLeads({ token }) {
                 return (
                   <div
                     key={session.id}
-                    className="grid grid-cols-[1fr_2.5fr_1.5fr_1fr_1.5fr] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                    className="flex flex-col md:grid md:grid-cols-[1fr_2.5fr_1.5fr_1fr_1.5fr] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors"
                   >
                     {/* Session ID */}
-                    <div className="font-mono text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-1 rounded w-fit">
-                      {session.session_id ? session.session_id.substring(0, 8) : 'unknown'}
-                    </div>
-
-                    {/* Colleges Viewed */}
-                    <div className="text-sm font-semibold text-slate-800 leading-relaxed max-w-sm truncate" title={viewsStr}>
-                      {viewsStr || <span className="text-slate-300">—</span>}
-                    </div>
-
-                    {/* Mode Filters Used */}
-                    <div className="flex flex-wrap gap-1">
-                      {session.mode_filters_used && session.mode_filters_used.length > 0 ? (
-                        session.mode_filters_used.map((mode, idx) => (
-                          <span
-                            key={idx}
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                              mode === 'Online'
-                                ? 'bg-cyan-50 text-cyan-700 border-cyan-200'
-                                : mode === 'Offline'
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                                : 'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            {mode}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-slate-300 text-xs">—</span>
-                      )}
-                    </div>
-
-                    {/* Total Views */}
-                    <div className="text-sm font-bold text-slate-900">
-                      {session.total_views || 0}
-                    </div>
-
-                    {/* Timeline (First seen / Last seen) */}
-                    <div className="flex flex-col gap-0.5 text-xs text-slate-500 font-medium">
-                      <div className="flex items-center gap-1">
-                        <Clock size={11} className="text-slate-400 shrink-0" />
-                        <span>Active {timeAgo(session.last_seen_at)}</span>
+                    <div className="flex flex-col gap-0.5 min-w-0 w-full md:w-auto">
+                      <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Session ID</span>
+                      <div className="font-mono text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-1 rounded w-fit">
+                        {session.session_id ? session.session_id.substring(0, 8) : 'unknown'}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                        <Calendar size={11} className="text-slate-300 shrink-0" />
-                        <span>First seen {timeAgo(session.first_seen_at)}</span>
+                    </div>
+
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* Colleges Viewed */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Colleges Viewed</span>
+                        <div className="text-sm font-semibold text-slate-800 leading-relaxed max-w-sm truncate" title={viewsStr}>
+                          {viewsStr || <span className="text-slate-300">—</span>}
+                        </div>
+                      </div>
+
+                      {/* Mode Filters Used */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Mode Filters</span>
+                        <div className="flex flex-wrap gap-1">
+                          {session.mode_filters_used && session.mode_filters_used.length > 0 ? (
+                            session.mode_filters_used.map((mode, idx) => (
+                              <span
+                                key={idx}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                                  mode === 'Online'
+                                    ? 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                                    : mode === 'Offline'
+                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                              >
+                                {mode}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-300 text-xs">—</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Total Views */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Total Views</span>
+                        <div className="text-sm font-bold text-slate-900">{session.total_views || 0}</div>
+                      </div>
+
+                      {/* Timeline (First seen / Last seen) */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Timeline</span>
+                        <div className="flex flex-col gap-0.5 text-xs text-slate-500 font-medium">
+                          <div className="flex items-center gap-1">
+                            <Clock size={11} className="text-slate-400 shrink-0" />
+                            <span>Active {timeAgo(session.last_seen_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <Calendar size={11} className="text-slate-300 shrink-0" />
+                            <span>First seen {timeAgo(session.first_seen_at)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

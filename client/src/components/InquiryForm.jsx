@@ -89,14 +89,14 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-sans text-slate-700">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6 font-sans text-slate-700">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300" 
         onClick={onClose}
       ></div>
 
-      <div className="bg-white/90 backdrop-blur-2xl border border-white rounded-[2rem] w-full max-w-lg shadow-[0_20px_60px_rgb(0,0,0,0.15)] relative flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+      <div className="bg-white backdrop-blur-2xl border-none sm:border sm:border-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:rounded-[2rem] shadow-[0_20px_60px_rgb(0,0,0,0.15)] relative flex flex-col sm:max-w-lg animate-in zoom-in-95 duration-300">
         
         {/* Modal Header */}
         <div className="flex justify-between items-center px-8 py-6 border-b border-slate-100">

@@ -294,7 +294,7 @@ export default function AdminCommissions({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Student / Lead</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">College Name</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Amount (INR)</div>
@@ -309,7 +309,7 @@ export default function AdminCommissions({ token }) {
               <p className="font-semibold text-sm">No commissions found matching your filters</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {filteredCommissions.map(comm => {
                 const isEditing = editingId === comm.id;
                 const isSaving = savingId === comm.id;
@@ -320,67 +320,79 @@ export default function AdminCommissions({ token }) {
                 return (
                   <div
                     key={comm.id}
-                    className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 items-center px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                    className="flex flex-col md:grid md:grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 hover:bg-slate-50/50 transition-colors"
                   >
-                    {/* Student Name */}
-                    <div className="font-semibold text-slate-900 text-sm truncate">
-                      {resolvedLeadName || <span className="text-slate-400 italic">Unknown Lead</span>}
+                    <div className="flex flex-col gap-0.5 min-w-0 w-full md:w-auto">
+                      <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Student / Lead</span>
+                      <div className="font-semibold text-slate-900 text-sm truncate">
+                        {resolvedLeadName || <span className="text-slate-400 italic">Unknown Lead</span>}
+                      </div>
                     </div>
 
-                    {/* College Name */}
-                    <div className="font-semibold text-slate-600 text-sm truncate">
-                      {resolvedCollegeName || <span className="text-slate-400 italic">Unknown College</span>}
-                    </div>
+                    {/* Mobile Grid Details */}
+                    <div className="grid grid-cols-2 gap-4 w-full md:contents">
+                      {/* College Name */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">College Name</span>
+                        <div className="font-semibold text-slate-600 text-sm truncate">
+                          {resolvedCollegeName || <span className="text-slate-400 italic">Unknown College</span>}
+                        </div>
+                      </div>
 
-                    {/* Amount (Editable inline) */}
-                    <div className="text-sm font-bold text-slate-800">
-                      {isEditing ? (
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
-                          onBlur={() => saveEdit(comm)}
-                          onKeyDown={e => handleKeyDown(e, comm)}
-                          disabled={isSaving}
-                          className="w-24 bg-white border border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 px-2 py-1 rounded text-sm font-semibold outline-none transition-all"
-                        />
-                      ) : (
-                        <div 
-                          onClick={() => startEdit(comm)}
-                          className="inline-flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all select-none"
-                          title="Click to edit amount"
-                        >
-                          <span>{comm.amount !== null && comm.amount !== undefined ? `₹${comm.amount.toLocaleString('en-IN')}` : '—'}</span>
-                          <Edit2 size={11} className="text-slate-400 opacity-0 hover:opacity-100 transition-opacity" />
-                          {savedFlash === `${comm.id}-amount` && (
-                            <span className="text-[10px] text-emerald-600 animate-pulse font-bold ml-1">Saved</span>
+                      {/* Amount (Editable inline) */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Amount (INR)</span>
+                        <div className="text-sm font-bold text-slate-800">
+                          {isEditing ? (
+                            <input
+                              ref={inputRef}
+                              type="text"
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={() => saveEdit(comm)}
+                              onKeyDown={e => handleKeyDown(e, comm)}
+                              disabled={isSaving}
+                              className="w-24 bg-white border border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 px-2 py-1 rounded text-sm font-semibold outline-none transition-all"
+                            />
+                          ) : (
+                            <div 
+                              onClick={() => startEdit(comm)}
+                              className="inline-flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all select-none"
+                              title="Click to edit amount"
+                            >
+                              <span>{comm.amount !== null && comm.amount !== undefined ? `₹${comm.amount.toLocaleString('en-IN')}` : '—'}</span>
+                              <Edit2 size={11} className="text-slate-400 opacity-0 hover:opacity-100 transition-opacity" />
+                              {savedFlash === `${comm.id}-amount` && (
+                                <span className="text-[10px] text-emerald-600 animate-pulse font-bold ml-1">Saved</span>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Status Badge */}
-                    <div>
-                      {comm.status === 'received' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700">
-                          <CheckCircle size={10} className="shrink-0 text-emerald-500" />
-                          Received
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-amber-200 bg-amber-50 text-amber-700">
-                          <HelpCircle size={10} className="shrink-0 text-amber-500" />
-                          Pending
-                        </span>
-                      )}
+                      {/* Status Badge */}
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
+                        {comm.status === 'received' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700">
+                            <CheckCircle size={10} className="shrink-0 text-emerald-500" />
+                            Received
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-amber-200 bg-amber-50 text-amber-700">
+                            <HelpCircle size={10} className="shrink-0 text-amber-500" />
+                            Pending
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Status Toggle Action */}
-                    <div className="flex justify-end gap-1.5 shrink-0">
+                    <div className="flex justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100 md:border-none pt-3 md:pt-0 mt-1 md:mt-0">
                       <button
                         onClick={() => toggleStatus(comm)}
                         disabled={isSaving}
-                        className={`p-1.5 rounded-lg border transition-all ${
+                        className={`w-full md:w-auto p-1.5 rounded-lg border transition-all cursor-pointer flex items-center justify-center gap-1 text-xs md:text-sm font-bold md:font-normal ${
                           comm.status === 'received'
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
                             : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
@@ -390,9 +402,15 @@ export default function AdminCommissions({ token }) {
                         {isSaving ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : comm.status === 'received' ? (
-                          <ToggleRight size={18} />
+                          <>
+                            <span className="md:hidden">Toggle to Pending</span>
+                            <ToggleRight size={18} />
+                          </>
                         ) : (
-                          <ToggleLeft size={18} />
+                          <>
+                            <span className="md:hidden">Toggle to Received</span>
+                            <ToggleLeft size={18} />
+                          </>
                         )}
                       </button>
                     </div>
