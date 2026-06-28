@@ -53,26 +53,11 @@ export default function CheckStatus() {
     setInquiries(null);
 
     try {
-      let recaptchaToken = '';
-      if (window.grecaptcha) {
-        try {
-          recaptchaToken = await window.grecaptcha.execute('6Ldf9TktAAAAAEmWTmgcqkxtb-RSj0EZWCGAPo-Y', { action: 'submit' });
-        } catch (reErr) {
-          console.error('reCAPTCHA execution error:', reErr);
-        }
-      }
-
-      const res = await fetch(
-        `${API}/leads/check?phone=${encodeURIComponent(phone.trim())}&name=${encodeURIComponent(
-          name.trim()
-        )}&recaptcha_token=${encodeURIComponent(recaptchaToken)}`
-      );
-
+      const res = await fetch(`${API}/leads/check?phone=${encodeURIComponent(phone.trim())}&name=${encodeURIComponent(name.trim())}`);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || 'Status lookup failed');
       }
-
       const data = await res.json();
       setInquiries(Array.isArray(data) ? data : []);
       setSearched(true);

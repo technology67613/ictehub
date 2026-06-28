@@ -2,20 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
-const verifyRecaptcha = require('../utils/verifyRecaptcha');
 
 const leadsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   message: { message: 'Too many requests from this IP. Please try again after 15 minutes.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const checkLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { message: 'Too many lookup requests. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -28,13 +19,7 @@ const checkLimiter = rateLimit({
 router.post('/', leadsLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { name, phone, email, interested_college_ids, session_id, source, recaptcha_token } = req.body;
-
-    // Verify reCAPTCHA
-    const isHuman = await verifyRecaptcha(recaptcha_token);
-    if (!isHuman) {
-      return res.status(400).json({ message: 'Verification failed, please try again.' });
-    }
+    const { name, phone, email, interested_college_ids, session_id, source } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ message: 'Name and phone are required fields.' });
@@ -71,16 +56,10 @@ router.post('/', leadsLimiter, async (req, res) => {
  * @desc    Check lead inquiry status by phone number (Public)
  * @access  Public
  */
-router.get('/check', checkLimiter, async (req, res) => {
+router.get('/check', async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { phone, name, recaptcha_token } = req.query;
-
-    // Verify reCAPTCHA
-    const isHuman = await verifyRecaptcha(recaptcha_token);
-    if (!isHuman) {
-      return res.status(400).json({ message: 'Verification failed, please try again.' });
-    }
+    const { phone, name } = req.query;
 
     if (!phone || !name) {
       return res.status(400).json({ message: 'Phone number and name are required.' });
