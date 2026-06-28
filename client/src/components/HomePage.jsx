@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, Briefcase, Calculator, Award, Check, 
-  Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin, Clock
+  Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin, Clock, Calendar
 } from 'lucide-react';
 import CollegeCard from './CollegeCard';
 import InquiryForm from './InquiryForm';
@@ -28,6 +28,10 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [inlineSuccess, setInlineSuccess] = useState(false);
   const [inlineError, setInlineError] = useState('');
   const [instituteCourses, setInstituteCourses] = useState([]);
+
+  // Sticky sub-nav states
+  const [showSubNav, setShowSubNav] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
 
   useEffect(() => {
     const fetchColleges = async () => {
@@ -56,6 +60,62 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
     fetchColleges();
     fetchInstituteCourses();
   }, []);
+
+  // IntersectionObserver for sticky sub-nav visibility and active section highlighting
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-64px 0px 0px 0px',
+      threshold: 0.1
+    };
+
+    // Hero observer: toggles sub-nav visibility
+    const heroObserver = new IntersectionObserver(([entry]) => {
+      setShowSubNav(!entry.isIntersecting);
+    }, { ...observerOptions, threshold: 0 });
+
+    const heroEl = document.getElementById('hero');
+    if (heroEl) heroObserver.observe(heroEl);
+
+    // Section observer: highlights current link
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '-30% 0px -60% 0px'
+    });
+
+    const sections = ['hero', 'search', 'universities', 'courses', 'programs', 'contact'];
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) sectionObserver.observe(el);
+    });
+
+    return () => {
+      if (heroEl) heroObserver.unobserve(heroEl);
+      sections.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) sectionObserver.unobserve(el);
+      });
+    };
+  }, [instituteCourses, colleges]);
+
+  const handleScrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const headerOffset = 120; // combined height of header and sub-nav
+      const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleInquire = (id) => {
     setPreselectedCollegeId(id);
@@ -136,8 +196,37 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         <div className="absolute bottom-[-20%] left-[20%] w-[50%] h-[70%] rounded-full bg-purple-400/20 mix-blend-multiply filter blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
+      {/* Sticky Sub-Navigation Bar */}
+      {showSubNav && (
+        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm py-3 px-6 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 hidden sm:inline-block">Quick Navigation</span>
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0 w-full sm:w-auto whitespace-nowrap">
+              {[
+                { id: 'universities', label: 'Universities' },
+                { id: 'courses', label: 'Courses' },
+                ...(instituteCourses.length > 0 ? [{ id: 'programs', label: 'Programs' }] : []),
+                { id: 'contact', label: 'Get Help' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleScrollTo(item.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border-none bg-transparent cursor-pointer ${
+                    activeSection === item.id
+                      ? 'text-[#1E40FF] bg-[#EEF2FF]'
+                      : 'text-slate-500 hover:text-slate-955 hover:bg-slate-100'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. HERO SECTION */}
-      <section className="relative z-10 max-w-[1800px] mx-auto px-6 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center min-h-[90vh]">
+      <section id="hero" className="relative z-10 max-w-[1800px] mx-auto px-6 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center min-h-[90vh]">
         <div className="lg:col-span-7 flex flex-col items-start relative">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-700">Welcome to ICTE Hub</span>
@@ -211,7 +300,8 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
         </div>
       </section>
 
-      <section className="relative z-20 -mt-10 max-w-5xl mx-auto px-6">
+      {/* 2. SMART SEARCH */}
+      <section id="search" className="relative z-20 -mt-10 max-w-5xl mx-auto px-6">
         <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl relative">
           {/* Background Decorative Wrapper (clips blur and grid to card boundaries) */}
           <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
@@ -301,7 +391,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       </section>
 
       {/* 3. FEATURED UNIVERSITIES */}
-      <section className="max-w-[1800px] mx-auto px-6 py-24 lg:py-32">
+      <section id="universities" className="max-w-[1800px] mx-auto px-6 py-24 lg:py-32">
         <div className="flex flex-col sm:flex-row justify-between items-end mb-12 gap-6">
           <div>
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-500 mb-2 block">Curated Choices</span>
@@ -335,7 +425,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       </section>
 
       {/* 4. BROWSE BY COURSE */}
-      <section className="bg-white py-24 px-6 border-y border-slate-100 relative overflow-hidden">
+      <section id="courses" className="bg-white py-24 px-6 border-y border-slate-100 relative overflow-hidden">
         <div className="max-w-[1800px] mx-auto relative z-10">
           <div className="text-center mb-16">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-500 mb-2 block">Filter Academics</span>
@@ -366,7 +456,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
 
       {/* Degree Programs Section */}
       {instituteCourses.length > 0 && (
-        <section className="max-w-[1800px] mx-auto px-6 py-24 lg:py-32">
+        <section id="programs" className="max-w-[1800px] mx-auto px-6 py-24 lg:py-32">
           <div className="text-center mb-16">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-500 mb-2 block">Direct Enrollment</span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Our Own Degree Programs</h2>
@@ -411,7 +501,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       )}
 
       {/* 5. INLINE CTA SECTION */}
-      <section className="bg-slate-900 text-white py-24 px-6 relative overflow-hidden">
+      <section id="contact" className="bg-slate-900 text-white py-24 px-6 relative overflow-hidden">
         {/* Repeating Dot Grid Background */}
         <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-screen z-0">
           <svg width="100%" height="100%">
