@@ -66,11 +66,20 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
     }
 
     try {
+      let recaptchaToken = '';
+      if (window.grecaptcha) {
+        try {
+          recaptchaToken = await window.grecaptcha.execute('6Ldf9TktAAAAAEmWTmgcqkxtb-RSj0EZWCGAPo-Y', { action: 'submit' });
+        } catch (reErr) {
+          console.error('reCAPTCHA execution error:', reErr);
+        }
+      }
+
       const source = getLeadSource();
       const response = await fetch('https://ictehub.onrender.com/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source }),
+        body: JSON.stringify({ ...formData, source, recaptcha_token: recaptchaToken }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to submit inquiry.');

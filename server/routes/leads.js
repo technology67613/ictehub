@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const verifyRecaptcha = require('../utils/verifyRecaptcha');
 
 const leadsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -27,7 +28,13 @@ const checkLimiter = rateLimit({
 router.post('/', leadsLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { name, phone, email, interested_college_ids, session_id, source } = req.body;
+    const { name, phone, email, interested_college_ids, session_id, source, recaptcha_token } = req.body;
+
+    // Verify reCAPTCHA
+    const isHuman = await verifyRecaptcha(recaptcha_token);
+    if (!isHuman) {
+      return res.status(400).json({ message: 'Verification failed, please try again.' });
+    }
 
     if (!name || !phone) {
       return res.status(400).json({ message: 'Name and phone are required fields.' });
@@ -67,7 +74,13 @@ router.post('/', leadsLimiter, async (req, res) => {
 router.get('/check', checkLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { phone, name } = req.query;
+    const { phone, name, recaptcha_token } = req.query;
+
+    // Verify reCAPTCHA
+    const isHuman = await verifyRecaptcha(recaptcha_token);
+    if (!isHuman) {
+      return res.status(400).json({ message: 'Verification failed, please try again.' });
+    }
 
     if (!phone || !name) {
       return res.status(400).json({ message: 'Phone number and name are required.' });
