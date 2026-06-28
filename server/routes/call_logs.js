@@ -82,7 +82,7 @@ router.get('/:leadId', protect, async (req, res) => {
     }
 
     const isAdmin = req.user.role === 'admin';
-    const isAssigned = req.user.role === 'telecaller' && leadData.assigned_telecaller_id === req.user.id;
+    const isAssigned = leadData.assigned_telecaller_id === req.user.id;
 
     if (!isAdmin && !isAssigned) {
       return res.status(403).json({ message: 'Not authorized to view call logs for this lead.' });

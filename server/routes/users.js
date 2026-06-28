@@ -138,15 +138,30 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     const supabase = req.app.get('supabase');
     const { id } = req.params;
 
-    // Check user exists
+    // Check user exists and get their role/active status
     const { data: user, error: checkError } = await supabase
       .from('users')
-      .select('id')
+      .select('id, role, is_active')
       .eq('id', id)
       .single();
 
     if (checkError || !user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Safeguard: Check if this is the last remaining admin account
+    if (user.role === 'admin' && user.is_active === true) {
+      const { count, error: countError } = await supabase
+        .from('users')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin')
+        .eq('is_active', true);
+
+      if (countError) throw countError;
+
+      if (count <= 1) {
+        return res.status(400).json({ message: 'Cannot delete the last remaining active admin account.' });
+      }
     }
 
     // Delete user from Supabase. FKey constraint ON DELETE SET NULL on leads.assigned_telecaller_id

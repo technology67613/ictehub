@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { createClient } = require('@supabase/supabase-js');
 
 const authRoutes = require('./routes/auth');
@@ -29,6 +30,7 @@ const supabase = createClient(
 app.set('supabase', supabase);
 
 // Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 

@@ -11,6 +11,14 @@ const leadsLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const checkLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many lookup requests. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * @route   POST /leads
  * @desc    Submit a new lead inquiry (Public)
@@ -56,7 +64,7 @@ router.post('/', leadsLimiter, async (req, res) => {
  * @desc    Check lead inquiry status by phone number (Public)
  * @access  Public
  */
-router.get('/check', leadsLimiter, async (req, res) => {
+router.get('/check', checkLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { phone } = req.query;
@@ -66,6 +74,10 @@ router.get('/check', leadsLimiter, async (req, res) => {
     }
 
     const cleanedPhone = phone.trim();
+
+    if (!/^\d{10}$/.test(cleanedPhone)) {
+      return res.status(400).json({ message: 'Invalid phone number. Must be exactly 10 digits.' });
+    }
 
     // Fetch leads matching the phone number
     const { data: leads, error: leadsError } = await supabase
