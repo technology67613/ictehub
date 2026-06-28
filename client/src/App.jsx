@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Flame } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CollegeBrowse from './components/CollegeBrowse';
 import AuthPage from './components/AuthPage';
@@ -20,6 +19,7 @@ import PartnerWithUs from './components/PartnerWithUs';
 import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import IcteLogo from './components/IcteLogo';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './components/AdminLayout';
 
 function App() {
   const navigate = useNavigate();
@@ -115,6 +115,7 @@ function App() {
   };
 
   const isLoginPage = location.pathname === '/login';
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   const handleLogoClick = () => {
     if (user) {
@@ -126,7 +127,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-600">
-      {!isLoginPage && (
+      {!isLoginPage && !isAdminPage && (
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
             <div
@@ -181,81 +182,6 @@ function App() {
                 </>
               ) : (
                 <>
-                  {user.role === 'admin' && (
-                    <>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin')}
-                      >
-                        Leads
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin/colleges'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/colleges')}
-                      >
-                        Manage Colleges
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin/institute-courses'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/institute-courses')}
-                      >
-                        Institute Courses
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin/team'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/team')}
-                      >
-                        Team
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin/commissions'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/commissions')}
-                      >
-                        Commissions
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                          location.pathname === '/admin/partner-inquiries'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/partner-inquiries')}
-                      >
-                        Partner Inquiries
-                      </button>
-                      <button
-                        className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center gap-1 border-none bg-transparent ${
-                          location.pathname === '/admin/hot-leads'
-                            ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                        onClick={() => navigate('/admin/hot-leads')}
-                      >
-                        <Flame size={13} className="text-amber-500 animate-pulse" />
-                        Hot Leads
-                      </button>
-                    </>
-                  )}
                   {user.role === 'telecaller' && (
                     <button
                       className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
@@ -352,42 +278,20 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Admin Protected Routes */}
-          <Route path="/admin" element={
+          {/* Admin Protected Routes with Left Sidebar Layout */}
+          <Route element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLeads token={token} />
+              <AdminLayout user={user} handleLogout={handleLogout} />
             </ProtectedRoute>
-          } />
-          <Route path="/admin/colleges" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminColleges token={token} />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/institute-courses" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminInstituteCourses token={token} />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/team" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminUsers token={token} />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/commissions" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminCommissions token={token} />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/hot-leads" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminHotLeads token={token} />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/partner-inquiries" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminPartnerInquiries token={token} />
-            </ProtectedRoute>
-          } />
+          }>
+            <Route path="/admin" element={<AdminLeads token={token} />} />
+            <Route path="/admin/colleges" element={<AdminColleges token={token} />} />
+            <Route path="/admin/institute-courses" element={<AdminInstituteCourses token={token} />} />
+            <Route path="/admin/team" element={<AdminUsers token={token} />} />
+            <Route path="/admin/commissions" element={<AdminCommissions token={token} />} />
+            <Route path="/admin/hot-leads" element={<AdminHotLeads token={token} />} />
+            <Route path="/admin/partner-inquiries" element={<AdminPartnerInquiries token={token} />} />
+          </Route>
 
           {/* Telecaller Protected Routes */}
           <Route path="/telecaller" element={
