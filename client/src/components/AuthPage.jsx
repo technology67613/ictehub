@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { Loader2, Lock, Mail, User as UserIcon, Shield } from 'lucide-react';
+import { Loader2, Lock, Mail, Shield } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 
 const AuthPage = ({ onAuthSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
-    role: 'telecaller',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,18 +17,6 @@ const AuthPage = ({ onAuthSuccess }) => {
       [e.target.name]: e.target.value,
     });
     setError('');
-  };
-
-  const handleToggle = (mode) => {
-    setIsLogin(mode === 'login');
-    setError('');
-    setSuccess('');
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      role: 'telecaller',
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -46,29 +31,16 @@ const AuthPage = ({ onAuthSuccess }) => {
       return;
     }
 
-    if (!isLogin && !formData.name) {
-      setError('Please provide your name.');
-      setIsLoading(false);
-      return;
-    }
-
-    const endpoint = isLogin ? '/auth/login' : '/auth/signup';
-    const payload = isLogin
-      ? { email: formData.email, password: formData.password }
-      : {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        };
-
     try {
-      const response = await fetch(`https://ictehub.onrender.com${endpoint}`, {
+      const response = await fetch('https://ictehub.onrender.com/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
@@ -82,7 +54,7 @@ const AuthPage = ({ onAuthSuccess }) => {
         localStorage.setItem('user', JSON.stringify(data.user));
       }
 
-      setSuccess(isLogin ? 'Login successful!' : 'Registration successful!');
+      setSuccess('Login successful!');
       if (onAuthSuccess) {
         onAuthSuccess(data.user, data.token);
       }
@@ -113,34 +85,8 @@ const AuthPage = ({ onAuthSuccess }) => {
               <IcteLogo size={56} withText />
             </div>
             <p className="text-sm text-slate-500 font-medium">
-              {isLogin ? 'Welcome back! Please sign in to continue.' : 'Create your workspace account.'}
+              Welcome back! Please sign in to continue.
             </p>
-          </div>
-
-          {/* Toggle Switch */}
-          <div className="bg-slate-100/50 p-1 rounded-xl flex items-center mb-8 border border-slate-200/50">
-            <button
-              type="button"
-              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ${
-                isLogin
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-              onClick={() => handleToggle('login')}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ${
-                !isLogin
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-              onClick={() => handleToggle('signup')}
-            >
-              Signup
-            </button>
           </div>
 
           {error && (
@@ -155,28 +101,6 @@ const AuthPage = ({ onAuthSuccess }) => {
           )}
 
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-            {!isLogin && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 ml-1">
-                  Full Name
-                </label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                    <UserIcon size={16} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" style={{ width: '16px', height: '16px' }} />
-                  </div>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="John Doe"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200/60 bg-white/50 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all font-medium text-sm shadow-sm"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required={!isLogin}
-                  />
-                </div>
-              </div>
-            )}
-
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 ml-1">
                 Email Address
@@ -217,8 +141,6 @@ const AuthPage = ({ onAuthSuccess }) => {
               </div>
             </div>
 
-
-
             <button
               type="submit"
               className="relative w-full mt-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 overflow-hidden group"
@@ -228,7 +150,7 @@ const AuthPage = ({ onAuthSuccess }) => {
               {isLoading ? (
                 <><Loader2 size={16} className="animate-spin shrink-0" style={{ width: '16px', height: '16px' }} /> Processing...</>
               ) : (
-                isLogin ? 'Sign In Securely' : 'Create Account'
+                'Sign In Securely'
               )}
             </button>
           </form>
