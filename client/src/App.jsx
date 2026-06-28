@@ -20,6 +20,7 @@ import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import IcteLogo from './components/IcteLogo';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
+import { Menu, X } from 'lucide-react';
 
 function App() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ function App() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMode, setActiveMode] = useState('All');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
@@ -136,7 +138,9 @@ function App() {
             >
               <IcteLogo size={36} withText className="group-hover:opacity-90 transition-opacity" />
             </div>
-            <nav className="flex gap-1 h-full items-center">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex gap-1 h-full items-center">
               {!user ? (
                 <>
                   <button
@@ -221,7 +225,87 @@ function App() {
                 </>
               )}
             </nav>
+
+            {/* Mobile Hamburger Button */}
+            <div className="flex md:hidden items-center">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
+                title="Toggle Menu"
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Navigation Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden bg-white border-t border-slate-200/80 px-4 py-4 flex flex-col gap-2.5 animate-in slide-in-from-top duration-200 shadow-lg">
+              {!user ? (
+                <>
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+                  >
+                    Home
+                  </button>
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/colleges' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
+                  >
+                    Colleges
+                  </button>
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/check-status' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-55 hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
+                  >
+                    Check Status
+                  </button>
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/login' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                  >
+                    Login
+                  </button>
+                </>
+              ) : (
+                <>
+                  {user.role === 'telecaller' && (
+                    <button
+                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                        location.pathname === '/telecaller' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      }`}
+                      onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
+                    >
+                      My Leads
+                    </button>
+                  )}
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                  >
+                    Profile
+                  </button>
+                  <button
+                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left text-red-500 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer"
+                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </header>
       )}
 
