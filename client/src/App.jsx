@@ -130,7 +130,8 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-600">
       {!isLoginPage && !isAdminPage && (
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
+        <>
+          <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
             <div
               className="flex items-center gap-2 cursor-pointer group"
@@ -237,107 +238,108 @@ function App() {
               </button>
             </div>
           </div>
-
-          {/* Backdrop for Mobile Sidebar Drawer */}
-          {mobileMenuOpen && (
-            <div
-              className="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-          )}
-
-          {/* Mobile Slide-in Drawer */}
-          <aside
-            className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-300 ease-in-out ${
-              mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-            } h-full p-6 shadow-2xl`}
-          >
-            {/* Header: Logo + Close Button */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 shrink-0">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-              >
-                <IcteLogo size={32} withText />
-              </div>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors border-none bg-transparent cursor-pointer"
-                title="Close Menu"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Nav links stacked vertically */}
-            <nav className="flex flex-col gap-4 overflow-y-auto">
-              {!user ? (
-                <>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-                  >
-                    Home
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/colleges' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
-                  >
-                    Colleges
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/check-status' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
-                  >
-                    Check Status
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/login' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
-                  >
-                    Login
-                  </button>
-                </>
-              ) : (
-                <>
-                  {user.role === 'telecaller' && (
-                    <button
-                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                        location.pathname === '/telecaller' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                      }`}
-                      onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
-                    >
-                      My Leads
-                    </button>
-                  )}
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/profile' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left text-red-500 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer"
-                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
-            </nav>
-          </aside>
         </header>
-      )}
+
+        {/* Backdrop for Mobile Sidebar Drawer */}
+        {mobileMenuOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Mobile Slide-in Drawer */}
+        <aside
+          className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } h-full p-6 shadow-2xl`}
+        >
+          {/* Header: Logo + Close Button */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 shrink-0">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+            >
+              <IcteLogo size={32} withText />
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors border-none bg-transparent cursor-pointer"
+              title="Close Menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Nav links stacked vertically */}
+          <nav className="flex flex-col gap-4 overflow-y-auto">
+            {!user ? (
+              <>
+                <button
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                    location.pathname === '/' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-55'
+                  }`}
+                  onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+                >
+                  Home
+                </button>
+                <button
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                    location.pathname === '/colleges' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                  }`}
+                  onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
+                >
+                  Colleges
+                </button>
+                <button
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                    location.pathname === '/check-status' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                  }`}
+                  onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
+                >
+                  Check Status
+                </button>
+                <button
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                    location.pathname === '/login' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                  }`}
+                  onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                >
+                  Login
+                </button>
+              </>
+            ) : (
+              <>
+                {user.role === 'telecaller' && (
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/telecaller' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
+                  >
+                    My Leads
+                  </button>
+                )}
+                <button
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                    location.pathname === '/profile' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                  }`}
+                  onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                >
+                  Profile
+                </button>
+                <button
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left text-red-500 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer"
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </nav>
+        </aside>
+      </>
+    )}
 
       <main>
         <Routes>
