@@ -238,73 +238,122 @@ function App() {
             </div>
           </div>
 
-          {/* Mobile Navigation Dropdown */}
+          {/* Mobile Navigation Drawer Sidebar */}
           {mobileMenuOpen && (
-            <div className="md:hidden bg-white border-t border-slate-200/80 px-4 py-4 flex flex-col gap-2.5 animate-in slide-in-from-top duration-200 shadow-lg">
-              {!user ? (
-                <>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-                  >
-                    Home
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/colleges' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
-                  >
-                    Colleges
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/check-status' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-55 hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
-                  >
-                    Check Status
-                  </button>
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/login' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
-                  >
-                    Login
-                  </button>
-                </>
-              ) : (
-                <>
-                  {user.role === 'telecaller' && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 transition-opacity animate-in fade-in"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+
+              {/* Sidebar Drawer */}
+              <div className="fixed right-0 top-0 h-full w-64 bg-white z-50 shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-right duration-300">
+                <div className="flex flex-col gap-6">
+                  {/* Drawer Header */}
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <IcteLogo size={28} withText />
                     <button
-                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                        location.pathname === '/telecaller' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
-                      }`}
-                      onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors border-none bg-transparent cursor-pointer"
+                      title="Close Menu"
                     >
-                      My Leads
+                      <X size={18} />
                     </button>
-                  )}
-                  <button
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
-                    }`}
-                    onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left text-red-500 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer"
-                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
-            </div>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <div className="flex flex-col gap-2">
+                    {!user ? (
+                      <>
+                        <button
+                          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                            location.pathname === '/' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                          onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+                        >
+                          Home
+                        </button>
+                        <button
+                          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                            location.pathname === '/colleges' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                          onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
+                        >
+                          Colleges
+                        </button>
+                        <button
+                          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                            location.pathname === '/check-status' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                          onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
+                        >
+                          Check Status
+                        </button>
+                        <button
+                          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                            location.pathname === '/login' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                          onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                        >
+                          Login
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {user.role === 'telecaller' && (
+                          <button
+                            className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                              location.pathname === '/telecaller' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                            }`}
+                            onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
+                          >
+                            My Leads
+                          </button>
+                        )}
+                        <button
+                          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                            location.pathname === '/profile' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                          onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                        >
+                          Profile
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer Actions (Only shown if user is logged in) */}
+                {user && (
+                  <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
+                    <div className="flex items-center gap-2.5 px-2">
+                      {user.profile_picture_url ? (
+                        <img
+                          src={user.profile_picture_url}
+                          alt=""
+                          className="w-8 h-8 rounded-full object-cover bg-slate-50 border border-slate-200 shadow-sm shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#1E40FF] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                          {(user.name || user.email).slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-800 truncate">{user.name || 'User'}</p>
+                        <p className="text-[10px] text-slate-400 font-medium truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left text-red-500 hover:bg-red-50 transition-all border-none bg-transparent cursor-pointer flex items-center justify-center gap-2"
+                      onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </header>
       )}
