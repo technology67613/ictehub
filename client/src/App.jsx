@@ -241,16 +241,16 @@ function App() {
           {/* Backdrop for Mobile Sidebar Drawer */}
           {mobileMenuOpen && (
             <div
-              className="md:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 transition-opacity duration-300"
+              className="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
               onClick={() => setMobileMenuOpen(false)}
             />
           )}
 
           {/* Mobile Slide-in Drawer */}
           <aside
-            className={`md:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-300 ease-in-out ${
+            className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-300 ease-in-out ${
               mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-            } h-full p-5 shadow-2xl`}
+            } h-full p-6 shadow-2xl`}
           >
             {/* Header: Logo + Close Button */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 shrink-0">
@@ -270,12 +270,12 @@ function App() {
             </div>
 
             {/* Nav links stacked vertically */}
-            <nav className="flex flex-col gap-2.5 overflow-y-auto">
+            <nav className="flex flex-col gap-4 overflow-y-auto">
               {!user ? (
                 <>
                   <button
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      location.pathname === '/' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                     }`}
                     onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
                   >
@@ -283,7 +283,7 @@ function App() {
                   </button>
                   <button
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/colleges' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      location.pathname === '/colleges' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                     }`}
                     onClick={() => { navigate('/colleges'); setMobileMenuOpen(false); }}
                   >
@@ -291,7 +291,7 @@ function App() {
                   </button>
                   <button
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/check-status' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      location.pathname === '/check-status' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                     }`}
                     onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
                   >
@@ -299,7 +299,7 @@ function App() {
                   </button>
                   <button
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/login' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      location.pathname === '/login' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                     }`}
                     onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
                   >
@@ -311,7 +311,7 @@ function App() {
                   {user.role === 'telecaller' && (
                     <button
                       className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                        location.pathname === '/telecaller' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                        location.pathname === '/telecaller' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                       }`}
                       onClick={() => { navigate('/telecaller'); setMobileMenuOpen(false); }}
                     >
@@ -320,7 +320,7 @@ function App() {
                   )}
                   <button
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                      location.pathname === '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:bg-slate-50'
+                      location.pathname === '/profile' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                     }`}
                     onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
                   >
