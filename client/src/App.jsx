@@ -17,6 +17,7 @@ import TermsOfService from './components/TermsOfService';
 import Disclaimer from './components/Disclaimer';
 import PartnerWithUs from './components/PartnerWithUs';
 import AdminPartnerInquiries from './components/AdminPartnerInquiries';
+import AdminInstituteLeads from './components/AdminInstituteLeads';
 import IcteLogo from './components/IcteLogo';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
@@ -401,6 +402,7 @@ function App() {
             </ProtectedRoute>
           }>
             <Route path="/admin" element={<AdminLeads token={token} />} />
+            <Route path="/admin/institute-leads" element={<AdminInstituteLeads token={token} />} />
             <Route path="/admin/colleges" element={<AdminColleges token={token} />} />
             <Route path="/admin/institute-courses" element={<AdminInstituteCourses token={token} />} />
             <Route path="/admin/team" element={<AdminUsers token={token} />} />

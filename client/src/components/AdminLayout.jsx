@@ -22,6 +22,7 @@ const AdminLayout = ({ user, handleLogout }) => {
 
   const navItems = [
     { name: 'Leads', path: '/admin', icon: Users, exact: true },
+    { name: 'Institute Leads', path: '/admin/institute-leads', icon: Users },
     { name: 'Colleges', path: '/admin/colleges', icon: Building2 },
     { name: 'Institute Courses', path: '/admin/institute-courses', icon: GraduationCap },
     { name: 'Team', path: '/admin/team', icon: UserCog },

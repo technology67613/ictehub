@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import CollegeCard from './CollegeCard';
 import InquiryForm from './InquiryForm';
+import InstituteInquiryForm from './InstituteInquiryForm';
 import Footer from './Footer';
 import { getLeadSource } from '../utils/tracking';
 
@@ -12,6 +13,9 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [colleges, setColleges] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [preselectedCollegeId, setPreselectedCollegeId] = useState(null);
+  
+  const [isInstModalOpen, setIsInstModalOpen] = useState(false);
+  const [preselectedCourseId, setPreselectedCourseId] = useState(null);
 
   const [totalCount, setTotalCount] = useState(0);
   const [searchVal, setSearchVal] = useState('');
@@ -488,7 +492,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                     </span>
                   </div>
                   <button
-                    onClick={() => { setPreselectedCollegeId(null); setIsModalOpen(true); }}
+                    onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
                     className="px-5 py-2.5 bg-slate-900 hover:bg-[#1E40FF] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors outline-none"
                   >
                     Enroll Now
@@ -617,6 +621,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
 
       <Footer setView={setView} />
       <InquiryForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} preselectedCollegeId={preselectedCollegeId} setView={setView} />
+      <InstituteInquiryForm isOpen={isInstModalOpen} onClose={() => setIsInstModalOpen(false)} preselectedCourseId={preselectedCourseId} setView={setView} />
     </div>
   );
 };
