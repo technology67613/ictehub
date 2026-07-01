@@ -549,8 +549,13 @@ export default function AdminLeads({ token }) {
                       <div className="flex flex-col gap-1 items-start">
                         <span className="md:hidden text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Assigned Telecaller</span>
                         {assignedTC ? (
-                          <span className="text-[#1E40FF] bg-[#EEF2FF] px-2.5 py-1 rounded-lg border border-[#1E40FF]/15 inline-block text-xs font-semibold">
+                          <span className="text-[#1E40FF] bg-[#EEF2FF] px-2.5 py-1.5 rounded-lg border border-[#1E40FF]/15 inline-flex items-center gap-1.5 text-xs font-semibold">
                             {assignedName}
+                            {lead.auto_assigned && (
+                              <span className="bg-[#1E40FF] text-white text-[8px] font-extrabold uppercase px-1 py-0.5 rounded leading-none shrink-0">
+                                Auto
+                              </span>
+                            )}
                           </span>
                         ) : (
                           <span className="text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 inline-block text-xs font-semibold">

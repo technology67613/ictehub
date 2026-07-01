@@ -225,6 +225,20 @@ function ActivityDrawer({ user, token, onClose }) {
     .slice(0, 2)
     .toUpperCase();
 
+  const workloadScore = useMemo(() => {
+    if (!activity?.leads) return 0;
+    const weights = {
+      'new': 1,
+      'contacted': 2,
+      'interested': 3,
+      'not-interested': 0,
+      'enrolled-college': 0,
+      'enrolled-institute': 0,
+      'enrolled': 0
+    };
+    return activity.leads.reduce((sum, lead) => sum + (weights[lead.status] || 0), 0);
+  }, [activity?.leads]);
+
   return (
     <>
       <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40" onClick={onClose} />
@@ -260,6 +274,19 @@ function ActivityDrawer({ user, token, onClose }) {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+
+            {/* Workload Score Metric */}
+            {user.role === 'telecaller' && (
+              <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50/50 border border-indigo-100/50 rounded-2xl flex items-center justify-between shadow-sm">
+                <div>
+                  <div className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-widest">Weighted Workload</div>
+                  <div className="text-xs text-slate-500 font-semibold mt-0.5">New = 1, Contacted = 2, Interested = 3</div>
+                </div>
+                <div className="bg-indigo-600 text-white font-black px-4 py-2 rounded-xl text-lg shadow-md shadow-indigo-600/10 shrink-0">
+                  {workloadScore} pts
+                </div>
+              </div>
+            )}
             
             {/* Assigned Leads */}
             <div className="space-y-3">

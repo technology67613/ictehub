@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const autoAssignTelecaller = require('../utils/autoAssignTelecaller');
 
 const leadsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -44,7 +45,17 @@ router.post('/', leadsLimiter, async (req, res) => {
       throw error;
     }
 
-    return res.status(201).json(newLead[0]);
+    // Auto assign telecaller
+    await autoAssignTelecaller(supabase, newLead[0].id, true);
+
+    // Fetch the lead again to return the updated record (with assigned_telecaller_id and auto_assigned fields populated)
+    const { data: assignedLead } = await supabase
+      .from('institute_leads')
+      .select('*, institute_courses(name)')
+      .eq('id', newLead[0].id)
+      .single();
+
+    return res.status(201).json(assignedLead || newLead[0]);
   } catch (error) {
     console.error('Error creating institute lead:', error);
     return res.status(500).json({ message: 'Server error creating institute lead', error: error.message });
@@ -126,6 +137,7 @@ router.put('/:id', protect, async (req, res) => {
         return res.status(403).json({ message: 'Only admins can assign telecallers.' });
       }
       updateData.assigned_telecaller_id = assigned_telecaller_id || null;
+      updateData.auto_assigned = false;
     }
 
     const { data: updatedLead, error: updateError } = await supabase

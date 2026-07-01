@@ -199,6 +199,21 @@ router.get('/:id/activity', protect, authorize('admin'), async (req, res) => {
 
     if (leadsError) throw leadsError;
 
+    // Fetch assigned institute leads
+    const { data: instLeads, error: instLeadsError } = await supabase
+      .from('institute_leads')
+      .select('id, name, status, created_at')
+      .eq('assigned_telecaller_id', id)
+      .order('created_at', { ascending: false });
+
+    const safeInstLeads = instLeads || [];
+
+    // Combine and sort leads
+    const combinedLeads = [
+      ...(leads || []).map(l => ({ ...l, type: 'college' })),
+      ...safeInstLeads.map(l => ({ ...l, type: 'institute' }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     // Fetch call history logs
     const { data: callLogs, error: logsError } = await supabase
       .from('call_logs')
@@ -209,7 +224,7 @@ router.get('/:id/activity', protect, authorize('admin'), async (req, res) => {
     if (logsError) throw logsError;
 
     return res.json({
-      leads: leads || [],
+      leads: combinedLeads,
       callLogs: (callLogs || []).map(log => ({
         id: log.id,
         outcome: log.outcome,
