@@ -2,7 +2,7 @@ import React from 'react';
 import { Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer({ setView }) {
-  const id = "icte-grad-footer";
+  const id = "buddha-college-footer";
 
   return (
     <footer className="w-full bg-[#0A0A0A] border-t border-slate-900 py-16 px-6 sm:px-10 text-slate-400 font-sans z-10 relative">
@@ -15,7 +15,7 @@ export default function Footer({ setView }) {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setView && setView('home')}>
               <div className="bg-white px-3.5 py-2 rounded-xl inline-flex items-center shadow-inner">
-                <img src="/logo.png" className="h-8 w-auto object-contain" alt="ICTE Logo" />
+                <img src="/main-logo.jpeg" className="h-8 w-auto object-contain" alt="Buddha College of Nursing Logo" />
               </div>
             </div>
             <p className="text-sm font-semibold text-slate-500 max-w-sm">
@@ -92,7 +92,7 @@ export default function Footer({ setView }) {
           </div>
           <div className="flex items-center gap-2">
             <Mail size={14} className="text-[#1E40FF]" />
-            <span>info@ictehub.com</span>
+            <span>info@budhhacollegeofnursingtamolia.com</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin size={14} className="text-[#1E40FF]" />
@@ -102,7 +102,7 @@ export default function Footer({ setView }) {
 
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-          <span>© {new Date().getFullYear()} ICTE Hub. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Buddha College of Nursing. All rights reserved.</span>
           <span>Built with care in India</span>
         </div>
 

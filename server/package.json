@@ -1,7 +1,7 @@
 {
-  "name": "ictehub-server",
+  "name": "Buddha College of Nursing - Server",
   "version": "1.0.0",
-  "description": "Express backend for ictehub",
+  "description": "Express backend for Buddha College of Nursing",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
