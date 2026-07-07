@@ -63,7 +63,7 @@ export default function PartnerWithUs({ setView }) {
           </span>
           <h1 className="text-3xl font-extrabold text-slate-900 leading-tight">Partner With Us</h1>
           <p className="text-sm font-semibold text-slate-500 max-w-md mx-auto">
-            List your university or college on ICTE Hub and connect with qualified prospective students.
+            List your university or college on Buddha College of Nursing and connect with qualified prospective students.
           </p>
         </div>
 

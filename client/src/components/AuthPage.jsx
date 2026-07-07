@@ -159,7 +159,7 @@ const AuthPage = ({ onAuthSuccess }) => {
         
         {/* Footer Text */}
         <p className="text-center text-xs font-semibold text-slate-500 mt-8 opacity-70">
-          Powered by ictEHub Education Workspace
+          Powered by Buddha College of Nursing Education Workspace
         </p>
       </div>
     </div>

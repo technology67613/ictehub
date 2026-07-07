@@ -78,7 +78,7 @@ function UserFormDrawer({ onClose, onSave, saving }) {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="e.g. rahul@ictehub.com"
+              placeholder="e.g. rahul@Buddha College of Nursing.com"
               className="w-full bg-slate-50 border border-slate-200 focus:border-[#1E40FF]/50 focus:ring-2 focus:ring-[#1E40FF]/15 rounded-lg px-3 py-2.5 text-sm font-semibold outline-none transition-all"
               required
             />

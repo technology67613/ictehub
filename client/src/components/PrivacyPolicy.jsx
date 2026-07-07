@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
 
         <div className="space-y-6 text-sm text-slate-600 font-medium leading-relaxed">
           <p>
-            Welcome to ICTE Hub. We respect your privacy and are committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, use, and share your information when you use our platform.
+            Welcome to Buddha College of Nursing. We respect your privacy and are committed to protecting the personal data you share with us. This Privacy Policy explains how we collect, use, and share your information when you use our platform.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">1. Information We Collect</h2>
@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">3. Sharing with Third-Party Colleges</h2>
           <p>
-            ICTE Hub functions as an educational consultancy. When you express interest in specific universities or courses, we share your basic contact info and preferences with the respective partner institutions so they can follow up with your enrollment query.
+            Buddha College of Nursing functions as an educational consultancy. When you express interest in specific universities or courses, we share your basic contact info and preferences with the respective partner institutions so they can follow up with your enrollment query.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">4. Data Integrity & Safety</h2>

@@ -11,12 +11,12 @@ export default function TermsOfService() {
 
         <div className="space-y-6 text-sm text-slate-600 font-medium leading-relaxed">
           <p>
-            By using the ICTE Hub platform, you agree to comply with and be bound by the following Terms of Service. Please review these terms carefully before submitting inquiries.
+            By using the Buddha College of Nursing platform, you agree to comply with and be bound by the following Terms of Service. Please review these terms carefully before submitting inquiries.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">1. Consultancy & Advisory Role</h2>
           <p>
-            ICTE Hub is an independent guidance platform that connects students with universities and colleges. We do not guarantee admission to any college, and we do not issue official degrees. All degrees, admissions, and tuition collections are directly managed by the respective academic institutions.
+            Buddha College of Nursing is an independent guidance platform that connects students with universities and colleges. We do not guarantee admission to any college, and we do not issue official degrees. All degrees, admissions, and tuition collections are directly managed by the respective academic institutions.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">2. Accurate Information Submission</h2>
@@ -31,7 +31,7 @@ export default function TermsOfService() {
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">4. Intellectual Property</h2>
           <p>
-            All website structure, branding assets, custom widgets, and logo properties displayed on ICTE Hub belong to our team. Logo assets of partner universities are properties of the respective institutions.
+            All website structure, branding assets, custom widgets, and logo properties displayed on Buddha College of Nursing belong to our team. Logo assets of partner universities are properties of the respective institutions.
           </p>
         </div>
       </div>

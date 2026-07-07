@@ -11,17 +11,17 @@ export default function Disclaimer() {
 
         <div className="space-y-6 text-sm text-slate-600 font-medium leading-relaxed">
           <p>
-            The information contained on the ICTE Hub platform is provided for general informational and academic guidance purposes only.
+            The information contained on the Buddha College of Nursing platform is provided for general informational and academic guidance purposes only.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">1. No Affiliation Notice</h2>
           <p>
-            ICTE Hub is an independent educational consultancy platform. We are not directly owned by, officially affiliated with, or run by any of the partner universities or colleges listed in our catalog.
+            Buddha College of Nursing is an independent educational consultancy platform. We are not directly owned by, officially affiliated with, or run by any of the partner universities or colleges listed in our catalog.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">2. Third-Party Information Accuracy</h2>
           <p>
-            While we make every effort to display accurate and current college details (including fees, courses, structure, and location details), all admissions, tuition amounts, policy details, and criteria are governed solely by the respective colleges. ICTE Hub is not liable for any discrepancies or sudden updates in university fees or guidelines.
+            While we make every effort to display accurate and current college details (including fees, courses, structure, and location details), all admissions, tuition amounts, policy details, and criteria are governed solely by the respective colleges. Buddha College of Nursing is not liable for any discrepancies or sudden updates in university fees or guidelines.
           </p>
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">3. External Links</h2>
@@ -31,7 +31,7 @@ export default function Disclaimer() {
 
           <h2 className="text-lg font-extrabold text-slate-800 mt-6">4. Financial Transactions</h2>
           <p>
-            ICTE Hub does not collect tuition fees on behalf of colleges directly from students. All program fees, admission costs, and enrollment bills should be paid directly to the official bank accounts of the chosen universities.
+            Buddha College of Nursing does not collect tuition fees on behalf of colleges directly from students. All program fees, admission costs, and enrollment bills should be paid directly to the official bank accounts of the chosen universities.
           </p>
         </div>
       </div>

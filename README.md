@@ -1,6 +1,6 @@
-# ICTE Hub — University Connection Platform
+# Buddha College of Nursing — University Connection Platform
 
-ICTE Hub is a high-performance web platform designed to connect students with universities and colleges. It is managed by an administrative team that matches student inquiries (leads) with partner institutions and processes admissions. The platform tracks anonymous visitor browsing behaviors to prioritize high-intent leads and supports direct enrollment in internal degree programs when a partner university mismatch occurs.
+Buddha College of Nursing is a high-performance web platform designed to connect students with universities and colleges. It is managed by an administrative team that matches student inquiries (leads) with partner institutions and processes admissions. The platform tracks anonymous visitor browsing behaviors to prioritize high-intent leads and supports direct enrollment in internal degree programs when a partner university mismatch occurs.
 
 ---
 
@@ -26,7 +26,7 @@ ICTE Hub is a high-performance web platform designed to connect students with un
 ## 📂 Project Architecture
 
 ```
-ictehub/
+Buddha College of Nursing/
 ├── client/                 # React Frontend (Vite)
 │   ├── public/             # Static public assets (Favicon, Logo image)
 │   ├── src/

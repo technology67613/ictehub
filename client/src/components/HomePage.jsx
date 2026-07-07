@@ -233,7 +233,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
       <section id="hero" className="relative z-10 max-w-[1800px] mx-auto px-6 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center min-h-[90vh]">
         <div className="lg:col-span-7 flex flex-col items-start relative">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-700">Welcome to ICTE Hub</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-700">Welcome to Buddha College of Nursing</span>
           </div>
           
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">

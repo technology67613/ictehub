@@ -1,4 +1,4 @@
-# ICTEHUB — PROJECT BRIEF (UPDATED)
+# Buddha College of Nursing — PROJECT BRIEF (UPDATED)
 # Paste this entire document at the start of every AI chat session.
 # Last updated: June 2026
 
@@ -6,7 +6,7 @@
 
 ## What this project is
 
-A full-stack MERN-style web platform that connects students with universities/colleges, run by a small team (ICTE Hub) that earns commission from partner colleges when a student enrolls and pays. If a student doesn't want a partner college, they are enrolled in ICTE Hub's own 2-year online degree programs (no commission, internal enrollment). Telecallers call students who show interest and move them through the enrollment process. The platform also tracks anonymous visitor behavior to detect "hot leads" — visitors who browse heavily but haven't submitted an inquiry yet.
+A full-stack MERN-style web platform that connects students with universities/colleges, run by a small team (Buddha College of Nursing) that earns commission from partner colleges when a student enrolls and pays. If a student doesn't want a partner college, they are enrolled in Buddha College of Nursing's own 2-year online degree programs (no commission, internal enrollment). Telecallers call students who show interest and move them through the enrollment process. The platform also tracks anonymous visitor behavior to detect "hot leads" — visitors who browse heavily but haven't submitted an inquiry yet.
 
 ---
 
@@ -18,9 +18,9 @@ A full-stack MERN-style web platform that connects students with universities/co
 - **Auth**: JWT (jsonwebtoken + bcryptjs) — custom implementation, NOT Supabase Auth
 - **File uploads**: multer + Supabase Storage (two public buckets: college-logos, profile-pictures)
 - **Security**: helmet, express-rate-limit
-- **Frontend hosting**: Vercel (ictehub.vercel.app) — auto-deploys from GitHub main branch
-- **Backend hosting**: Render (ictehub.onrender.com) — auto-deploys from GitHub main branch
-- **GitHub repo**: https://github.com/technology67613/ictehub
+- **Frontend hosting**: Vercel (Buddha College of Nursing.vercel.app) — auto-deploys from GitHub main branch
+- **Backend hosting**: Render (Buddha College of Nursing.onrender.com) — auto-deploys from GitHub main branch
+- **GitHub repo**: https://github.com/technology67613/Buddha College of Nursing
 
 ---
 
@@ -40,7 +40,7 @@ A full-stack MERN-style web platform that connects students with universities/co
 ## Project Structure
 
 ```
-ictehub/
+Buddha College of Nursing/
 ├── client/                  (React/Vite frontend)
 │   ├── src/
 │   │   ├── components/
