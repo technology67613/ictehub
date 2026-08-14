@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2, MessageSquare } from 'lucide-react';
 import { linkLeadToSession } from '../utils/tracking';
+import { getCached, setCached } from '../utils/cache';
 
 const InstituteInquiryForm = ({ isOpen, onClose, preselectedCourseId, setView }) => {
   const [courses, setCourses] = useState([]);
@@ -18,10 +19,16 @@ const InstituteInquiryForm = ({ isOpen, onClose, preselectedCourseId, setView })
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        const cachedData = getCached('institute_courses_cache');
+        if (cachedData) {
+          setCourses(cachedData);
+          return;
+        }
         const response = await fetch('https://ictehub.onrender.com/institute-courses');
         if (response.ok) {
           const data = await response.json();
           setCourses(data);
+          setCached('institute_courses_cache', data);
         }
       } catch (err) {
         console.error('Error fetching institute courses:', err);

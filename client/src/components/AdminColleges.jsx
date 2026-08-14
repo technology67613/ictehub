@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 const API = 'https://ictehub.onrender.com';
+import { clearCache } from '../utils/cache';
 
 // ─── Drawer Component ────────────────────────────────────────────────────────
 function CollegeFormDrawer({ college, onClose, onSave, saving }) {
@@ -380,6 +381,7 @@ export default function AdminColleges({ token }) {
         setSavedFlash('new-college');
       }
       
+      clearCache();
       setIsOpen(false);
       setSelectedCollege(null);
       setTimeout(() => setSavedFlash(null), 2500);
@@ -401,6 +403,7 @@ export default function AdminColleges({ token }) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to delete college');
+      clearCache();
       setColleges(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       setError(err.message);

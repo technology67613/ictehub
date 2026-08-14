@@ -6,6 +6,7 @@ import {
   Loader2, Filter, Send, Flame, AlertCircle, TrendingUp,
   Copy, X, Users, BarChart2, Activity
 } from 'lucide-react';
+import { getCached, setCached } from '../utils/cache';
 
 const API = 'https://ictehub.onrender.com';
 
@@ -70,10 +71,17 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        const cachedData = getCached('institute_courses_cache');
+        if (cachedData) {
+          setInstituteCourses(cachedData);
+          return;
+        }
         const res = await fetch('https://ictehub.onrender.com/institute-courses');
         if (res.ok) {
           const data = await res.json();
-          setInstituteCourses(data || []);
+          const courses = data || [];
+          setInstituteCourses(courses);
+          setCached('institute_courses_cache', courses);
         }
       } catch (err) {}
     };
@@ -372,11 +380,19 @@ export default function TelecallerDashboard() {
 
   const fetchColleges = async () => {
     try {
+      const cachedData = getCached('colleges_cache');
+      if (cachedData) {
+        const map = {};
+        cachedData.forEach(c => { map[c.id] = c.name; });
+        setColleges(map);
+        return;
+      }
       const res = await fetch(`${API}/colleges`);
       const data = await res.json();
       const map = {};
       (data || []).forEach(c => { map[c.id] = c.name; });
       setColleges(map);
+      setCached('colleges_cache', data || []);
     } catch (err) {}
   };
 

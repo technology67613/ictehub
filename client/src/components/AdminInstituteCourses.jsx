@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 
 const API = 'https://ictehub.onrender.com';
+import { clearCache } from '../utils/cache';
 
 // ─── Modal/Drawer Component ──────────────────────────────────────────────────
 function CourseFormDrawer({ course, onClose, onSave, saving }) {
@@ -176,6 +177,7 @@ export default function AdminInstituteCourses({ token }) {
         setSavedFlash('new-course');
       }
 
+      clearCache();
       setIsOpen(false);
       setSelectedCourse(null);
       setTimeout(() => setSavedFlash(null), 2500);
@@ -197,6 +199,7 @@ export default function AdminInstituteCourses({ token }) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to delete course');
+      clearCache();
       setCourses(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       setError(err.message);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, RotateCw, Inbox, AlertTriangle, MonitorPlay, MapPin, Grid, Layers, X } from 'lucide-react';
 import { trackModeFilter } from '../utils/tracking';
+import { getCached, setCached } from '../utils/cache';
 import InquiryForm from './InquiryForm';
 import CollegeCard from './CollegeCard';
 import Footer from './Footer';
@@ -13,41 +14,32 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [preselectedCollegeId, setPreselectedCollegeId] = useState(null);
 
-  const fetchAllForStats = async () => {
-    try {
-      const response = await fetch('https://ictehub.onrender.com/colleges');
-      if (response.ok) {
-        const data = await response.json();
+  useEffect(() => {
+    const loadAllColleges = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        let data = getCached('colleges_cache');
+        if (!data) {
+          const response = await fetch('https://ictehub.onrender.com/colleges');
+          if (!response.ok) throw new Error('Failed to fetch colleges');
+          data = await response.json();
+          setCached('colleges_cache', data);
+        }
         setAllColleges(data);
+        
+        if (activeMode && activeMode !== 'All') {
+          setColleges(data.filter((c) => c.mode === activeMode));
+        } else {
+          setColleges(data);
+        }
+      } catch (err) {
+        setError('Could not load colleges. Please try again later.');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Stats loading error:', err);
-    }
-  };
-
-  const fetchColleges = async (mode) => {
-    setLoading(true);
-    setError('');
-    try {
-      let url = 'https://ictehub.onrender.com/colleges';
-      if (mode && mode !== 'All') url += `?mode=${mode}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch colleges');
-      const data = await response.json();
-      setColleges(data);
-    } catch (err) {
-      setError('Could not load colleges. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllForStats();
-  }, []);
-
-  useEffect(() => {
-    fetchColleges(activeMode);
+    };
+    loadAllColleges();
   }, [activeMode]);
 
   const totalCount = allColleges.length;

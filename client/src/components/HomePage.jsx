@@ -8,6 +8,7 @@ import InquiryForm from './InquiryForm';
 import InstituteInquiryForm from './InstituteInquiryForm';
 import Footer from './Footer';
 import { getLeadSource } from '../utils/tracking';
+import { getCached, setCached } from '../utils/cache';
 
 const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   const [colleges, setColleges] = useState([]);
@@ -40,21 +41,35 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
   useEffect(() => {
     const fetchColleges = async () => {
       try {
+        const cachedData = getCached('colleges_cache');
+        if (cachedData) {
+          setColleges(cachedData);
+          setTotalCount(cachedData.length);
+          return;
+        }
         const response = await fetch('https://ictehub.onrender.com/colleges');
         if (response.ok) {
           const data = await response.json();
           setColleges(data);
           setTotalCount(data.length);
+          setCached('colleges_cache', data);
         }
       } catch (err) {}
     };
 
     const fetchInstituteCourses = async () => {
       try {
+        const cachedData = getCached('institute_courses_cache');
+        if (cachedData) {
+          setInstituteCourses(cachedData);
+          return;
+        }
         const res = await fetch('https://ictehub.onrender.com/institute-courses');
         if (res.ok) {
           const data = await res.json();
-          setInstituteCourses(Array.isArray(data) ? data : []);
+          const courses = Array.isArray(data) ? data : [];
+          setInstituteCourses(courses);
+          setCached('institute_courses_cache', courses);
         }
       } catch (e) {
         console.error('Error fetching institute courses:', e);

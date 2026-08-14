@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, AlertCircle, BookOpen, User, Phone, Mail, Loader2 } from 'lucide-react';
 import { linkLeadToSession, getLeadSource } from '../utils/tracking';
+import { getCached, setCached } from '../utils/cache';
 
 const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
   const [colleges, setColleges] = useState([]);
@@ -17,10 +18,16 @@ const InquiryForm = ({ isOpen, onClose, preselectedCollegeId, setView }) => {
   useEffect(() => {
     const fetchColleges = async () => {
       try {
+        const cachedData = getCached('colleges_cache');
+        if (cachedData) {
+          setColleges(cachedData);
+          return;
+        }
         const response = await fetch('https://ictehub.onrender.com/colleges');
         if (response.ok) {
           const data = await response.json();
           setColleges(data);
+          setCached('colleges_cache', data);
         }
       } catch (err) {}
     };
