@@ -545,7 +545,7 @@ export default function AdmissionForm() {
 
     if (stepNumber === 5) {
       if (!formData.guardian_name.trim()) newErrors.guardian_name = 'Guardian Name is required';
-      if (!formData.relationship) newErrors.relationship = 'Relationship is required';
+      if (!formData.guardian_relationship) newErrors.guardian_relationship = 'Relationship is required';
       if (!formData.guardian_mobile.trim() || !/^[6-9]\d{9}$/.test(formData.guardian_mobile.trim())) {
         newErrors.guardian_mobile = 'Valid 10-digit Guardian Mobile is required';
       }
@@ -575,7 +575,9 @@ export default function AdmissionForm() {
   };
 
   const handleNextStep = () => {
-    if (validateStep(currentStep)) {
+    const isValid = validateStep(currentStep);
+    console.log(`Step ${currentStep} validation result:`, isValid, errors);
+    if (isValid) {
       const nextStepNum = currentStep + 1;
       setCurrentStep(nextStepNum);
       saveDraftToLocalStorage(formData, nextStepNum, false);
@@ -786,7 +788,7 @@ export default function AdmissionForm() {
                 <Info size={20} className="text-amber-600" /> What happens next?
               </h4>
               <p className="text-sm font-medium text-amber-800 leading-relaxed">
-                Our counselor will contact you within <strong>24 hours</strong> on your registered mobile number <strong>+91 {formData.primary_mobile}</strong>.
+                Thank you for applying to Buddha College of Nursing. Our counselor will contact you within <strong>24 hours</strong> on your registered mobile number <strong>+91 {formData.primary_mobile}</strong>.
               </p>
             </div>
 
@@ -866,7 +868,7 @@ export default function AdmissionForm() {
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF2FF] text-[#1E40FF] text-[11px] font-extrabold uppercase tracking-wider mb-2">
-              <Building size={14} /> ICTE Hub Admissions Portal
+              <Building size={14} /> Buddha College of Nursing Admissions Portal
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Online Admission Application Form
@@ -1486,7 +1488,7 @@ export default function AdmissionForm() {
 
                   {!hasUrlSource ? (
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-xs font-bold uppercase text-slate-700">How did you hear about ICTE Hub?</label>
+                      <label className="text-xs font-bold uppercase text-slate-700">How did you hear about Buddha College of Nursing?</label>
                       <select value={formData.hear_about_us} onChange={(e) => setFormData(prev => ({ ...prev, hear_about_us: e.target.value }))} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold">
                         <option value="Google Search">Google Search</option>
                         <option value="Social Media">Social Media</option>
@@ -1746,7 +1748,7 @@ export default function AdmissionForm() {
                     className="w-5 h-5 rounded text-[#1E40FF] mt-0.5"
                   />
                   <span className="text-xs font-semibold text-slate-800 leading-relaxed">
-                    I hereby declare that the information provided by me is true, correct and complete to the best of my knowledge. I understand that providing false information may result in cancellation of my application. I authorize ICTE Hub to contact me via phone, SMS and email regarding my admission.
+                    I hereby declare that the information provided by me is true, correct and complete to the best of my knowledge. I understand that providing false information may result in cancellation of my application. I authorize Buddha College of Nursing to contact me via phone, SMS and email regarding my admission.
                   </span>
                 </label>
                 {errors.declaration_accepted && <p className="text-xs text-red-600 font-extrabold pl-8">{errors.declaration_accepted}</p>}
