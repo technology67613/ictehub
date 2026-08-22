@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
+  FileText,
   Users,
   Building2,
   GraduationCap,
@@ -21,6 +22,7 @@ const AdminLayout = ({ user, handleLogout }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navItems = [
+    { name: 'Admissions', path: '/admin/admissions', icon: FileText },
     { name: 'Leads', path: '/admin', icon: Users, exact: true },
     { name: 'Institute Leads', path: '/admin/institute-leads', icon: Users },
     { name: 'Colleges', path: '/admin/colleges', icon: Building2 },
@@ -48,7 +50,7 @@ const AdminLayout = ({ user, handleLogout }) => {
       
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200 sticky top-0 z-30 w-full">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin')}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin/admissions')}>
           <IcteLogo size={32} withText />
           <span className="text-[10px] bg-indigo-50 text-indigo-600 font-extrabold uppercase px-2 py-0.5 rounded-full border border-indigo-100">
             Admin
@@ -80,7 +82,7 @@ const AdminLayout = ({ user, handleLogout }) => {
         <div>
           {/* Logo Container (Hidden on mobile top header layout to prevent double logo, shown on desktop sidebar) */}
           <div className="h-16 px-6 border-b border-slate-200/80 items-center gap-3 hidden md:flex">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin')}>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin/admissions')}>
               <IcteLogo size={34} withText />
             </div>
             <span className="text-[10px] bg-indigo-50 text-indigo-600 font-extrabold uppercase px-2 py-0.5 rounded-full border border-indigo-100 shrink-0">
