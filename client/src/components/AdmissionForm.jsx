@@ -227,7 +227,11 @@ export default function AdmissionForm() {
   // Mask Aadhaar display state
   const [showFullAadhaar, setShowFullAadhaar] = useState(false);
 
-  // Check URL params on mount
+  // Institute courses state
+  const [instituteCourses, setInstituteCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  // Check URL params on mount & fetch institute courses
   useEffect(() => {
     const urlSource = searchParams.get('source');
     if (urlSource) {
@@ -238,29 +242,37 @@ export default function AdmissionForm() {
       setFormData(prev => ({ ...prev, source: source || 'direct' }));
     }
 
-    const paramCourse = searchParams.get('course');
-    const paramProgram = searchParams.get('program');
+    // Fetch Institute Courses from backend
+    fetch(`${API}/institute-courses`)
+      .then(res => res.json())
+      .then(courses => {
+        const list = Array.isArray(courses) ? courses : [];
+        setInstituteCourses(list);
 
-    if (paramCourse) {
-      let matchedProg = 'UG Degree';
-      for (const [prog, courses] of Object.entries(PROGRAM_COURSES)) {
-        if (courses.some(c => c.toLowerCase() === paramCourse.toLowerCase())) {
-          matchedProg = prog;
-          break;
+        const paramCourse = searchParams.get('course');
+        if (!paramCourse) {
+          // Redirect to homepage if no course parameter specified
+          navigate('/', { replace: true });
+          return;
         }
-      }
-      setFormData(prev => ({
-        ...prev,
-        program_type: matchedProg,
-        course: paramCourse
-      }));
-    } else if (paramProgram && PROGRAM_COURSES[paramProgram]) {
-      setFormData(prev => ({
-        ...prev,
-        program_type: paramProgram,
-        course: PROGRAM_COURSES[paramProgram][0]
-      }));
-    }
+
+        const matched = list.find(c => (c.name || c.title || '').toLowerCase() === paramCourse.trim().toLowerCase());
+        if (!matched) {
+          // Redirect to homepage if course is invalid / not found in institute courses
+          navigate('/', { replace: true });
+          return;
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          course: matched.name || matched.title,
+          program_type: matched.program_type || matched.category || 'Nursing'
+        }));
+      })
+      .catch(err => {
+        console.error('Error fetching institute courses:', err);
+      })
+      .finally(() => setLoadingCourses(false));
 
     const savedDraft = localStorage.getItem('admission_draft');
     if (savedDraft) {
@@ -273,7 +285,7 @@ export default function AdmissionForm() {
         localStorage.removeItem('admission_draft');
       }
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
@@ -589,11 +601,13 @@ export default function AdmissionForm() {
     }
 
     if (stepNumber === 6) {
-      // Validate mandatory document uploads
+      // Validate mandatory document uploads (must have real Supabase storage URL, no data: URLs)
       const docCards = getDocumentCardsList();
       docCards.forEach(doc => {
-        if (doc.required && (!formData.documents || !formData.documents[doc.type] || !formData.documents[doc.type].file_url)) {
-          newErrors[`doc_${doc.type}`] = `${doc.title} is required`;
+        const docMeta = formData.documents ? formData.documents[doc.type] : null;
+        const isInvalid = !docMeta || !docMeta.file_url || docMeta.file_url.startsWith('data:');
+        if (doc.required && isInvalid) {
+          newErrors[`doc_${doc.type}`] = `Please upload ${doc.title} to continue`;
         }
       });
     }
@@ -995,35 +1009,39 @@ export default function AdmissionForm() {
                 <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
                   <GraduationCap className="text-[#1E40FF]" size={24} /> Step 1 — Course Details
                 </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Select your program for admission to Buddha College of Nursing.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Program Type *</label>
-                  <select
-                    value={formData.program_type}
-                    onChange={handleProgramTypeChange}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-[#1E40FF] text-sm"
-                  >
-                    <option value="UG Degree">UG Degree</option>
-                    <option value="PG Degree">PG Degree</option>
-                    <option value="Diploma">Diploma</option>
-                    <option value="Nursing">Nursing</option>
-                    <option value="Certificate">Certificate</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Course *</label>
-                  <select
-                    value={formData.course}
-                    onChange={handleCourseChange}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-[#1E40FF] text-sm"
-                  >
-                    {(PROGRAM_COURSES[formData.program_type] || []).map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  {loadingCourses ? (
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin text-[#1E40FF]" /> Loading institute courses...
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.course}
+                      onChange={(e) => {
+                        const selectedCourseName = e.target.value;
+                        const matched = instituteCourses.find(c => (c.name || c.title) === selectedCourseName);
+                        setFormData(prev => ({
+                          ...prev,
+                          course: selectedCourseName,
+                          program_type: matched?.program_type || matched?.category || 'Nursing'
+                        }));
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-[#1E40FF] text-sm"
+                    >
+                      {instituteCourses.map((c) => (
+                        <option key={c.id || c.name} value={c.name || c.title}>
+                          {c.name || c.title} {c.duration ? `(${c.duration})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {formData.course === 'MBA' && (

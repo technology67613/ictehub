@@ -177,16 +177,6 @@ function App() {
                     Check Status
                   </button>
                   <button
-                    className={`h-full px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
-                      location.pathname === '/apply'
-                        ? 'text-[#1E40FF] bg-[#EEF2FF]'
-                        : 'text-[#1E40FF] hover:bg-blue-50'
-                    }`}
-                    onClick={() => navigate('/apply')}
-                  >
-                    Apply Now
-                  </button>
-                  <button
                     className={`ml-2 px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                       location.pathname === '/login'
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20'
@@ -310,14 +300,6 @@ function App() {
                   onClick={() => { navigate('/check-status'); setMobileMenuOpen(false); }}
                 >
                   Check Status
-                </button>
-                <button
-                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                    location.pathname === '/apply' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-[#1E40FF] hover:bg-blue-50'
-                  }`}
-                  onClick={() => { navigate('/apply'); setMobileMenuOpen(false); }}
-                >
-                  Apply Now
                 </button>
                 <button
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${

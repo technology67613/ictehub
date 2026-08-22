@@ -270,12 +270,6 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
               Get Free Consultation
             </button>
             <button
-              onClick={() => navigate('/apply')}
-              className="bg-[#1E40FF] hover:bg-blue-700 text-white text-sm font-bold uppercase tracking-wider px-8 py-4 rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-1 transition-all cursor-pointer border-none"
-            >
-              Apply Now
-            </button>
-            <button
               onClick={() => setView('browse')}
               className="bg-white/80 backdrop-blur-md border border-slate-200 text-slate-700 hover:text-indigo-600 text-sm font-bold uppercase tracking-wider px-8 py-4 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer"
             >
