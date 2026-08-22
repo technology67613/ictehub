@@ -147,6 +147,58 @@ function sanitizeFormData(data) {
   return cleanData;
 }
 
+/**
+ * Reusable helper function for uploading files with XMLHttpRequest to track progress
+ * and attach the Authorization header automatically.
+ */
+function uploadWithProgress(file, type, token, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        onProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.url) {
+            resolve(res.url);
+          } else {
+            reject(new Error(res.message || 'Upload succeeded but server returned no URL'));
+          }
+        } catch (err) {
+          reject(new Error('Invalid JSON response from upload server'));
+        }
+      } else {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          reject(new Error(res.message || `Upload failed with status ${xhr.status}`));
+        } catch (err) {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.onabort = () => reject(new Error('Upload aborted'));
+
+    xhr.open('POST', `${API}/upload`);
+    const authToken = token || localStorage.getItem('token');
+    if (authToken) {
+      xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+    }
+    xhr.send(formData);
+  });
+}
+
 export default function AdmissionForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -159,6 +211,7 @@ export default function AdmissionForm() {
 
   // Document upload state: { [docType]: boolean }
   const [uploadingDocs, setUploadingDocs] = useState({});
+  const [uploadProgress, setUploadProgress] = useState({});
   const [docUploadErrors, setDocUploadErrors] = useState({});
 
   // Draft Banner State
@@ -319,62 +372,30 @@ export default function AdmissionForm() {
     setUploadingPhoto(true);
     setPhotoUploadError('');
 
-    const token = localStorage.getItem('token');
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('type', 'profile-picture');
-
     try {
-      const headers = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const token = localStorage.getItem('token');
+      const uploadedUrl = await uploadWithProgress(file, 'profile-picture', token);
 
-      const res = await fetch(`${API}/upload`, {
-        method: 'POST',
-        headers,
-        body: uploadFormData
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Upload failed');
-      }
-
-      const data = await res.json();
       setFormData(prev => ({
         ...prev,
-        photo_url: data.url,
+        photo_url: uploadedUrl,
         documents: {
           ...prev.documents,
           passport_photo: {
-            file_url: data.url,
+            file_url: uploadedUrl,
             document_name: file.name,
             file_size: file.size
           }
         }
       }));
     } catch (err) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData(prev => ({
-          ...prev,
-          photo_url: event.target.result,
-          documents: {
-            ...prev.documents,
-            passport_photo: {
-              file_url: event.target.result,
-              document_name: file.name,
-              file_size: file.size
-            }
-          }
-        }));
-      };
-      reader.readAsDataURL(file);
+      setPhotoUploadError(err.message || 'Upload failed');
     } finally {
       setUploadingPhoto(false);
     }
   };
 
-  // General Document Upload Handler (POST /upload type="admission-document")
+  // General Document Upload Handler with real-time XMLHttpRequest progress tracking
   const handleDocumentUpload = async (docType, e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -391,31 +412,22 @@ export default function AdmissionForm() {
     }
 
     setUploadingDocs(prev => ({ ...prev, [docType]: true }));
+    setUploadProgress(prev => ({ ...prev, [docType]: 0 }));
     setDocUploadErrors(prev => ({ ...prev, [docType]: '' }));
 
-    const token = localStorage.getItem('token');
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('type', 'admission-document');
-
     try {
-      const headers = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const token = localStorage.getItem('token');
+      const uploadedUrl = await uploadWithProgress(
+        file,
+        'admission-document',
+        token,
+        (percent) => {
+          setUploadProgress(prev => ({ ...prev, [docType]: percent }));
+        }
+      );
 
-      const res = await fetch(`${API}/upload`, {
-        method: 'POST',
-        headers,
-        body: uploadFormData
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Upload failed');
-      }
-
-      const data = await res.json();
       const docObj = {
-        file_url: data.url,
+        file_url: uploadedUrl,
         document_name: file.name,
         file_size: file.size
       };
@@ -428,30 +440,13 @@ export default function AdmissionForm() {
             [docType]: docObj
           }
         };
-        // Also keep photo_url in sync if passport_photo uploaded
         if (docType === 'passport_photo') {
-          updated.photo_url = data.url;
+          updated.photo_url = uploadedUrl;
         }
         return updated;
       });
     } catch (err) {
-      // Fallback preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const docObj = {
-          file_url: event.target.result,
-          document_name: file.name,
-          file_size: file.size
-        };
-        setFormData(prev => ({
-          ...prev,
-          documents: {
-            ...prev.documents,
-            [docType]: docObj
-          }
-        }));
-      };
-      reader.readAsDataURL(file);
+      setDocUploadErrors(prev => ({ ...prev, [docType]: err.message || 'Upload failed — try again' }));
     } finally {
       setUploadingDocs(prev => ({ ...prev, [docType]: false }));
     }
@@ -1598,8 +1593,19 @@ export default function AdmissionForm() {
 
                       {/* Card Content & Action State */}
                       {isUploading ? (
-                        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold text-[#1E40FF]">
-                          <Loader2 size={16} className="animate-spin text-[#1E40FF]" /> Uploading document...
+                        <div className="p-4 bg-white rounded-xl border border-blue-200 space-y-2">
+                          <div className="flex items-center justify-between text-xs font-bold text-[#1E40FF]">
+                            <span className="flex items-center gap-1.5">
+                              <Loader2 size={14} className="animate-spin text-[#1E40FF]" /> Uploading... {uploadProgress[doc.type] || 0}%
+                            </span>
+                            <span>{uploadProgress[doc.type] || 0}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#1E40FF] transition-all duration-200"
+                              style={{ width: `${uploadProgress[doc.type] || 0}%` }}
+                            ></div>
+                          </div>
                         </div>
                       ) : uploadedMeta ? (
                         <div className="p-3 bg-white rounded-xl border border-emerald-200 space-y-3">
@@ -1616,6 +1622,11 @@ export default function AdmissionForm() {
                               />
                             )}
                             <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  ✓ Uploaded
+                                </span>
+                              </div>
                               <span className="font-bold text-slate-800 text-xs truncate block" title={uploadedMeta.document_name}>
                                 {uploadedMeta.document_name}
                               </span>
@@ -1648,8 +1659,8 @@ export default function AdmissionForm() {
                         </div>
                       ) : (
                         <div>
-                          <label className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase cursor-pointer shadow-sm transition-all">
-                            <Upload size={14} className="text-[#1E40FF]" /> Upload {doc.title}
+                          <label className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border bg-white hover:bg-slate-50 font-bold text-xs uppercase cursor-pointer shadow-sm transition-all ${uploadError ? 'border-red-300 text-red-700' : 'border-slate-300 text-slate-700'}`}>
+                            <Upload size={14} className="text-[#1E40FF]" /> {uploadError ? 'Try Again' : `Upload ${doc.title}`}
                             <input
                               type="file"
                               accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -1660,7 +1671,20 @@ export default function AdmissionForm() {
                         </div>
                       )}
 
-                      {uploadError && <p className="text-xs text-red-500 font-semibold mt-2">{uploadError}</p>}
+                      {uploadError && (
+                        <div className="mt-2 p-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center justify-between gap-2">
+                          <span>Upload failed — try again</span>
+                          <label className="text-[11px] font-bold underline cursor-pointer text-red-700 shrink-0">
+                            Retry
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,application/pdf"
+                              onChange={(e) => handleDocumentUpload(doc.type, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      )}
                       {errors[`doc_${doc.type}`] && <p className="text-xs text-red-500 font-semibold mt-2">{errors[`doc_${doc.type}`]}</p>}
                     </div>
                   );
