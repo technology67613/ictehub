@@ -3,31 +3,38 @@ const router = express.Router();
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
 
-// Setup multer memory storage
+// Setup multer memory storage with 5MB limit and support for image + PDF types
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and WebP images are allowed.'));
+      cb(new Error('Invalid file type. Only JPEG, PNG, WebP images, and PDF documents are allowed.'));
     }
   }
 });
 
+const optionalProtect = (req, res, next) => {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    return protect(req, res, next);
+  }
+  next();
+};
+
 /**
  * @route   POST /upload
- * @desc    Upload file to Supabase storage (Any logged-in user)
- * @access  Private
+ * @desc    Upload file to Supabase storage (Public or Authenticated)
+ * @access  Public / Private
  */
-router.post('/', protect, (req, res, next) => {
+router.post('/', optionalProtect, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ message: 'File size limit exceeded. Maximum file size is 2MB.' });
+          return res.status(400).json({ message: 'File size limit exceeded. Maximum file size is 5MB.' });
         }
         return res.status(400).json({ message: `Upload error: ${err.message}` });
       }
@@ -46,7 +53,7 @@ router.post('/', protect, (req, res, next) => {
     }
 
     if (!type) {
-      return res.status(400).json({ message: 'Upload type (e.g. college-logo or profile-picture) is required' });
+      return res.status(400).json({ message: 'Upload type (e.g. college-logo, profile-picture, or admission-document) is required' });
     }
 
     let bucketName = '';
@@ -58,8 +65,11 @@ router.post('/', protect, (req, res, next) => {
     } else if (type === 'profile-picture') {
       bucketName = 'profile-pictures';
       folder = 'profiles';
+    } else if (type === 'admission-document') {
+      bucketName = 'admission-documents';
+      folder = 'documents';
     } else {
-      return res.status(400).json({ message: 'Invalid upload type. Supported types: college-logo, profile-picture' });
+      return res.status(400).json({ message: 'Invalid upload type. Supported types: college-logo, profile-picture, admission-document' });
     }
 
     // Generate a unique file name
@@ -78,7 +88,7 @@ router.post('/', protect, (req, res, next) => {
 
     if (error) throw error;
 
-    // Get public URL of the uploaded image
+    // Get public URL of the uploaded image/document
     const { data: publicUrlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(filePath);

@@ -15,6 +15,7 @@ const instituteCoursesRoutes = require('./routes/institute-courses');
 const uploadRoutes = require('./routes/upload');
 const partnerInquiriesRoutes = require('./routes/partner-inquiries');
 const instituteLeadsRoutes = require('./routes/institute-leads');
+const admissionDocumentsRoutes = require('./routes/admission-documents');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/institute-courses', instituteCoursesRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/partner-inquiries', partnerInquiriesRoutes);
 app.use('/institute-leads', instituteLeadsRoutes);
+app.use('/admission-documents', require('./routes/admission-documents'));
 
 // Test Route
 app.get('/health', (req, res) => {

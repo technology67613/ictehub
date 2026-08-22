@@ -20,7 +20,7 @@ const leadsLimiter = rateLimit({
 router.post('/', leadsLimiter, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
-    const { name, phone, email, interested_college_ids, session_id, source } = req.body;
+    const { name, phone, email, interested_college_ids, session_id, source, admission_form_data } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ message: 'Name and phone are required fields.' });
@@ -36,6 +36,7 @@ router.post('/', leadsLimiter, async (req, res) => {
           interested_college_ids: interested_college_ids || [],
           session_id: session_id || null,
           source: source || 'direct',
+          admission_form_data: admission_form_data || null,
           status: 'new',
         }
       ])

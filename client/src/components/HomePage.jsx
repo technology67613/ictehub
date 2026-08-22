@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Briefcase, Calculator, Award, Check, 
   Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin, Clock, Calendar
@@ -11,6 +12,7 @@ import { getLeadSource } from '../utils/tracking';
 import { getCached, setCached } from '../utils/cache';
 
 const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
+  const navigate = useNavigate();
   const [colleges, setColleges] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [preselectedCollegeId, setPreselectedCollegeId] = useState(null);
@@ -268,6 +270,12 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
               Get Free Consultation
             </button>
             <button
+              onClick={() => navigate('/apply')}
+              className="bg-[#1E40FF] hover:bg-blue-700 text-white text-sm font-bold uppercase tracking-wider px-8 py-4 rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-1 transition-all cursor-pointer border-none"
+            >
+              Apply Now
+            </button>
+            <button
               onClick={() => setView('browse')}
               className="bg-white/80 backdrop-blur-md border border-slate-200 text-slate-700 hover:text-indigo-600 text-sm font-bold uppercase tracking-wider px-8 py-4 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer"
             >
@@ -499,19 +507,27 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                   </div>
                 </div>
                 
-                <div className="border-t border-slate-100 pt-5 flex items-center justify-between mt-auto">
+                <div className="border-t border-slate-100 pt-5 flex items-center justify-between gap-3 mt-auto">
                   <div>
                     <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Program Fees</span>
                     <span className="text-base font-extrabold text-[#1E40FF]">
                       {course.fees !== null && course.fees !== undefined ? `₹${course.fees.toLocaleString('en-IN')}` : '—'}
                     </span>
                   </div>
-                  <button
-                    onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
-                    className="px-5 py-2.5 bg-slate-900 hover:bg-[#1E40FF] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors outline-none"
-                  >
-                    Enroll Now
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => navigate(`/apply?course=${encodeURIComponent(course.name)}`)}
+                      className="px-4 py-2 bg-[#1E40FF] hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
+                    >
+                      Apply Now
+                    </button>
+                    <button
+                      onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
+                    >
+                      Enroll
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

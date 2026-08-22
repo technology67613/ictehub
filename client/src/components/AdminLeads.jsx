@@ -3,7 +3,7 @@ import {
   Search, Phone, Mail, GraduationCap, CheckCircle2, XCircle,
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert,
   Loader2, Filter, AlertCircle, TrendingUp, Copy, X, Users,
-  UserCheck, UserMinus, Activity, Award
+  UserCheck, UserMinus, Activity, Award, FileText, ExternalLink, Trash2
 } from 'lucide-react';
 
 const API = 'https://ictehub.onrender.com';
@@ -47,11 +47,44 @@ function StatusBadge({ status }) {
 }
 
 // ─── Drawer ──────────────────────────────────────────────────────────────────
-function LeadDrawer({ lead, colleges, telecallers, onClose, onAssign, callHistory, savingId, savedFlash, copyToClipboard }) {
+function LeadDrawer({ lead, colleges, telecallers, onClose, onAssign, callHistory, savingId, savedFlash, copyToClipboard, token }) {
   const status = STATUS_CONFIG[lead.status] || STATUS_CONFIG['new'];
   const collegeNames = (lead.interested_college_ids || []).map(id => colleges[id]).filter(Boolean);
   const history = callHistory[lead.id] || [];
   const [colors] = useState(avatarColor(lead.name));
+
+  const [documents, setDocuments] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
+  useEffect(() => {
+    if (lead && lead.admission_form_data && token) {
+      setLoadingDocs(true);
+      fetch(`${API}/admission-documents/${lead.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setDocuments(Array.isArray(data) ? data : []);
+        })
+        .catch(err => console.error('Error fetching admission documents:', err))
+        .finally(() => setLoadingDocs(false));
+    }
+  }, [lead?.id, token]);
+
+  const handleDeleteDoc = async (docId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    try {
+      const res = await fetch(`${API}/admission-documents/${docId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setDocuments(prev => prev.filter(d => d.id !== docId));
+      }
+    } catch (err) {
+      console.error('Error deleting document:', err);
+    }
+  };
 
   return (
     <>
@@ -204,6 +237,71 @@ function LeadDrawer({ lead, colleges, telecallers, onClose, onAssign, callHistor
               </div>
             )}
           </div>
+
+          {/* Admission Documents Section (Shown only if lead has admission_form_data) */}
+          {lead.admission_form_data && (
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                <FileText size={12} className="text-[#1E40FF]" /> Admission Documents ({documents.length})
+              </div>
+
+              {loadingDocs ? (
+                <div className="p-4 text-center text-slate-400 text-xs font-semibold flex items-center justify-center gap-2">
+                  <Loader2 size={14} className="animate-spin text-[#1E40FF]" /> Loading documents...
+                </div>
+              ) : documents.length === 0 ? (
+                <div className="p-4 text-center bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-xs font-medium">
+                  No documents uploaded
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {documents.map((doc) => {
+                    const typeLabel = doc.document_type
+                      ? doc.document_type.replace(/_/g, ' ').toUpperCase()
+                      : 'DOCUMENT';
+                    const uploadDate = doc.uploaded_at
+                      ? new Date(doc.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '';
+
+                    return (
+                      <div key={doc.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-[#1E40FF] inline-block mb-1">
+                            {typeLabel}
+                          </span>
+                          <div className="font-bold text-slate-800 truncate" title={doc.document_name}>
+                            {doc.document_name}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {doc.file_size ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB • ` : ''}{uploadDate}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a
+                            href={doc.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 bg-white hover:bg-blue-50 text-[#1E40FF] border border-slate-200 rounded-lg transition-colors inline-flex items-center gap-1 font-bold text-[11px] no-underline"
+                          >
+                            <ExternalLink size={13} /> View
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDoc(doc.id)}
+                            className="p-1.5 bg-white hover:bg-red-50 text-red-500 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Document"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -598,6 +696,7 @@ export default function AdminLeads({ token }) {
           lead={leads.find(l => l.id === selectedLead.id) || selectedLead}
           colleges={colleges}
           telecallers={telecallers}
+          token={token}
           onClose={closeLead}
           onAssign={handleAssignTelecaller}
           callHistory={callHistory}
