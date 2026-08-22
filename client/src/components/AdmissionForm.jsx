@@ -113,6 +113,40 @@ const INITIAL_FORM_STATE = {
   declaration_accepted: false,
 };
 
+/**
+ * Helper to strip base64 data URLs, File instances, or non-serializable objects
+ * to prevent localStorage QuotaExceededError and 413 Payload Too Large on POST /leads.
+ */
+function sanitizeFormData(data) {
+  if (!data) return data;
+  const cleanData = JSON.parse(JSON.stringify(data));
+
+  // Sanitize photo_url if it's base64 data URL
+  if (cleanData.photo_url && typeof cleanData.photo_url === 'string' && cleanData.photo_url.startsWith('data:')) {
+    cleanData.photo_url = '';
+  }
+
+  // Sanitize documents object: keep only real HTTP/HTTPS URLs
+  if (cleanData.documents && typeof cleanData.documents === 'object') {
+    const cleanDocs = {};
+    for (const [docType, docMeta] of Object.entries(cleanData.documents)) {
+      if (docMeta && typeof docMeta === 'object') {
+        const fileUrl = docMeta.file_url;
+        if (typeof fileUrl === 'string' && !fileUrl.startsWith('data:')) {
+          cleanDocs[docType] = {
+            file_url: fileUrl,
+            document_name: docMeta.document_name || '',
+            file_size: docMeta.file_size || null
+          };
+        }
+      }
+    }
+    cleanData.documents = cleanDocs;
+  }
+
+  return cleanData;
+}
+
 export default function AdmissionForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -199,15 +233,20 @@ export default function AdmissionForm() {
 
   const saveDraftToLocalStorage = (dataToSave, stepToSave, showToastMsg = true) => {
     if (submittedLead) return;
-    const draftObj = {
-      formData: dataToSave,
-      currentStep: stepToSave,
-      updatedAt: new Date().toISOString()
-    };
-    localStorage.setItem('admission_draft', JSON.stringify(draftObj));
-    if (showToastMsg) {
-      setSavedToast('Draft saved to localStorage!');
-      setTimeout(() => setSavedToast(''), 3000);
+    try {
+      const sanitized = sanitizeFormData(dataToSave);
+      const draftObj = {
+        formData: sanitized,
+        currentStep: stepToSave,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem('admission_draft', JSON.stringify(draftObj));
+      if (showToastMsg) {
+        setSavedToast('Draft saved to localStorage!');
+        setTimeout(() => setSavedToast(''), 3000);
+      }
+    } catch (err) {
+      console.warn('Could not save draft to localStorage:', err);
     }
   };
 
@@ -644,7 +683,7 @@ export default function AdmissionForm() {
         interested_college_ids: [],
         source: finalSource,
         session_id: sessionId,
-        admission_form_data: JSON.stringify(formData)
+        admission_form_data: JSON.stringify(sanitizeFormData(formData))
       };
 
       // 1. POST /leads
