@@ -22,6 +22,38 @@ router.post('/', async (req, res) => {
   }
 });
 
+// GET /admission-documents/my - Student only
+router.get('/my', protect, authorize('student'), async (req, res) => {
+  try {
+    const supabase = req.supabase || req.app.get('supabase');
+    
+    // Find the lead associated with this student
+    const { data: lead, error: leadError } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('student_user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (leadError || !lead) {
+      return res.json([]);
+    }
+
+    const { data, error } = await supabase
+      .from('admission_documents')
+      .select('*')
+      .eq('lead_id', lead.id)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Error fetching student documents:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /admission-documents/:leadId - Admin or assigned telecaller
 router.get('/:leadId', protect, async (req, res) => {
   try {

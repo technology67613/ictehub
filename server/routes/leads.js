@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { protect, authorize } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
 const autoAssignTelecaller = require('../utils/autoAssignTelecaller');
@@ -14,7 +15,7 @@ const leadsLimiter = rateLimit({
 
 /**
  * @route   POST /leads
- * @desc    Submit a new lead inquiry (Public)
+ * @desc    Submit a new lead inquiry & auto-create student account (Public)
  * @access  Public
  */
 router.post('/', leadsLimiter, async (req, res) => {
@@ -24,6 +25,51 @@ router.post('/', leadsLimiter, async (req, res) => {
 
     if (!name || !phone) {
       return res.status(400).json({ message: 'Name and phone are required fields.' });
+    }
+
+    const cleanedPhone = phone.toString().trim().replace(/\D/g, '').slice(-10);
+    const studentEmail = `${cleanedPhone}@student.ictehub`.toLowerCase();
+
+    // Check if a user with role='student' already exists with this phone/email
+    let studentUserId = null;
+    let studentCredentials = null;
+
+    if (cleanedPhone.length === 10) {
+      const { data: existingStudentUsers } = await supabase
+        .from('users')
+        .select('id, role')
+        .eq('email', studentEmail);
+
+      if (existingStudentUsers && existingStudentUsers.length > 0) {
+        studentUserId = existingStudentUsers[0].id;
+      } else {
+        // Create new student user
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(cleanedPhone, salt);
+
+        const { data: newUser, error: userError } = await supabase
+          .from('users')
+          .insert([
+            {
+              name: name ? name.trim() : null,
+              email: studentEmail,
+              password_hash: passwordHash,
+              role: 'student',
+              is_active: true,
+            }
+          ])
+          .select('id')
+          .single();
+
+        if (!userError && newUser) {
+          studentUserId = newUser.id;
+          studentCredentials = {
+            phone: cleanedPhone,
+            default_password: cleanedPhone,
+            message: 'Your login credentials',
+          };
+        }
+      }
     }
 
     const { data: newLead, error } = await supabase
@@ -38,6 +84,7 @@ router.post('/', leadsLimiter, async (req, res) => {
           source: source || 'direct',
           admission_form_data: admission_form_data || null,
           status: 'new',
+          student_user_id: studentUserId || null,
         }
       ])
       .select();
@@ -56,12 +103,18 @@ router.post('/', leadsLimiter, async (req, res) => {
       .eq('id', newLead[0].id)
       .single();
 
-    return res.status(201).json(assignedLead || newLead[0]);
+    const responsePayload = assignedLead || newLead[0];
+    if (studentCredentials) {
+      responsePayload.student_credentials = studentCredentials;
+    }
+
+    return res.status(201).json(responsePayload);
   } catch (error) {
     console.error('Error creating lead:', error);
     return res.status(500).json({ message: 'Server error creating lead', error: error.message });
   }
 });
+
 
 /**
  * @route   GET /leads/check
@@ -299,4 +352,78 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /leads/my-application
+ * @desc    Get linked lead/application for current student (Student only)
+ * @access  Private/Student
+ */
+router.get('/my-application', protect, authorize('student'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+
+    // Fetch the lead linked to this student
+    const { data: leads, error: leadError } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('student_user_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (leadError) {
+      throw leadError;
+    }
+
+    if (!leads || leads.length === 0) {
+      return res.status(404).json({ message: 'No application found linked to your student account.' });
+    }
+
+    const lead = leads[0];
+
+    // Resolve interested colleges if any
+    let resolvedColleges = [];
+    if (lead.interested_college_ids && lead.interested_college_ids.length > 0) {
+      const { data: colleges, error: colError } = await supabase
+        .from('colleges')
+        .select('id, name, city, state, courses, fee_range, brochure_url, website, logo_url')
+        .in('id', lead.interested_college_ids);
+
+      if (!colError && colleges) {
+        resolvedColleges = colleges;
+      }
+    }
+
+    // Resolve enrolled institute course if any
+    let resolvedEnrolledCourse = null;
+    if (lead.enrolled_institute_course_id) {
+      const { data: courseData, error: courseError } = await supabase
+        .from('institute_courses')
+        .select('*')
+        .eq('id', lead.enrolled_institute_course_id)
+        .single();
+
+      if (!courseError && courseData) {
+        resolvedEnrolledCourse = courseData;
+      }
+    }
+
+    // Parse admission_form_data if stored as a string
+    let parsedFormData = lead.admission_form_data;
+    if (typeof parsedFormData === 'string') {
+      try {
+        parsedFormData = JSON.parse(parsedFormData);
+      } catch (e) {}
+    }
+
+    return res.json({
+      ...lead,
+      admission_form_data: parsedFormData,
+      interested_colleges: resolvedColleges,
+      enrolled_course: resolvedEnrolledCourse,
+    });
+  } catch (error) {
+    console.error('Error fetching student application:', error);
+    return res.status(500).json({ message: 'Server error fetching student application', error: error.message });
+  }
+});
+
 module.exports = router;
+

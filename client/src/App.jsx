@@ -20,6 +20,8 @@ import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import AdminInstituteLeads from './components/AdminInstituteLeads';
 import AdminAdmissions from './components/AdminAdmissions';
 import AdmissionForm from './components/AdmissionForm';
+import StudentDashboard from './components/StudentDashboard';
+import StudentProfile from './components/StudentProfile';
 import IcteLogo from './components/IcteLogo';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
@@ -48,6 +50,8 @@ function App() {
       navigate('/admin');
     } else if (userData.role === 'telecaller') {
       navigate('/telecaller');
+    } else if (userData.role === 'student') {
+      navigate('/student/dashboard');
     } else {
       navigate('/');
     }
@@ -121,10 +125,14 @@ function App() {
 
   const isLoginPage = location.pathname === '/login';
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isStudentPage = location.pathname.startsWith('/student');
 
   const handleLogoClick = () => {
     if (user) {
-      navigate(user.role === 'admin' ? '/admin' : '/telecaller');
+      if (user.role === 'admin') navigate('/admin');
+      else if (user.role === 'telecaller') navigate('/telecaller');
+      else if (user.role === 'student') navigate('/student/dashboard');
+      else navigate('/');
     } else {
       navigate('/');
     }
@@ -132,7 +140,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-600">
-      {!isLoginPage && !isAdminPage && (
+      {!isLoginPage && !isAdminPage && !isStudentPage && (
         <>
           <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-2xl border-b border-slate-200/80 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
@@ -202,18 +210,30 @@ function App() {
                       My Leads
                     </button>
                   )}
+                  {user.role === 'student' && (
+                    <button
+                      className={`h-full px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer border-none bg-transparent ${
+                        location.pathname === '/student/dashboard'
+                          ? 'text-indigo-600 bg-indigo-50'
+                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                      onClick={() => navigate('/student/dashboard')}
+                    >
+                      My Dashboard
+                    </button>
+                  )}
                   <div className="flex items-center gap-2.5 ml-2">
                     {user.profile_picture_url ? (
                       <img
                         src={user.profile_picture_url}
                         alt=""
                         className="w-7 h-7 rounded-full object-cover bg-slate-50 border border-slate-200 shadow-sm shrink-0 cursor-pointer"
-                        onClick={() => navigate('/profile')}
+                        onClick={() => navigate(user.role === 'student' ? '/student/profile' : '/profile')}
                       />
                     ) : (
                       <div
                         className="w-7 h-7 rounded-full bg-[#1E40FF] flex items-center justify-center font-bold text-white text-[10px] shrink-0 cursor-pointer"
-                        onClick={() => navigate('/profile')}
+                        onClick={() => navigate(user.role === 'student' ? '/student/profile' : '/profile')}
                       >
                         {(user.name || user.email).slice(0, 2).toUpperCase()}
                       </div>
@@ -323,11 +343,21 @@ function App() {
                     My Leads
                   </button>
                 )}
+                {user.role === 'student' && (
+                  <button
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
+                      location.pathname === '/student/dashboard' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                    }`}
+                    onClick={() => { navigate('/student/dashboard'); setMobileMenuOpen(false); }}
+                  >
+                    My Dashboard
+                  </button>
+                )}
                 <button
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-left transition-all border-none bg-transparent cursor-pointer ${
-                    location.pathname === '/profile' ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
+                    location.pathname === (user.role === 'student' ? '/student/profile' : '/profile') ? 'text-[#1E40FF] bg-[#EEF2FF]' : 'text-slate-600 hover:text-[#1E40FF] hover:bg-slate-50'
                   }`}
-                  onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate(user.role === 'student' ? '/student/profile' : '/profile'); setMobileMenuOpen(false); }}
                 >
                   Profile
                 </button>
@@ -364,7 +394,7 @@ function App() {
           } />
           <Route path="/check-status" element={
             user ? (
-              <Navigate to={user.role === 'admin' ? '/admin' : '/telecaller'} replace />
+              <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'telecaller' ? '/telecaller' : '/student/dashboard'} replace />
             ) : (
               <CheckStatus />
             )
@@ -372,7 +402,7 @@ function App() {
           <Route path="/apply" element={<AdmissionForm />} />
           <Route path="/login" element={
             user ? (
-              <Navigate to={user.role === 'admin' ? '/admin' : '/telecaller'} replace />
+              <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'telecaller' ? '/telecaller' : '/student/dashboard'} replace />
             ) : (
               <AuthPage onAuthSuccess={handleAuthSuccess} />
             )
@@ -384,7 +414,27 @@ function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
 
-          {/* Protected Route Wrapper */}
+          {/* Student Protected Routes */}
+          <Route path="/student/dashboard" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentDashboard user={user} handleLogout={handleLogout} />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/profile" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentProfile
+                user={user}
+                token={token}
+                onProfileUpdate={(updatedUser) => {
+                  setUser(updatedUser);
+                  localStorage.setItem('user', JSON.stringify(updatedUser));
+                }}
+                handleLogout={handleLogout}
+              />
+            </ProtectedRoute>
+          } />
+
+          {/* Staff Protected Route Wrapper */}
           <Route path="/profile" element={
             <ProtectedRoute>
               <ProfilePage
@@ -431,3 +481,4 @@ function App() {
 }
 
 export default App;
+

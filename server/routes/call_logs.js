@@ -61,6 +61,94 @@ router.post('/', protect, authorize('telecaller'), async (req, res) => {
 });
 
 /**
+ * @route   GET /call-logs/my-timeline
+ * @desc    Get student-friendly application timeline (Student only)
+ * @access  Private/Student
+ */
+router.get('/my-timeline', protect, authorize('student'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+
+    // Find the lead associated with this student
+    const { data: lead, error: leadError } = await supabase
+      .from('leads')
+      .select('id, created_at, status')
+      .eq('student_user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (leadError || !lead) {
+      return res.json([]);
+    }
+
+    const { data: logs, error: logsError } = await supabase
+      .from('call_logs')
+      .select('id, call_date, outcome')
+      .eq('lead_id', lead.id)
+      .order('call_date', { ascending: false });
+
+    if (logsError) throw logsError;
+
+    const timelineEvents = [];
+
+    // 1. Initial application submission event
+    if (lead.created_at) {
+      timelineEvents.push({
+        id: `submit_${lead.id}`,
+        title: 'Application Submitted',
+        description: 'Your admission application was successfully received and registered in our portal.',
+        date: lead.created_at,
+        type: 'status',
+      });
+    }
+
+    // 2. Counselor contact events (sanitized, student-friendly)
+    (logs || []).forEach(l => {
+      let description = 'Our admissions counseling team reached out to assist you with your application.';
+      if (l.outcome === 'interested') {
+        description = 'Counselor reviewed your eligibility and discussed program details.';
+      } else if (l.outcome === 'call-back-later') {
+        description = 'Follow-up scheduled with admissions counselor.';
+      }
+
+      timelineEvents.push({
+        id: l.id,
+        title: 'Admissions Team Follow-up',
+        description,
+        date: l.call_date,
+        type: 'contact',
+      });
+    });
+
+    // 3. Current status milestone if enrolled or shortlisted
+    if (['interested', 'enrolled-college', 'enrolled-institute'].includes(lead.status)) {
+      let statusTitle = 'Application Shortlisted';
+      let statusDesc = 'Your profile is under priority review for admission.';
+      if (lead.status === 'enrolled-college' || lead.status === 'enrolled-institute') {
+        statusTitle = 'Admission Confirmed 🎉';
+        statusDesc = 'Congratulations! You have been successfully admitted to Buddha College of Nursing.';
+      }
+      timelineEvents.push({
+        id: `status_${lead.id}`,
+        title: statusTitle,
+        description: statusDesc,
+        date: new Date().toISOString(),
+        type: 'milestone',
+      });
+    }
+
+    // Sort timeline descending by date
+    timelineEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return res.json(timelineEvents);
+  } catch (error) {
+    console.error('Error fetching student timeline:', error);
+    return res.status(500).json({ message: 'Server error fetching timeline', error: error.message });
+  }
+});
+
+/**
  * @route   GET /call-logs/:leadId
  * @desc    Get call history for a lead (Admin or assigned telecaller)
  * @access  Private

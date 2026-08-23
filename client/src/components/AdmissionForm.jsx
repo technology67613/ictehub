@@ -4,7 +4,7 @@ import {
   CheckCircle2, ChevronRight, ChevronLeft, Save, FileText, Upload,
   Trash2, Plus, AlertCircle, Edit3, User, BookOpen, MapPin, Phone,
   GraduationCap, Shield, Building, RotateCcw, Info, Eye, EyeOff, Check,
-  FileCheck, File, RefreshCw, Loader2
+  FileCheck, File, RefreshCw, Loader2, Key, MessageCircle, ArrowRight, Sparkles
 } from 'lucide-react';
 import { getSessionId, getLeadSource, linkLeadToSession } from '../utils/tracking';
 
@@ -764,6 +764,47 @@ export default function AdmissionForm() {
       minute: '2-digit'
     });
 
+    const handleGoToDashboard = async () => {
+      try {
+        const studentEmail = `${formData.primary_mobile.trim()}@student.ictehub`.toLowerCase();
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: studentEmail,
+            password: formData.primary_mobile.trim()
+          })
+        });
+
+        if (res.ok) {
+          const authData = await res.json();
+          localStorage.setItem('token', authData.token);
+          if (authData.user) {
+            localStorage.setItem('user', JSON.stringify(authData.user));
+          }
+          navigate('/student/dashboard');
+          return;
+        }
+      } catch (e) {
+        console.warn('Auto-login exception:', e);
+      }
+      navigate('/login');
+    };
+
+    const handleShareWhatsApp = () => {
+      const portalUrl = `${window.location.origin}/login`;
+      const text = `🎓 *Buddha College of Nursing Admission Application*\n\n` +
+        `👤 *Applicant:* ${formData.full_name}\n` +
+        `📚 *Course:* ${formData.course} (${formData.program_type})\n` +
+        `🆔 *Application ID:* ${refNum}\n` +
+        `📅 *Session:* ${formData.academic_session}\n\n` +
+        `🔐 *Student Portal Login:*\n` +
+        `• Phone: ${formData.primary_mobile}\n` +
+        `• Default Password: ${formData.primary_mobile}\n` +
+        `• Login Link: ${portalUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
     return (
       <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-500/20">
         <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-500">
@@ -780,12 +821,14 @@ export default function AdmissionForm() {
                 Application Submitted Successfully!
               </h1>
               <p className="text-emerald-100 font-medium text-sm sm:text-base max-w-md">
-                Your admission application and documents have been registered.
+                Your admission application, documents, and student account have been created.
               </p>
             </div>
           </div>
 
           <div className="p-6 sm:p-10 space-y-8">
+            
+            {/* Reference Header */}
             <div className="bg-[#EEF2FF] border border-blue-200/60 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">
@@ -806,6 +849,52 @@ export default function AdmissionForm() {
               </div>
             </div>
 
+            {/* Student Login Credentials Box */}
+            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-4">
+              <div className="flex items-center gap-2">
+                <Key className="text-blue-300" size={22} />
+                <h3 className="text-lg font-black tracking-tight text-white">
+                  Your Student Dashboard Login Credentials:
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 text-xs">
+                <div>
+                  <span className="text-blue-200 text-[10px] font-extrabold uppercase tracking-wider block">Registered Phone (Login ID)</span>
+                  <span className="text-base font-black text-white font-mono mt-0.5 block">+91 {formData.primary_mobile}</span>
+                </div>
+                <div>
+                  <span className="text-blue-200 text-[10px] font-extrabold uppercase tracking-wider block">Default Password</span>
+                  <span className="text-base font-black text-emerald-300 font-mono mt-0.5 block">{formData.primary_mobile}</span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 text-xs text-blue-200 font-medium bg-white/5 p-3 rounded-xl border border-white/10">
+                <Shield size={16} className="text-amber-300 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Important:</strong> Your default password is your 10-digit mobile number. Please log in to your Student Dashboard and change your password to secure your account.
+                </span>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleGoToDashboard}
+                  className="flex-1 py-4 px-6 rounded-2xl bg-[#1E40FF] hover:bg-blue-600 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 cursor-pointer border-none"
+                >
+                  <Sparkles size={16} /> Go to My Dashboard <ArrowRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  className="py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer border-none"
+                >
+                  <MessageCircle size={16} /> Share via WhatsApp
+                </button>
+              </div>
+            </div>
+
+            {/* Application Summary */}
             <div className="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 space-y-4">
               <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-3 flex items-center gap-2">
                 <FileText size={16} className="text-[#1E40FF]" /> Application Summary
@@ -831,6 +920,7 @@ export default function AdmissionForm() {
               </div>
             </div>
 
+            {/* Next Steps */}
             <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-6">
               <h4 className="text-base font-extrabold text-amber-900 mb-2 flex items-center gap-2">
                 <Info size={20} className="text-amber-600" /> What happens next?
@@ -848,12 +938,13 @@ export default function AdmissionForm() {
                 Go to Home
               </button>
               <button
-                onClick={() => navigate('/check-status')}
+                onClick={handleGoToDashboard}
                 className="flex-1 py-4 px-6 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-lg shadow-blue-500/20 text-center cursor-pointer border-none"
               >
-                Check Application Status
+                Open Student Portal
               </button>
             </div>
+
           </div>
 
         </div>

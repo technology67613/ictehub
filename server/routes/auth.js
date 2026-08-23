@@ -75,4 +75,63 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
+const { protect } = require('../middleware/auth');
+
+/**
+ * @route   PUT /auth/change-password
+ * @desc    Change password for logged-in user
+ * @access  Private
+ */
+router.put('/change-password', protect, async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    // Fetch user with current password_hash
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('id, password_hash')
+      .eq('id', req.user.id)
+      .single();
+
+    if (findError || !user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(current_password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(new_password, salt);
+
+    // Update password_hash in Supabase
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('id', req.user.id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return res.status(500).json({ message: 'Server error updating password', error: error.message });
+  }
+});
+
 module.exports = router;
+
