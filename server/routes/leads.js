@@ -14,6 +14,48 @@ const leadsLimiter = rateLimit({
 });
 
 /**
+ * Helper to normalize date of birth into DDMMYYYY format string
+ */
+function formatDobToDDMMYYYY(dobStr) {
+  if (!dobStr || typeof dobStr !== 'string') return null;
+  const trimmed = dobStr.trim();
+
+  // If already 8 continuous digits
+  if (/^\d{8}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Format YYYY-MM-DD or YYYY/MM/DD
+  const ymdMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, '0');
+    const day = ymdMatch[3].padStart(2, '0');
+    return `${day}${month}${year}`;
+  }
+
+  // Format DD-MM-YYYY or DD/MM/YYYY
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${day}${month}${year}`;
+  }
+
+  // Fallback date parsing
+  const parsedDate = new Date(trimmed);
+  if (!isNaN(parsedDate.getTime())) {
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const year = String(parsedDate.getFullYear());
+    return `${day}${month}${year}`;
+  }
+
+  return null;
+}
+
+/**
  * @route   POST /leads
  * @desc    Submit a new lead inquiry & auto-create student account (Public)
  * @access  Public
@@ -30,6 +72,24 @@ router.post('/', leadsLimiter, async (req, res) => {
     const cleanedPhone = phone.toString().trim().replace(/\D/g, '').slice(-10);
     const studentEmail = `${cleanedPhone}@student.ictehub`.toLowerCase();
 
+    // Extract DOB if present in admission_form_data or req.body
+    let rawDob = req.body.dob || null;
+    if (!rawDob && admission_form_data) {
+      if (typeof admission_form_data === 'object' && admission_form_data.dob) {
+        rawDob = admission_form_data.dob;
+      } else if (typeof admission_form_data === 'string') {
+        try {
+          const parsed = JSON.parse(admission_form_data);
+          if (parsed && parsed.dob) {
+            rawDob = parsed.dob;
+          }
+        } catch (e) {}
+      }
+    }
+
+    const formattedDob = formatDobToDDMMYYYY(rawDob);
+    const defaultPassword = formattedDob || cleanedPhone;
+
     // Check if a user with role='student' already exists with this phone/email
     let studentUserId = null;
     let studentCredentials = null;
@@ -43,9 +103,9 @@ router.post('/', leadsLimiter, async (req, res) => {
       if (existingStudentUsers && existingStudentUsers.length > 0) {
         studentUserId = existingStudentUsers[0].id;
       } else {
-        // Create new student user
+        // Create new student user with DOB as default password
         const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(cleanedPhone, salt);
+        const passwordHash = await bcrypt.hash(defaultPassword, salt);
 
         const { data: newUser, error: userError } = await supabase
           .from('users')
@@ -65,7 +125,8 @@ router.post('/', leadsLimiter, async (req, res) => {
           studentUserId = newUser.id;
           studentCredentials = {
             phone: cleanedPhone,
-            default_password: cleanedPhone,
+            default_password: defaultPassword,
+            email: studentEmail,
             message: 'Your login credentials',
           };
         }

@@ -114,6 +114,40 @@ const INITIAL_FORM_STATE = {
 };
 
 /**
+ * Helper to normalize date of birth into DDMMYYYY format string for student default password
+ */
+function formatDobToDDMMYYYY(dobStr) {
+  if (!dobStr || typeof dobStr !== 'string') return '';
+  const trimmed = dobStr.trim();
+  if (/^\d{8}$/.test(trimmed)) return trimmed;
+
+  const ymdMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, '0');
+    const day = ymdMatch[3].padStart(2, '0');
+    return `${day}${month}${year}`;
+  }
+
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${day}${month}${year}`;
+  }
+
+  const parsedDate = new Date(trimmed);
+  if (!isNaN(parsedDate.getTime())) {
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const year = String(parsedDate.getFullYear());
+    return `${day}${month}${year}`;
+  }
+  return '';
+}
+
+/**
  * Helper to strip base64 data URLs, File instances, or non-serializable objects
  * to prevent localStorage QuotaExceededError and 413 Payload Too Large on POST /leads.
  */
@@ -764,6 +798,8 @@ export default function AdmissionForm() {
       minute: '2-digit'
     });
 
+    const defaultDobPassword = submittedLead.student_credentials?.default_password || formatDobToDDMMYYYY(formData.dob) || formData.primary_mobile.trim();
+
     const handleGoToDashboard = async () => {
       try {
         const studentEmail = `${formData.primary_mobile.trim()}@student.ictehub`.toLowerCase();
@@ -772,7 +808,7 @@ export default function AdmissionForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: studentEmail,
-            password: formData.primary_mobile.trim()
+            password: defaultDobPassword
           })
         });
 
@@ -800,7 +836,7 @@ export default function AdmissionForm() {
         `📅 *Session:* ${formData.academic_session}\n\n` +
         `🔐 *Student Portal Login:*\n` +
         `• Phone: ${formData.primary_mobile}\n` +
-        `• Default Password: ${formData.primary_mobile}\n` +
+        `• Default Password: ${defaultDobPassword} (DOB in DDMMYYYY)\n` +
         `• Login Link: ${portalUrl}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
@@ -864,15 +900,15 @@ export default function AdmissionForm() {
                   <span className="text-base font-black text-white font-mono mt-0.5 block">+91 {formData.primary_mobile}</span>
                 </div>
                 <div>
-                  <span className="text-blue-200 text-[10px] font-extrabold uppercase tracking-wider block">Default Password</span>
-                  <span className="text-base font-black text-emerald-300 font-mono mt-0.5 block">{formData.primary_mobile}</span>
+                  <span className="text-blue-200 text-[10px] font-extrabold uppercase tracking-wider block">Default Password (DOB in DDMMYYYY)</span>
+                  <span className="text-base font-black text-emerald-300 font-mono mt-0.5 block">{defaultDobPassword}</span>
                 </div>
               </div>
 
               <div className="flex items-start gap-2 text-xs text-blue-200 font-medium bg-white/5 p-3 rounded-xl border border-white/10">
                 <Shield size={16} className="text-amber-300 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Important:</strong> Your default password is your 10-digit mobile number. Please log in to your Student Dashboard and change your password to secure your account.
+                  <strong>Important:</strong> Your default password is your Date of Birth in DDMMYYYY format ({defaultDobPassword}). Please log in to your Student Dashboard and change your password to secure your account.
                 </span>
               </div>
 

@@ -44,7 +44,7 @@ const AuthPage = ({ onAuthSuccess }) => {
         return;
       }
       if (!formData.password) {
-        setError('Please enter your password (default is your 10-digit mobile number).');
+        setError('Please enter your password (default is your Date of Birth in DDMMYYYY format, e.g. 15082002).');
         setIsLoading(false);
         return;
       }
@@ -222,7 +222,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                 </label>
                 {loginType === 'student' && (
                   <span className="text-[10px] font-bold text-[#1E40FF]">
-                    Default = Phone No.
+                    Default = DOB (DDMMYYYY)
                   </span>
                 )}
               </div>
@@ -233,7 +233,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  placeholder="••••••••"
+                  placeholder={loginType === 'student' ? 'e.g. 15082002 or custom password' : '••••••••'}
                   className="w-full pl-11 pr-11 py-3 rounded-xl border border-slate-200/80 bg-white/70 focus:bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1E40FF] focus:ring-4 focus:ring-[#1E40FF]/15 transition-all font-medium text-sm shadow-sm"
                   value={formData.password}
                   onChange={handleChange}
@@ -254,7 +254,7 @@ const AuthPage = ({ onAuthSuccess }) => {
               <div className="bg-blue-50/80 border border-blue-200/70 rounded-xl p-3 text-[11px] text-blue-900 leading-relaxed font-medium flex items-start gap-2">
                 <HelpCircle size={15} className="text-[#1E40FF] shrink-0 mt-0.5" />
                 <span>
-                  <strong>First time logging in?</strong> Your default password is your 10-digit registered mobile number. You can change it after signing in.
+                  <strong>First time logging in?</strong> Your default password is your Date of Birth in <strong>DDMMYYYY</strong> format (e.g. if born on 15 Aug 2002, enter <strong>15082002</strong>). You can update it anytime in your dashboard.
                 </span>
               </div>
             )}
@@ -303,9 +303,12 @@ const AuthPage = ({ onAuthSuccess }) => {
             <h3 className="text-lg font-extrabold text-slate-900 mb-2 flex items-center gap-2">
               <HelpCircle className="text-[#1E40FF]" size={20} /> Account Assistance
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              If you are a student and forgot your password or need admission assistance, please contact the Buddha College of Nursing admissions desk:
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              If you are a student and need password assistance or admission help:
             </p>
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded-2xl text-[11px] text-blue-900 mb-4 font-medium">
+              💡 <strong>Default Password:</strong> Your Date of Birth in <strong>DDMMYYYY</strong> format (e.g. 15082002) as submitted in your application.
+            </div>
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2 text-xs font-bold text-slate-800 mb-6">
               <div>📞 Admissions Helpline: <a href="tel:+919876543210" className="text-[#1E40FF] underline">+91 98765 43210</a></div>
               <div>✉️ Email: <span className="text-slate-600 font-medium">admissions@buddhacollegeofnursing.edu</span></div>

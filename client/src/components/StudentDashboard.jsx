@@ -885,14 +885,14 @@ export default function StudentDashboard({ user, handleLogout }) {
               <Key className="text-[#1E40FF]" size={20} /> Account Security & Password
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Change your portal password away from your default phone number to keep your student record secure.
+              Change your portal password away from your default Date of Birth to keep your student record secure.
             </p>
           </div>
 
           <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-xs font-semibold text-amber-900 flex items-start gap-2.5">
             <Shield size={18} className="text-amber-600 shrink-0 mt-0.5" />
             <span>
-              <strong>Security Reminder:</strong> Your initial default password was set to your 10-digit mobile number. Please create a custom private password below.
+              <strong>Security Reminder:</strong> Your initial default password was set to your Date of Birth in <strong>DDMMYYYY</strong> format (e.g. 15082002). Please create a custom private password below.
             </span>
           </div>
 
@@ -918,7 +918,7 @@ export default function StudentDashboard({ user, handleLogout }) {
                   type={showCurrentPw ? 'text' : 'password'}
                   value={passwordData.current_password}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, current_password: e.target.value }))}
-                  placeholder="Default: Phone Number"
+                  placeholder="Default: DOB (DDMMYYYY)"
                   className="w-full px-4 pr-10 py-3 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 text-xs font-medium focus:outline-none focus:border-[#1E40FF] focus:ring-4 focus:ring-[#1E40FF]/15 transition-all"
                   required
                 />

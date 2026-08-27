@@ -46,8 +46,8 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       return res.status(400).json({ message: 'Please provide email, password, and role' });
     }
 
-    if (!['admin', 'telecaller'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be admin or telecaller' });
+    if (!['admin', 'telecaller', 'student'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role. Must be admin, telecaller, or student' });
     }
 
     // Check if user already exists
