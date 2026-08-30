@@ -5,7 +5,7 @@ import {
   Eye, EyeOff, Upload, Phone, Mail, MapPin, User, Calendar,
   GraduationCap, Shield, Lock, Key, Copy, Check, ExternalLink,
   RefreshCw, Loader2, Sparkles, Building2, HelpCircle, ArrowRight,
-  CreditCard, LayoutDashboard
+  CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 import IDCard from './IDCard';
@@ -21,6 +21,80 @@ const REQUIRED_DOC_TYPES = [
   { type: 'transfer_certificate', label: 'Transfer Certificate (TC)', required: false },
   { type: 'migration_certificate', label: 'Migration Certificate', required: false },
 ];
+
+/**
+ * Helper to render value or "Not provided" in gray italic
+ */
+function renderVal(val) {
+  if (val === null || val === undefined || String(val).trim() === '') {
+    return <span className="text-slate-400 italic font-normal">Not provided</span>;
+  }
+  return <span className="font-bold text-slate-900">{String(val)}</span>;
+}
+
+/**
+ * Helper to format DOB string into DD/MM/YYYY
+ */
+function formatDobDate(dobStr) {
+  if (!dobStr) return null;
+  const str = String(dobStr).trim();
+  
+  // YYYY-MM-DD
+  const ymd = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (ymd) {
+    return `${ymd[3].padStart(2, '0')}/${ymd[2].padStart(2, '0')}/${ymd[1]}`;
+  }
+  
+  // DDMMYYYY
+  if (/^\d{8}$/.test(str)) {
+    return `${str.slice(0, 2)}/${str.slice(2, 4)}/${str.slice(4)}`;
+  }
+
+  // DD-MM-YYYY
+  const dmy = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmy) {
+    return `${dmy[1].padStart(2, '0')}/${dmy[2].padStart(2, '0')}/${dmy[3]}`;
+  }
+
+  return str;
+}
+
+/**
+ * Helper to format Aadhaar as XXXX-XXXX-1234
+ */
+function formatAadhaarNumber(aadhaarStr) {
+  if (!aadhaarStr) return null;
+  const cleaned = String(aadhaarStr).replace(/\D/g, '');
+  if (cleaned.length >= 4) {
+    return `XXXX-XXXX-${cleaned.slice(-4)}`;
+  }
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/**
+ * Helper to format Address object as "123 Street, City, District, State - PIN"
+ */
+function formatAddress(addr) {
+  if (!addr || typeof addr !== 'object') return null;
+  const line1 = addr.address_line_1 ? addr.address_line_1.trim() : '';
+  const line2 = addr.address_line_2 ? addr.address_line_2.trim() : '';
+  const city = addr.city ? addr.city.trim() : '';
+  const district = addr.district ? addr.district.trim() : '';
+  const state = addr.state ? addr.state.trim() : '';
+  const pin = addr.pincode ? addr.pincode.trim() : '';
+
+  const street = [line1, line2].filter(Boolean).join(', ');
+  const mainParts = [street, city, district].filter(Boolean);
+  
+  let statePin = '';
+  if (state && pin) statePin = `${state} - ${pin}`;
+  else if (state) statePin = state;
+  else if (pin) statePin = `PIN: ${pin}`;
+
+  if (statePin) mainParts.push(statePin);
+  
+  return mainParts.length > 0 ? mainParts.join(', ') : null;
+}
 
 export default function StudentDashboard({ user, handleLogout }) {
   const navigate = useNavigate();
@@ -398,7 +472,7 @@ export default function StudentDashboard({ user, handleLogout }) {
               Welcome, {application.name || 'Applicant'}!
             </h1>
             <p className="text-xs sm:text-sm text-blue-100 max-w-xl font-medium">
-              Manage your Buddha College of Nursing application, upload required credentials, and track your admission journey in real-time.
+              Manage your Buddha College of Nursing application, view your institutional credentials, and track your admission status in real-time.
             </p>
           </div>
 
@@ -471,7 +545,7 @@ export default function StudentDashboard({ user, handleLogout }) {
           })}
         </div>
 
-        {/* STUDENT ID CARD COMPONENT */}
+        {/* 1. STUDENT ID CARD COMPONENT */}
         {(activeTab === 'all' || activeTab === 'idcard') && (
           <IDCard
             application={application}
@@ -486,7 +560,7 @@ export default function StudentDashboard({ user, handleLogout }) {
           />
         )}
 
-        {/* 1. APPLICATION STATUS CARD (Top & Most Prominent) */}
+        {/* 2. APPLICATION STATUS & JOURNEY CARD */}
         {(activeTab === 'all' || activeTab === 'overview') && (
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
@@ -572,206 +646,448 @@ export default function StudentDashboard({ user, handleLogout }) {
         </section>
         )}
 
-        {/* 2-Column Grid for Details */}
+        {/* 3. COURSE DETAILS SECTION */}
+        {(activeTab === 'all' || activeTab === 'overview') && (
+        <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <GraduationCap className="text-[#1E40FF]" size={20} /> Course Details
+            </h3>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF] bg-blue-50 px-2.5 py-1 rounded-md">
+              Session: {formData.academic_session || '2025-26'}
+            </span>
+          </div>
+
+          {/* Labeled Cards Grid for Course Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Program Type
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.program_type)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Course
+              </span>
+              <div className="text-xs font-black text-[#1E40FF]">
+                {renderVal(formData.course || application.course)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Specialization
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.specialization)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Academic Session
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.academic_session)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Preferred College Type
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.preferred_college_type)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Hostel Required
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {formData.hostel_required === 'Yes'
+                  ? `Yes${formData.hostel_location ? ` (${formData.hostel_location})` : ''}`
+                  : (formData.hostel_required ? formData.hostel_required : <span className="text-slate-400 italic font-normal">Not provided</span>)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Scholarship Required
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.scholarship_required)}
+              </div>
+            </div>
+
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Category
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {renderVal(formData.category)}
+              </div>
+            </div>
+          </div>
+
+          {/* Enrolled Course Full Details if enrolled */}
+          {application.enrolled_course && (
+            <div className="bg-emerald-50/80 border border-emerald-200 p-4 rounded-2xl space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                Enrolled Program Details
+              </span>
+              <h4 className="font-extrabold text-slate-900 text-sm">{application.enrolled_course.name}</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div><span className="text-slate-400 block font-medium">Duration:</span> <span className="font-bold text-slate-800">{application.enrolled_course.duration || '3 Years'}</span></div>
+                <div><span className="text-slate-400 block font-medium">Fee:</span> <span className="font-bold text-slate-800">₹{application.enrolled_course.fee || 'TBD'}</span></div>
+              </div>
+            </div>
+          )}
+
+          {application.interested_colleges && application.interested_colleges.length > 0 && (
+            <div className="pt-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
+                Preferred Campus
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {application.interested_colleges.map(col => (
+                  <div key={col.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building2 size={16} className="text-[#1E40FF]" />
+                      <span className="font-bold text-slate-800 text-xs">{col.name}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-semibold">{col.city}, {col.state}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+        )}
+
+        {/* 4. PERSONAL, CONTACT, ADDRESS & GUARDIAN DETAILS (2-Column Grid) */}
         {(activeTab === 'all' || activeTab === 'overview') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* 2. COURSE DETAILS CARD */}
-          <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
+          {/* PERSONAL DETAILS CARD */}
+          <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <GraduationCap className="text-[#1E40FF]" size={20} /> Course Details
-              </h3>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF] bg-blue-50 px-2.5 py-1 rounded-md">
-                {formData.academic_session || '2025-26'}
-              </span>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Applied Program</span>
-                  <span className="font-extrabold text-slate-800">{formData.program_type || 'Nursing'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Course Name</span>
-                  <span className="font-black text-[#1E40FF] text-sm">{formData.course || 'B.Sc Nursing'}</span>
-                </div>
-                {formData.specialization && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Specialization</span>
-                    <span className="font-bold text-slate-800">{formData.specialization}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Study Mode</span>
-                  <span className="font-bold text-slate-800">{formData.preferred_college_type || 'Offline / Regular'}</span>
-                </div>
-              </div>
-
-              {/* Enrolled Course Full Details if enrolled */}
-              {application.enrolled_course && (
-                <div className="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
-                    Enrolled Program Details
-                  </span>
-                  <h4 className="font-extrabold text-slate-900 text-sm">{application.enrolled_course.name}</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div><span className="text-slate-400 block font-medium">Duration:</span> <span className="font-bold text-slate-800">{application.enrolled_course.duration || '3 Years'}</span></div>
-                    <div><span className="text-slate-400 block font-medium">Fee:</span> <span className="font-bold text-slate-800">₹{application.enrolled_course.fee || 'TBD'}</span></div>
-                  </div>
-                </div>
-              )}
-
-              {application.interested_colleges && application.interested_colleges.length > 0 && (
-                <div className="pt-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">
-                    Preferred Campus
-                  </span>
-                  <div className="space-y-2">
-                    {application.interested_colleges.map(col => (
-                      <div key={col.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Building2 size={16} className="text-[#1E40FF]" />
-                          <span className="font-bold text-slate-800 text-xs">{col.name}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-semibold">{col.city}, {col.state}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* 3. PERSONAL INFORMATION CARD */}
-          <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <User className="text-[#1E40FF]" size={20} /> Personal Information
+                <User className="text-[#1E40FF]" size={20} /> Personal Details
               </h3>
               <button
                 onClick={() => navigate('/student/profile')}
                 className="text-xs font-bold text-[#1E40FF] hover:underline border-none bg-transparent cursor-pointer flex items-center gap-1"
               >
-                Edit <ArrowRight size={13} />
+                Edit Profile <ArrowRight size={13} />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Applicant Name</span>
-                <span className="font-bold text-slate-900">{formData.full_name || application.name}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Date of Birth</span>
-                <span className="font-bold text-slate-900">{formData.dob || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Gender</span>
-                <span className="font-bold text-slate-900">{formData.gender || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Category</span>
-                <span className="font-bold text-slate-900">{formData.category || 'General'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Father's Name</span>
-                <span className="font-bold text-slate-900">{formData.father_name || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Mother's Name</span>
-                <span className="font-bold text-slate-900">{formData.mother_name || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Phone Number</span>
-                <span className="font-bold text-slate-900">+91 {application.phone}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block text-[11px]">Email Address</span>
-                <span className="font-bold text-slate-900 truncate block">{formData.email || application.email || 'N/A'}</span>
+            {/* Exact 9 Fields in Clean 2-Column Grid on Desktop, 1 on Mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 text-xs">
+              {/* 1. Full Name */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Full Name
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.full_name || application.name)}
+                </div>
               </div>
 
-              {formData.aadhaar_number && (
-                <div className="col-span-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex items-center justify-between">
-                  <div>
-                    <span className="text-slate-400 font-medium block text-[10px]">Aadhaar Number</span>
-                    <span className="font-mono font-bold text-slate-800">
-                      {showAadhaar
-                        ? formData.aadhaar_number
-                        : `•••• •••• ${formData.aadhaar_number.slice(-4)}`}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAadhaar(!showAadhaar)}
-                    className="text-slate-500 hover:text-slate-800 p-1 border-none bg-transparent cursor-pointer"
-                  >
-                    {showAadhaar ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
+              {/* 2. Father's Name */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Father's Name
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.father_name)}
                 </div>
-              )}
+              </div>
 
-              {formData.permanent_address && (
-                <div className="col-span-2">
-                  <span className="text-slate-400 font-medium block text-[11px]">Permanent Address</span>
-                  <span className="font-bold text-slate-800 leading-relaxed block">
-                    {formData.permanent_address.address_line_1}
-                    {formData.permanent_address.city ? `, ${formData.permanent_address.city}` : ''}
-                    {formData.permanent_address.district ? `, ${formData.permanent_address.district}` : ''}
-                    {formData.permanent_address.state ? `, ${formData.permanent_address.state}` : ''}
-                    {formData.permanent_address.pincode ? ` - ${formData.permanent_address.pincode}` : ''}
-                  </span>
+              {/* 3. Mother's Name */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Mother's Name
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.mother_name)}
                 </div>
-              )}
+              </div>
+
+              {/* 4. Date of Birth (format as DD/MM/YYYY) */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Date of Birth
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formatDobDate(formData.dob))}
+                </div>
+              </div>
+
+              {/* 5. Gender */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Gender
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.gender)}
+                </div>
+              </div>
+
+              {/* 6. Blood Group */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Blood Group
+                </span>
+                <div className="text-sm font-bold text-red-600">
+                  {formData.blood_group ? formData.blood_group : <span className="text-slate-400 italic font-normal">Not provided</span>}
+                </div>
+              </div>
+
+              {/* 7. Category */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Category
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.category)}
+                </div>
+              </div>
+
+              {/* 8. Nationality */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Nationality
+                </span>
+                <div className="text-sm font-bold text-slate-900">
+                  {renderVal(formData.nationality)}
+                </div>
+              </div>
+
+              {/* 9. Aadhaar (show last 4 digits only: XXXX-XXXX-1234) */}
+              <div className="bg-slate-50/60 p-3.5 rounded-2xl border border-slate-200/60 md:col-span-2">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                  Aadhaar Number
+                </span>
+                <div className="text-sm font-mono font-bold text-slate-900">
+                  {renderVal(formatAadhaarNumber(formData.aadhaar_number))}
+                </div>
+              </div>
             </div>
           </section>
+
+          {/* CONTACT, ADDRESS & GUARDIAN DETAILS */}
+          <div className="space-y-8">
+            
+            {/* CONTACT SECTION */}
+            <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Phone className="text-[#1E40FF]" size={20} /> Contact Details
+                </h3>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                {/* Primary Mobile */}
+                <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/70 flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-blue-50 text-[#1E40FF] shrink-0 mt-0.5">
+                    <Phone size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Primary Mobile
+                    </span>
+                    <div className="text-sm font-bold text-slate-900">
+                      {renderVal(formData.primary_mobile ? `+91 ${formData.primary_mobile}` : (application.phone ? `+91 ${application.phone}` : null))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alternate Mobile */}
+                <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/70 flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 mt-0.5">
+                    <PhoneCall size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Alternate Mobile
+                    </span>
+                    <div className="text-sm font-bold text-slate-900">
+                      {renderVal(formData.alternate_mobile ? `+91 ${formData.alternate_mobile}` : null)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Address */}
+                <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/70 flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 shrink-0 mt-0.5">
+                    <Mail size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Email Address
+                    </span>
+                    <div className="text-sm font-bold text-slate-900 truncate">
+                      {renderVal(formData.email || application.email)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ADDRESS SECTION */}
+            <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <MapPin className="text-[#1E40FF]" size={20} /> Address Details
+                </h3>
+              </div>
+
+              <div className="space-y-3.5 text-xs">
+                {/* Permanent Address */}
+                <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/70 flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-blue-50 text-[#1E40FF] shrink-0 mt-0.5">
+                    <Home size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Permanent Address
+                    </span>
+                    <div className="text-xs font-bold text-slate-800 leading-relaxed">
+                      {renderVal(formatAddress(formData.permanent_address))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Correspondence Address */}
+                <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/70 flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-slate-100 text-slate-600 shrink-0 mt-0.5">
+                    <MapPin size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Correspondence Address
+                    </span>
+                    <div className="text-xs font-bold text-slate-800 leading-relaxed">
+                      {formData.same_as_permanent
+                        ? <span className="text-slate-700 font-semibold">Same as Permanent Address</span>
+                        : renderVal(formatAddress(formData.correspondence_address))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* GUARDIAN SECTION */}
+            <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <UserCheck className="text-[#1E40FF]" size={20} /> Guardian Information
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                {/* Guardian Name */}
+                <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-200/70">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Guardian Name
+                  </span>
+                  <div className="text-xs font-bold text-slate-900">
+                    {renderVal(formData.guardian_name)}
+                  </div>
+                </div>
+
+                {/* Relationship */}
+                <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-200/70">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Relationship
+                  </span>
+                  <div className="text-xs font-bold text-slate-900">
+                    {renderVal(formData.guardian_relationship)}
+                  </div>
+                </div>
+
+                {/* Guardian Mobile */}
+                <div className="bg-slate-50/70 p-3 rounded-2xl border border-slate-200/70">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Guardian Mobile
+                  </span>
+                  <div className="text-xs font-bold text-slate-900">
+                    {renderVal(formData.guardian_mobile ? `+91 ${formData.guardian_mobile}` : null)}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
 
         </div>
         )}
 
-        {/* 4. ACADEMIC QUALIFICATIONS CARD */}
+        {/* 5. ACADEMIC QUALIFICATIONS SECTION */}
         {(activeTab === 'all' || activeTab === 'overview') && (
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
               <Award className="text-[#1E40FF]" size={20} /> Academic Qualifications
             </h3>
-            <span className="text-xs text-slate-400 font-medium">Verified from Application</span>
+            <span className="text-xs text-slate-400 font-semibold">Verified from Application</span>
           </div>
 
           {Array.isArray(formData.qualifications) && formData.qualifications.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-extrabold uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-4 rounded-l-xl">Level</th>
-                    <th className="py-3 px-4">Board / University</th>
-                    <th className="py-3 px-4">Institution / School</th>
-                    <th className="py-3 px-4">Passing Year</th>
-                    <th className="py-3 px-4 rounded-r-xl">Score / %</th>
+                  <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-600 font-extrabold uppercase tracking-wider text-[10px]">
+                    <th className="py-3.5 px-4">Examination</th>
+                    <th className="py-3.5 px-4">Board / Institution</th>
+                    <th className="py-3.5 px-4">Year</th>
+                    <th className="py-3.5 px-4">Percentage</th>
+                    <th className="py-3.5 px-4">Division</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                  {formData.qualifications.map((q, idx) => (
-                    <tr key={q.id || idx} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-[#1E40FF]">{q.level}</td>
-                      <td className="py-3.5 px-4">{q.board || '—'}</td>
-                      <td className="py-3.5 px-4">{q.institution || '—'}</td>
-                      <td className="py-3.5 px-4 font-semibold">{q.year || '—'}</td>
-                      <td className="py-3.5 px-4 font-extrabold text-emerald-700">{q.percentage ? `${q.percentage}%` : '—'}</td>
-                    </tr>
-                  ))}
+                  {formData.qualifications.map((q, idx) => {
+                    const boardInst = [q.board, q.institution].filter(Boolean).join(' / ');
+                    return (
+                      <tr
+                        key={q.id || idx}
+                        className={idx % 2 === 1 ? 'bg-slate-50' : 'bg-white'}
+                      >
+                        <td className="py-3.5 px-4 font-bold text-[#1E40FF]">
+                          {q.level || q.stream || 'Examination'}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {boardInst || <span className="text-slate-400 italic">Not provided</span>}
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold">
+                          {q.year || <span className="text-slate-400 italic">Not provided</span>}
+                        </td>
+                        <td className="py-3.5 px-4 font-extrabold text-emerald-700">
+                          {q.percentage ? `${q.percentage}%` : <span className="text-slate-400 italic font-normal">Not provided</span>}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold">
+                          {q.division || <span className="text-slate-400 italic font-normal">Not provided</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="text-xs text-slate-500 italic py-4">No detailed qualification records found in application.</p>
+            <p className="text-xs text-slate-400 italic py-6 text-center">No qualifications added</p>
           )}
         </section>
         )}
 
-        {/* 5. DOCUMENTS CARD */}
+        {/* 6. DOCUMENTS CARD */}
         {(activeTab === 'all' || activeTab === 'documents') && (
         <section id="documents-section" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -879,11 +1195,11 @@ export default function StudentDashboard({ user, handleLogout }) {
         </section>
         )}
 
-        {/* 6. APPLICATION TIMELINE & 7. IMPORTANT INFORMATION */}
+        {/* 7. APPLICATION TIMELINE & CHECKLIST */}
         {(activeTab === 'all' || activeTab === 'overview') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* 6. APPLICATION TIMELINE */}
+          {/* APPLICATION TIMELINE */}
           <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -916,7 +1232,7 @@ export default function StudentDashboard({ user, handleLogout }) {
             )}
           </section>
 
-          {/* 7. IMPORTANT INFORMATION & CHECKLIST */}
+          {/* ADMISSION DAY CHECKLIST */}
           <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-5">
             <div className="border-b border-slate-100 pb-4">
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
