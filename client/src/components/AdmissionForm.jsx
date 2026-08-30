@@ -566,6 +566,7 @@ export default function AdmissionForm() {
       if (!formData.dob) newErrors.dob = 'Date of Birth is required';
       if (!formData.gender) newErrors.gender = 'Gender selection is required';
       if (!formData.nationality.trim()) newErrors.nationality = 'Nationality is required';
+      if (!formData.blood_group) newErrors.blood_group = 'Blood group is required';
       if (!formData.photo_url) newErrors.photo_url = 'Passport size photograph is required';
 
       if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number.replace(/\s/g, ''))) {
@@ -1339,8 +1340,14 @@ export default function AdmissionForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Blood Group (Optional)</label>
-                  <select value={formData.blood_group} onChange={(e) => setFormData(prev => ({ ...prev, blood_group: e.target.value }))} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Blood Group *</label>
+                  <select
+                    value={formData.blood_group}
+                    onChange={(e) => setFormData(prev => ({ ...prev, blood_group: e.target.value }))}
+                    className={`w-full px-4 py-3 rounded-xl border font-semibold text-sm ${
+                      errors.blood_group ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
+                    }`}
+                  >
                     <option value="">-- Select Blood Group --</option>
                     <option value="A+">A+</option>
                     <option value="A-">A-</option>
@@ -1351,6 +1358,7 @@ export default function AdmissionForm() {
                     <option value="AB+">AB+</option>
                     <option value="AB-">AB-</option>
                   </select>
+                  {errors.blood_group && <p className="text-xs text-red-500 font-semibold">{errors.blood_group}</p>}
                 </div>
 
                 <div className="space-y-2">

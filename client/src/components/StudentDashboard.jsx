@@ -4,9 +4,11 @@ import {
   CheckCircle2, Clock, Award, XCircle, AlertCircle, FileText,
   Eye, EyeOff, Upload, Phone, Mail, MapPin, User, Calendar,
   GraduationCap, Shield, Lock, Key, Copy, Check, ExternalLink,
-  RefreshCw, Loader2, Sparkles, Building2, HelpCircle, ArrowRight
+  RefreshCw, Loader2, Sparkles, Building2, HelpCircle, ArrowRight,
+  CreditCard, LayoutDashboard
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
+import IDCard from './IDCard';
 
 const API = 'https://ictehub.onrender.com';
 
@@ -28,6 +30,9 @@ export default function StudentDashboard({ user, handleLogout }) {
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState('all');
 
   // Aadhaar masking
   const [showAadhaar, setShowAadhaar] = useState(false);
@@ -399,8 +404,18 @@ export default function StudentDashboard({ user, handleLogout }) {
 
           <div className="relative z-10 flex flex-wrap items-center gap-3">
             <button
-              onClick={() => navigate('/student/profile')}
+              onClick={() => {
+                setActiveTab('idcard');
+                const el = document.getElementById('student-id-card-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="px-4 py-2.5 rounded-xl bg-white text-[#1E40FF] hover:bg-blue-50 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-none flex items-center gap-1.5"
+            >
+              <CreditCard size={14} /> Student ID Card
+            </button>
+            <button
+              onClick={() => navigate('/student/profile')}
+              className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer border border-white/20 flex items-center gap-1.5"
             >
               <User size={14} /> View Profile
             </button>
@@ -414,7 +429,65 @@ export default function StudentDashboard({ user, handleLogout }) {
           </div>
         </div>
 
+        {/* Navigation Tabs Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {[
+            { id: 'all', label: 'Full Overview', icon: <LayoutDashboard size={15} /> },
+            { id: 'idcard', label: 'Student ID Card', icon: <CreditCard size={15} />, badge: 'Official' },
+            { id: 'overview', label: 'Application & Course', icon: <FileText size={15} /> },
+            { id: 'documents', label: 'Documents', icon: <Upload size={15} />, count: documents.length },
+            { id: 'security', label: 'Account Security', icon: <Lock size={15} /> },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer border ${
+                  isActive
+                    ? 'bg-[#1E40FF] text-white border-[#1E40FF] shadow-lg shadow-blue-500/20'
+                    : 'bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-white text-[#1E40FF]' : 'bg-blue-100 text-[#1E40FF]'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
+                {tab.count !== undefined && (
+                  <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* STUDENT ID CARD COMPONENT */}
+        {(activeTab === 'all' || activeTab === 'idcard') && (
+          <IDCard
+            application={application}
+            documents={documents}
+            onNavigateToDocuments={() => {
+              setActiveTab('documents');
+              setTimeout(() => {
+                const el = document.getElementById('documents-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
+          />
+        )}
+
         {/* 1. APPLICATION STATUS CARD (Top & Most Prominent) */}
+        {(activeTab === 'all' || activeTab === 'overview') && (
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
@@ -497,8 +570,10 @@ export default function StudentDashboard({ user, handleLogout }) {
             </div>
           </div>
         </section>
+        )}
 
         {/* 2-Column Grid for Details */}
+        {(activeTab === 'all' || activeTab === 'overview') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* 2. COURSE DETAILS CARD */}
@@ -653,8 +728,10 @@ export default function StudentDashboard({ user, handleLogout }) {
           </section>
 
         </div>
+        )}
 
         {/* 4. ACADEMIC QUALIFICATIONS CARD */}
+        {(activeTab === 'all' || activeTab === 'overview') && (
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -692,9 +769,11 @@ export default function StudentDashboard({ user, handleLogout }) {
             <p className="text-xs text-slate-500 italic py-4">No detailed qualification records found in application.</p>
           )}
         </section>
+        )}
 
         {/* 5. DOCUMENTS CARD */}
-        <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        {(activeTab === 'all' || activeTab === 'documents') && (
+        <section id="documents-section" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -798,8 +877,10 @@ export default function StudentDashboard({ user, handleLogout }) {
             })}
           </div>
         </section>
+        )}
 
         {/* 6. APPLICATION TIMELINE & 7. IMPORTANT INFORMATION */}
+        {(activeTab === 'all' || activeTab === 'overview') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* 6. APPLICATION TIMELINE */}
@@ -877,8 +958,10 @@ export default function StudentDashboard({ user, handleLogout }) {
           </section>
 
         </div>
+        )}
 
         {/* 8. CHANGE PASSWORD SECTION */}
+        {(activeTab === 'all' || activeTab === 'security') && (
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -981,6 +1064,7 @@ export default function StudentDashboard({ user, handleLogout }) {
 
           </form>
         </section>
+        )}
 
       </main>
 

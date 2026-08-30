@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.21.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -26,5 +28,10 @@
   },
   "homepage": "https://budhhacollegeofnursingtamolia.com/",
   "description": "Buddha College of Nursing - Education platform",
-  "keywords": ["education", "college", "nursing", "Buddha College"]
+  "keywords": [
+    "education",
+    "college",
+    "nursing",
+    "Buddha College"
+  ]
 }
