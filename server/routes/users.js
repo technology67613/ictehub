@@ -271,4 +271,40 @@ router.put('/me', protect, async (req, res) => {
   }
 });
 
+/**
+ * @route   PUT /users/:id/reset-password
+ * @desc    Reset password for a user (Admin only)
+ * @access  Private/Admin
+ */
+router.put('/:id/reset-password', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+    const { new_password } = req.body;
+
+    if (!new_password || new_password.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(new_password, salt);
+
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('id', id)
+      .select('id, name, email, role, is_active')
+      .single();
+
+    if (error || !updatedUser) {
+      return res.status(404).json({ message: 'User not found or update failed' });
+    }
+
+    return res.json({ message: 'Password reset successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Error resetting user password:', error);
+    return res.status(500).json({ message: 'Server error resetting password', error: error.message });
+  }
+});
+
 module.exports = router;

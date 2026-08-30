@@ -10,12 +10,12 @@ import {
 const API = 'https://ictehub.onrender.com';
 
 const STATUS_CONFIG = {
-  'new':               { label: 'New',               color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
-  'contacted':         { label: 'Contacted',          color: '#3B82F6', bg: '#EFF6FF', icon: Phone },
-  'interested':        { label: 'Interested',         color: '#F59E0B', bg: '#FFFBEB', icon: PhoneCall },
-  'not-interested':    { label: 'Not Interested',     color: '#EF4444', bg: '#FEF2F2', icon: XCircle },
-  'enrolled-college':  { label: 'Enrolled (College)', color: '#10B981', bg: '#ECFDF5', icon: Award },
-  'enrolled-institute':{ label: 'Enrolled (Inst.)',   color: '#10B981', bg: '#ECFDF5', icon: Award },
+  'new': { label: 'New', color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
+  'contacted': { label: 'Contacted', color: '#3B82F6', bg: '#EFF6FF', icon: Phone },
+  'interested': { label: 'Interested', color: '#F59E0B', bg: '#FFFBEB', icon: PhoneCall },
+  'not-interested': { label: 'Not Interested', color: '#EF4444', bg: '#FEF2F2', icon: XCircle },
+  'enrolled-college': { label: 'Enrolled (College)', color: '#10B981', bg: '#ECFDF5', icon: Award },
+  'enrolled-institute': { label: 'Enrolled (Inst.)', color: '#10B981', bg: '#ECFDF5', icon: Award },
 };
 
 function initials(name) {
@@ -211,7 +211,7 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
 
       {/* Drawer Panel */}
       <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-        
+
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0 bg-slate-50/50">
           <div className="flex items-center gap-3">
@@ -635,7 +635,7 @@ export default function AdminAdmissions({ token }) {
           if (Array.isArray(docs)) {
             setDocCounts(prev => ({ ...prev, [l.id]: docs.length, [targetId]: docs.length }));
           }
-        } catch (e) {}
+        } catch (e) { }
       });
     } catch (err) {
       console.error('Error fetching admission applications:', err);
@@ -708,7 +708,7 @@ export default function AdminAdmissions({ token }) {
         parsedForm = typeof l.admission_form_data === 'string'
           ? JSON.parse(l.admission_form_data)
           : l.admission_form_data || {};
-      } catch (e) {}
+      } catch (e) { }
 
       return {
         ...l,
@@ -810,7 +810,7 @@ export default function AdminAdmissions({ token }) {
 
   return (
     <div className="space-y-8 font-sans">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -879,7 +879,7 @@ export default function AdminAdmissions({ token }) {
       {/* Filter & Search Bar */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          
+
           {/* Search */}
           <div className="relative lg:col-span-2">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -945,7 +945,7 @@ export default function AdminAdmissions({ token }) {
 
       {/* Applications Table */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
-        
+
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
             <FileText size={16} className="text-[#1E40FF]" /> Application Submissions ({filteredApplications.length})
@@ -995,7 +995,7 @@ export default function AdminAdmissions({ token }) {
 
                   return (
                     <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
-                      
+
                       {/* Applicant */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
@@ -1041,9 +1041,8 @@ export default function AdminAdmissions({ token }) {
 
                       {/* Documents Badge */}
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
-                          dCount > 0 ? 'bg-blue-100 text-[#1E40FF]' : 'bg-slate-100 text-slate-400'
-                        }`}>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${dCount > 0 ? 'bg-blue-100 text-[#1E40FF]' : 'bg-slate-100 text-slate-400'
+                          }`}>
                           <FileText size={12} /> {dCount} Docs
                         </span>
                       </td>

@@ -81,6 +81,31 @@ router.get('/:leadId', protect, async (req, res) => {
   }
 });
 
+// PUT /admission-documents/:id - Admin or Telecaller
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const supabase = req.supabase || req.app.get('supabase');
+    const { id } = req.params;
+    const { verification_status, verification_note } = req.body;
+
+    const updateData = {};
+    if (verification_status) updateData.verification_status = verification_status;
+    if (verification_note !== undefined) updateData.verification_note = verification_note;
+
+    const { data, error } = await supabase
+      .from('admission_documents')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /admission-documents/:id - Admin only
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {

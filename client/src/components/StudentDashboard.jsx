@@ -479,7 +479,7 @@ export default function StudentDashboard({ user, handleLogout }) {
   }
 
   const formData = application.admission_form_data || {};
-  const statusInfo = getStatusBadge(application.status);
+  const statusInfo = getStatusBadge(application.application_status || application.status);
   const appIdShort = (application.id || '').substring(0, 8).toUpperCase();
   const appliedDate = application.created_at
     ? new Date(application.created_at).toLocaleString('en-IN', {
@@ -543,9 +543,6 @@ export default function StudentDashboard({ user, handleLogout }) {
           <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="relative z-10 space-y-1.5 w-full md:w-auto">
-            <div className="inline-flex items-center justify-center md:justify-start gap-1.5 text-xs font-extrabold uppercase tracking-widest bg-white/15 px-3 py-1 rounded-full text-blue-100 mb-1 border border-white/20">
-              <Sparkles size={14} /> Admissions 2025-26
-            </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white">
               Welcome, {application.name || 'Applicant'}!
             </h1>

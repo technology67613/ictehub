@@ -43,8 +43,8 @@ export default function IDCard({ application, documents = [] }) {
 
   const course = formData.course || application?.course || 'GNM / ANM';
   const session = formData.academic_session || application?.academic_session || '';
-  const batch = formData.batch || application?.batch || '';
-  const rollNo = formData.roll_no || application?.roll_no || '';
+  const batch = application?.batch || formData.batch || '';
+  const rollNo = application?.roll_number || application?.roll_no || formData.roll_number || formData.roll_no || '';
 
   const fullName = formData.full_name || application?.full_name || application?.name || '';
   const fatherName = formData.father_name || application?.father_name || '';

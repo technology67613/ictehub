@@ -372,21 +372,48 @@ router.get('/:id', protect, async (req, res) => {
 });
 
 /**
- * @route   PUT /admission-applications/:id
- * @desc    Update admission application status or details (Admin only)
- * @access  Private/Admin
+ * @route   GET /admission-applications/qualifications/:applicationId
+ * @desc    Get qualifications for an application
+ * @access  Private
  */
-router.put('/:id', protect, authorize('admin'), async (req, res) => {
+router.get('/qualifications/:applicationId', protect, async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { applicationId } = req.params;
+
+    const { data: quals, error } = await supabase
+      .from('admission_qualifications')
+      .select('*')
+      .eq('application_id', applicationId)
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    return res.json(quals || []);
+  } catch (error) {
+    console.error('Error fetching admission qualifications:', error);
+    return res.status(500).json({ message: 'Server error fetching qualifications', error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /admission-applications/:id
+ * @desc    Update admission application status or details (Admin/Telecaller)
+ * @access  Private
+ */
+router.put('/:id', protect, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { id } = req.params;
-    const { status, program_type, course, academic_session } = req.body;
+    const { status, application_status, batch, roll_number, program_type, course, academic_session } = req.body;
 
     const updateData = {
       updated_at: new Date().toISOString()
     };
 
     if (status) updateData.status = status;
+    if (application_status) updateData.application_status = application_status;
+    if (batch !== undefined) updateData.batch = batch;
+    if (roll_number !== undefined) updateData.roll_number = roll_number;
     if (program_type) updateData.program_type = program_type;
     if (course) updateData.course = course;
     if (academic_session) updateData.academic_session = academic_session;
