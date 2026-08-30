@@ -116,7 +116,7 @@ export default function StudentProfile({ user, token, onProfileUpdate, handleLog
               <ArrowLeft size={16} /> Back to Dashboard
             </button>
           </div>
-          <IcteLogo size={32} withText />
+          <img src="/logo.png" alt="Buddha College of Nursing" className="h-9 w-auto object-contain" />
         </div>
       </header>
 

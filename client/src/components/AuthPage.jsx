@@ -109,7 +109,7 @@ const AuthPage = ({ onAuthSuccess }) => {
           
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
-              <IcteLogo size={52} withText />
+              <img src="/logo.png" alt="Buddha College of Nursing" className="h-16 w-auto object-contain drop-shadow-sm" />
             </div>
             <h2 className="text-xl font-black text-slate-900 tracking-tight">
               {loginType === 'student' ? 'Student Portal Login' : 'Staff & Administration Login'}

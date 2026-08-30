@@ -266,12 +266,12 @@ export default function IDCard({ application, documents = [], onNavigateToDocume
               >
                 {/* College Logo */}
                 <img
-                  src="/main-logo.jpeg"
-                  alt="College Logo"
+                  src="/logo.png"
+                  alt="Buddha College of Nursing"
                   crossOrigin="anonymous"
                   style={{
-                    height: '40px',
-                    width: '40px',
+                    height: '42px',
+                    width: '42px',
                     objectFit: 'contain',
                     flexShrink: 0,
                     borderRadius: '50%',

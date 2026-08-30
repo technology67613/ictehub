@@ -140,16 +140,94 @@ export default function StudentDashboard({ user, handleLogout }) {
         return;
       }
 
-      // 1. Fetch Student Application
-      const appRes = await fetch(`${API}/leads/my-application`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!appRes.ok) {
-        const errData = await appRes.json();
-        throw new Error(errData.message || 'Failed to fetch application details.');
+      // 1. Fetch Student Application (Relational Schema with fallback)
+      let appData = null;
+      try {
+        const relationalRes = await fetch(`${API}/admission-applications/my`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (relationalRes.ok) {
+          const relData = await relationalRes.json();
+          if (relData && relData.id) {
+            // Map relational fields into both top-level and admission_form_data for complete compatibility
+            appData = {
+              ...relData,
+              name: relData.full_name || relData.name,
+              phone: relData.primary_mobile || relData.phone,
+              email: relData.email,
+              admission_form_data: {
+                full_name: relData.full_name,
+                father_name: relData.father_name,
+                mother_name: relData.mother_name,
+                dob: relData.dob,
+                gender: relData.gender,
+                nationality: relData.nationality,
+                blood_group: relData.blood_group,
+                aadhaar_number: relData.aadhaar_number,
+                photo_url: relData.photo_url,
+                primary_mobile: relData.primary_mobile,
+                alternate_mobile: relData.alternate_mobile,
+                email: relData.email,
+                program_type: relData.program_type,
+                course: relData.course,
+                specialization: relData.specialization,
+                preferred_college_type: relData.preferred_college_type,
+                academic_session: relData.academic_session,
+                category: relData.category,
+                permanent_address: {
+                  address_line_1: relData.perm_address_line1 || '',
+                  address_line_2: relData.perm_address_line2 || '',
+                  city: relData.perm_city || '',
+                  district: relData.perm_district || '',
+                  state: relData.perm_state || '',
+                  pincode: relData.perm_pin || '',
+                },
+                same_as_permanent: relData.corr_same_as_perm !== false,
+                correspondence_address: {
+                  address_line_1: relData.corr_address_line1 || '',
+                  address_line_2: relData.corr_address_line2 || '',
+                  city: relData.corr_city || '',
+                  district: relData.corr_district || '',
+                  state: relData.corr_state || '',
+                  pincode: relData.corr_pin || '',
+                },
+                guardian_name: relData.guardian_name,
+                guardian_relationship: relData.guardian_relationship,
+                guardian_mobile: relData.guardian_mobile,
+                hostel_required: relData.hostel_required ? 'Yes' : 'No',
+                hostel_location: relData.hostel_location,
+                scholarship_required: relData.scholarship_required ? 'Yes' : 'No',
+                hear_about_us: relData.heard_about_us,
+                qualifications: (relData.qualifications || relData.admission_qualifications || []).map((q, idx) => ({
+                  id: q.id || `q_${idx}`,
+                  level: q.examination,
+                  board: q.board_institution,
+                  institution: '',
+                  year: q.year_of_passing,
+                  stream: q.stream_subjects,
+                  percentage: q.percentage_cgpa,
+                  division: q.division,
+                }))
+              }
+            };
+          }
+        }
+      } catch (e) {
+        console.warn('Relational fetch fallback trigger:', e);
       }
-      const appData = await appRes.json();
+
+      if (!appData) {
+        const appRes = await fetch(`${API}/leads/my-application`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!appRes.ok) {
+          const errData = await appRes.json();
+          throw new Error(errData.message || 'Failed to fetch application details.');
+        }
+        appData = await appRes.json();
+      }
+
       setApplication(appData);
 
       // 2. Fetch Student Documents
@@ -427,7 +505,7 @@ export default function StudentDashboard({ user, handleLogout }) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           <div className="flex items-center gap-3">
-            <IcteLogo size={36} withText />
+            <img src="/logo.png" alt="Buddha College of Nursing" className="h-10 w-auto object-contain" />
             <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-3">
               <span className="text-xs font-black uppercase tracking-widest text-[#1E40FF] bg-blue-50 px-2 py-0.5 rounded-md">
                 Student Portal

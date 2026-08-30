@@ -148,7 +148,7 @@ function App() {
               className="flex items-center gap-2 cursor-pointer group"
               onClick={handleLogoClick}
             >
-              <IcteLogo size={36} withText className="group-hover:opacity-90 transition-opacity" />
+              <img src="/logo.png" alt="Buddha College of Nursing" className="h-10 w-auto object-contain group-hover:opacity-90 transition-opacity" />
             </div>
 
             {/* Desktop Navigation */}
@@ -283,7 +283,7 @@ function App() {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
             >
-              <IcteLogo size={32} withText />
+              <img src="/logo.png" alt="Buddha College of Nursing" className="h-9 w-auto object-contain" />
             </div>
             <button
               onClick={() => setMobileMenuOpen(false)}

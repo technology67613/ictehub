@@ -51,6 +51,61 @@ function StatusBadge({ status }) {
 function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onAssign, token }) {
   const [formData] = useState(() => {
     try {
+      if (lead.full_name || lead.perm_address_line1 || lead.admission_qualifications || lead.qualifications) {
+        return {
+          full_name: lead.full_name,
+          father_name: lead.father_name,
+          mother_name: lead.mother_name,
+          dob: lead.dob,
+          gender: lead.gender,
+          nationality: lead.nationality,
+          blood_group: lead.blood_group,
+          aadhaar_number: lead.aadhaar_number,
+          photo_url: lead.photo_url,
+          primary_mobile: lead.primary_mobile,
+          alternate_mobile: lead.alternate_mobile,
+          email: lead.email,
+          program_type: lead.program_type,
+          course: lead.course,
+          specialization: lead.specialization,
+          preferred_college_type: lead.preferred_college_type,
+          academic_session: lead.academic_session,
+          category: lead.category,
+          permanent_address: {
+            address_line_1: lead.perm_address_line1 || '',
+            address_line_2: lead.perm_address_line2 || '',
+            city: lead.perm_city || '',
+            district: lead.perm_district || '',
+            state: lead.perm_state || '',
+            pincode: lead.perm_pin || '',
+          },
+          same_as_permanent: lead.corr_same_as_perm !== false,
+          correspondence_address: {
+            address_line_1: lead.corr_address_line1 || '',
+            address_line_2: lead.corr_address_line2 || '',
+            city: lead.corr_city || '',
+            district: lead.corr_district || '',
+            state: lead.corr_state || '',
+            pincode: lead.corr_pin || '',
+          },
+          guardian_name: lead.guardian_name,
+          guardian_relationship: lead.guardian_relationship,
+          guardian_mobile: lead.guardian_mobile,
+          hostel_required: lead.hostel_required ? 'Yes' : 'No',
+          hostel_location: lead.hostel_location,
+          scholarship_required: lead.scholarship_required ? 'Yes' : 'No',
+          hear_about_us: lead.heard_about_us,
+          qualifications: (lead.qualifications || lead.admission_qualifications || []).map((q, idx) => ({
+            id: q.id || `q_${idx}`,
+            level: q.examination,
+            board: q.board_institution,
+            institution: '',
+            year: q.year_of_passing,
+            percentage: q.percentage_cgpa,
+            division: q.division
+          }))
+        };
+      }
       return typeof lead.admission_form_data === 'string'
         ? JSON.parse(lead.admission_form_data)
         : lead.admission_form_data || {};
@@ -529,28 +584,59 @@ export default function AdminAdmissions({ token }) {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/leads`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok && Array.isArray(data)) {
-        // Filter only leads that submitted the admission form
-        const admissionLeads = data.filter(l => Boolean(l.admission_form_data));
-        setLeads(admissionLeads);
-
-        // Fetch doc count for each lead asynchronously
-        admissionLeads.forEach(async (l) => {
-          try {
-            const docRes = await fetch(`${API}/admission-documents/${l.id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const docs = await docRes.json();
-            if (Array.isArray(docs)) {
-              setDocCounts(prev => ({ ...prev, [l.id]: docs.length }));
-            }
-          } catch (e) {}
+      // 1. Try relational GET /admission-applications
+      let admissionList = [];
+      try {
+        const appRes = await fetch(`${API}/admission-applications`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        if (appRes.ok) {
+          const appData = await appRes.json();
+          if (Array.isArray(appData) && appData.length > 0) {
+            admissionList = appData.map(app => ({
+              ...app,
+              id: app.id,
+              lead_id: app.lead_id || app.id,
+              name: app.full_name || app.name,
+              phone: app.primary_mobile || app.phone,
+              email: app.email,
+              course: app.course,
+              status: app.status || 'submitted',
+              created_at: app.submitted_at || app.created_at,
+              assigned_telecaller_id: app.leads?.assigned_telecaller_id || null,
+            }));
+          }
+        }
+      } catch (errRel) {
+        console.warn('Could not fetch relational applications, falling back to leads:', errRel);
       }
+
+      // 2. Fallback to GET /leads if relational list is empty
+      if (admissionList.length === 0) {
+        const res = await fetch(`${API}/leads`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && Array.isArray(data)) {
+          admissionList = data.filter(l => Boolean(l.admission_form_data));
+        }
+      }
+
+      setLeads(admissionList);
+
+      // Fetch doc count for each application asynchronously
+      admissionList.forEach(async (l) => {
+        const targetId = l.lead_id || l.id;
+        try {
+          const docRes = await fetch(`${API}/admission-documents/${targetId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const docs = await docRes.json();
+          if (Array.isArray(docs)) {
+            setDocCounts(prev => ({ ...prev, [l.id]: docs.length, [targetId]: docs.length }));
+          }
+        } catch (e) {}
+      });
     } catch (err) {
       console.error('Error fetching admission applications:', err);
     } finally {

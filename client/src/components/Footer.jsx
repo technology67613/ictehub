@@ -14,8 +14,8 @@ export default function Footer({ setView }) {
           {/* Logo & Tagline */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setView && setView('home')}>
-              <div className="bg-white px-3.5 py-2 rounded-xl inline-flex items-center shadow-inner">
-                <img src="/main-logo.jpeg" className="h-8 w-auto object-contain" alt="Buddha College of Nursing Logo" />
+              <div className="bg-white px-3.5 py-2 rounded-2xl inline-flex items-center shadow-inner">
+                <img src="/logo.png" className="h-10 w-auto object-contain" alt="Buddha College of Nursing" />
               </div>
             </div>
             <p className="text-sm font-semibold text-slate-500 max-w-sm">

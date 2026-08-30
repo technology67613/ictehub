@@ -744,8 +744,85 @@ export default function AdmissionForm() {
       }
 
       const newLeadId = resData.id;
+      let applicationRef = resData.application_ref || (`BCN-${newLeadId.substring(0, 8).toUpperCase()}`);
 
-      // 2. Save each uploaded document via POST /admission-documents
+      // 2. POST /admission-applications (Relational Application Schema)
+      try {
+        setSubmittingProgress('Creating relational admission records...');
+        const appPayload = {
+          lead_id: newLeadId,
+          student_user_id: resData.student_user_id || null,
+          program_type: formData.program_type,
+          course: formData.course,
+          specialization: formData.specialization || null,
+          preferred_college_type: formData.preferred_college_type || null,
+          academic_session: formData.academic_session || '2025-26',
+          category: formData.category || 'General',
+          
+          full_name: formData.full_name,
+          father_name: formData.father_name,
+          mother_name: formData.mother_name,
+          dob: formData.dob || null,
+          gender: formData.gender,
+          nationality: formData.nationality || 'Indian',
+          blood_group: formData.blood_group || null,
+          aadhaar_number: formData.aadhaar_number || null,
+          photo_url: formData.photo_url || null,
+          
+          primary_mobile: formData.primary_mobile,
+          alternate_mobile: formData.alternate_mobile || null,
+          email: formData.email || null,
+          perm_address_line1: formData.permanent_address?.address_line_1 || null,
+          perm_address_line2: formData.permanent_address?.address_line_2 || null,
+          perm_city: formData.permanent_address?.city || null,
+          perm_district: formData.permanent_address?.district || null,
+          perm_state: formData.permanent_address?.state || null,
+          perm_pin: formData.permanent_address?.pincode || null,
+          corr_same_as_perm: Boolean(formData.same_as_permanent),
+          corr_address_line1: !formData.same_as_permanent ? formData.correspondence_address?.address_line_1 : null,
+          corr_address_line2: !formData.same_as_permanent ? formData.correspondence_address?.address_line_2 : null,
+          corr_city: !formData.same_as_permanent ? formData.correspondence_address?.city : null,
+          corr_district: !formData.same_as_permanent ? formData.correspondence_address?.district : null,
+          corr_state: !formData.same_as_permanent ? formData.correspondence_address?.state : null,
+          corr_pin: !formData.same_as_permanent ? formData.correspondence_address?.pincode : null,
+          
+          guardian_name: formData.guardian_name || null,
+          guardian_relationship: formData.guardian_relationship || null,
+          guardian_mobile: formData.guardian_mobile || null,
+          hostel_required: formData.hostel_required === 'Yes',
+          hostel_location: formData.hostel_required === 'Yes' ? (formData.hostel_location || null) : null,
+          scholarship_required: formData.scholarship_required === 'Yes',
+          heard_about_us: formData.hear_about_us || formData.heard_about_us || null,
+          source: finalSource,
+          
+          qualifications: Array.isArray(formData.qualifications) ? formData.qualifications.map((q, idx) => ({
+            examination: q.level || q.examination || '',
+            board_institution: [q.board, q.institution].filter(Boolean).join(' / ') || q.board || q.institution || '',
+            year_of_passing: String(q.year || q.year_of_passing || ''),
+            stream_subjects: q.stream || q.stream_subjects || '',
+            percentage_cgpa: String(q.percentage || q.percentage_cgpa || ''),
+            division: q.division || '',
+            sort_order: idx
+          })) : []
+        };
+
+        const appRes = await fetch(`${API}/admission-applications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appPayload)
+        });
+
+        if (appRes.ok) {
+          const appData = await appRes.json();
+          if (appData.application_ref) {
+            applicationRef = appData.application_ref;
+          }
+        }
+      } catch (appErr) {
+        console.warn('Relational application creation error:', appErr);
+      }
+
+      // 3. Save each uploaded document via POST /admission-documents
       if (newLeadId && formData.documents) {
         setSubmittingProgress('Linking uploaded documents...');
         const docEntries = Object.entries(formData.documents);
@@ -771,14 +848,17 @@ export default function AdmissionForm() {
         }
       }
 
-      // 3. Link session to lead
+      // 4. Link session to lead
       if (newLeadId) {
         linkLeadToSession(newLeadId);
       }
 
-      // 4. Clear draft from localStorage
+      // 5. Clear draft from localStorage
       localStorage.removeItem('admission_draft');
-      setSubmittedLead(resData);
+      setSubmittedLead({
+        ...resData,
+        application_ref: applicationRef
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setErrors({ submit: err.message || 'Server error. Please try again.' });
@@ -790,7 +870,7 @@ export default function AdmissionForm() {
 
   // Confirmation Screen
   if (submittedLead) {
-    const refNum = (submittedLead.id || 'SUBMITTED').substring(0, 8).toUpperCase();
+    const refNum = submittedLead.application_ref || (submittedLead.id || 'SUBMITTED').substring(0, 8).toUpperCase();
     const submitDate = new Date().toLocaleString('en-IN', {
       day: 'numeric',
       month: 'short',

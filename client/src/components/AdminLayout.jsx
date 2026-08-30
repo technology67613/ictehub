@@ -51,7 +51,7 @@ const AdminLayout = ({ user, handleLogout }) => {
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200 sticky top-0 z-30 w-full">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin/admissions')}>
-          <IcteLogo size={32} withText />
+          <img src="/logo.png" alt="Buddha College of Nursing" className="h-9 w-auto object-contain" />
           <span className="text-[10px] bg-indigo-50 text-indigo-600 font-extrabold uppercase px-2 py-0.5 rounded-full border border-indigo-100">
             Admin
           </span>
@@ -81,9 +81,9 @@ const AdminLayout = ({ user, handleLogout }) => {
         {/* Top Section */}
         <div>
           {/* Logo Container (Hidden on mobile top header layout to prevent double logo, shown on desktop sidebar) */}
-          <div className="h-16 px-6 border-b border-slate-200/80 items-center gap-3 hidden md:flex">
+          <div className="h-16 px-6 border-b border-slate-200/80 items-center justify-between hidden md:flex">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/admin/admissions')}>
-              <IcteLogo size={34} withText />
+              <img src="/logo.png" alt="Buddha College of Nursing" className="h-10 w-auto object-contain" />
             </div>
             <span className="text-[10px] bg-indigo-50 text-indigo-600 font-extrabold uppercase px-2 py-0.5 rounded-full border border-indigo-100 shrink-0">
               Admin
