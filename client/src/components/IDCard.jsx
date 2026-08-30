@@ -132,7 +132,7 @@ export default function IDCard({ application, documents = [] }) {
   };
 
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+    <div className="w-full overflow-hidden flex flex-col items-center justify-center p-2 sm:p-5 bg-slate-50">
       {/* Embedded CSS for clean printing */}
       <style>{`
         @media print {
@@ -156,23 +156,25 @@ export default function IDCard({ application, documents = [] }) {
         }
       `}</style>
 
-      {/* Official ID Card Component */}
-      <div
-        ref={cardRef}
-        className="print-id-card"
-        style={{
-          width: '800px',
-          height: 'auto',
-          backgroundColor: '#ffffff',
-          color: '#000000',
-          border: '2px solid #000000',
-          padding: '20px',
-          boxSizing: 'border-box',
-          fontFamily: "'Times New Roman', Times, serif",
-          fontSize: '14px',
-          lineHeight: '1.4',
-        }}
-      >
+      {/* Responsive Scaled Wrapper for Official ID Card */}
+      <div className="w-full overflow-x-auto overflow-y-hidden flex justify-center items-start py-2 max-w-full">
+        <div className="transform scale-[0.42] xs:scale-[0.52] sm:scale-75 md:scale-100 origin-top flex-shrink-0 -mb-[270px] xs:-mb-[220px] sm:-mb-[90px] md:mb-0 transition-transform">
+          <div
+            ref={cardRef}
+            className="print-id-card"
+            style={{
+              width: '800px',
+              height: 'auto',
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              border: '2px solid #000000',
+              padding: '20px',
+              boxSizing: 'border-box',
+              fontFamily: "'Times New Roman', Times, serif",
+              fontSize: '14px',
+              lineHeight: '1.4',
+            }}
+          >
         {/* Header Section */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           {/* Left: College circular logo */}
@@ -556,28 +558,17 @@ export default function IDCard({ application, documents = [] }) {
           Note: Candidate must bring this ID card along with a valid ID proof.
         </div>
       </div>
+    </div>
+  </div>
 
       {/* Download & Print Action Buttons */}
-      <div className="no-print" style={{ width: '800px', marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+      <div className="no-print w-full max-w-[800px] mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 px-2">
         {/* Download as PNG */}
         <button
           type="button"
           onClick={handleDownloadImage}
           disabled={downloadingImg || downloadingPdf}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            cursor: 'pointer',
-            opacity: downloadingImg || downloadingPdf ? 0.7 : 1,
-          }}
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-black text-white rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-slate-800 transition-all disabled:opacity-70 border-none w-full sm:w-auto"
         >
           {downloadingImg ? (
             <><Loader2 size={18} className="animate-spin" /> Generating PNG...</>
@@ -591,20 +582,7 @@ export default function IDCard({ application, documents = [] }) {
           type="button"
           onClick={handleDownloadPDF}
           disabled={downloadingImg || downloadingPdf}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: '#ffffff',
-            color: '#000000',
-            border: '2px solid #000000',
-            borderRadius: '6px',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            cursor: 'pointer',
-            opacity: downloadingImg || downloadingPdf ? 0.7 : 1,
-          }}
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-black border-2 border-black rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-slate-100 transition-all disabled:opacity-70 w-full sm:w-auto"
         >
           {downloadingPdf ? (
             <><Loader2 size={18} className="animate-spin" /> Generating PDF...</>
@@ -618,19 +596,7 @@ export default function IDCard({ application, documents = [] }) {
           type="button"
           onClick={handlePrint}
           disabled={downloadingImg || downloadingPdf}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            cursor: 'pointer',
-          }}
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-black transition-all border-none w-full sm:w-auto"
         >
           <Printer size={18} /> Print
         </button>
@@ -638,4 +604,3 @@ export default function IDCard({ application, documents = [] }) {
     </div>
   );
 }
-
