@@ -519,7 +519,7 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                       onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
                       className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
                     >
-                      Enroll
+                      Enquire
                     </button>
                   </div>
                 </div>
