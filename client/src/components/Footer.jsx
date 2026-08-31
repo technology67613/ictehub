@@ -29,10 +29,10 @@ export default function Footer({ setView }) {
               <p className="text-slate-400 text-xs">
                 Email:{' '}
                 <a 
-                  href="mailto:buddhacollegeofnurrsskh@gmail.com" 
+                  href="mailto:buddhacollegeofnursing@gmail.com" 
                   className="text-slate-300 hover:text-[#1E40FF] transition-colors underline-offset-2 hover:underline"
                 >
-                  buddhacollegeofnurrsskh@gmail.com
+                  buddhacollegeofnursing@gmail.com
                 </a>
               </p>
               <div className="pt-1 text-[11px] text-slate-500 leading-snug space-y-0.5">
@@ -121,9 +121,9 @@ export default function Footer({ setView }) {
             <MapPin size={14} className="text-[#1E40FF] shrink-0" />
             <span>Tamulia, Seraikela-Kharsawan, Jharkhand – 831020</span>
           </div>
-          <a href="mailto:buddhacollegeofnurrsskh@gmail.com" className="flex items-center gap-2 hover:text-[#1E40FF] transition-colors">
+          <a href="mailto:buddhacollegeofnursing@gmail.com" className="flex items-center gap-2 hover:text-[#1E40FF] transition-colors">
             <Mail size={14} className="text-[#1E40FF] shrink-0" />
-            <span>buddhacollegeofnurrsskh@gmail.com</span>
+            <span>buddhacollegeofnursing@gmail.com</span>
           </a>
         </div>
 
