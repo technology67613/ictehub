@@ -20,6 +20,7 @@ import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import AdminInstituteLeads from './components/AdminInstituteLeads';
 import AdminAdmissions from './components/AdminAdmissions';
 import AdmissionForm from './components/AdmissionForm';
+import OfflineAdmission from './components/OfflineAdmission';
 import StudentDashboard from './components/StudentDashboard';
 import StudentProfile from './components/StudentProfile';
 import IcteLogo from './components/IcteLogo';
@@ -400,6 +401,7 @@ function App() {
             )
           } />
           <Route path="/apply" element={<AdmissionForm />} />
+          <Route path="/apply/offline" element={<OfflineAdmission />} />
           <Route path="/login" element={
             user ? (
               <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'telecaller' ? '/telecaller' : '/student/dashboard'} replace />
