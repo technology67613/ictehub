@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Download, Upload, CheckCircle2, AlertCircle, FileText, ArrowRight,
-  ShieldCheck, Loader2, Sparkles, Plus, Trash2, Key, User, Phone, Mail,
+  ShieldCheck, Loader2, Plus, Trash2, Key, User, Phone, Mail,
   CheckSquare, FileCheck
 } from 'lucide-react';
 
@@ -46,17 +46,6 @@ export default function OfflineAdmission() {
   const [submitting, setSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState('');
   const [submittedCredentials, setSubmittedCredentials] = useState(null);
-  const [checkedDocs, setCheckedDocs] = useState({});
-
-  const CHECKLIST_ITEMS = [
-    { id: 'c10', label: 'High School Marksheet (10th)' },
-    { id: 'c10c', label: 'High School Passing Certificate' },
-    { id: 'c12', label: 'Intermediate Marksheet (12th)' },
-    { id: 'c12c', label: 'Intermediate Passing Certificate' },
-    { id: 'tc', label: 'Transfer / Migration Certificate' },
-    { id: 'caste', label: 'Caste / Domicile / Income Certificate' },
-    { id: 'photo', label: '10 Colored Passport Size Photographs' }
-  ];
 
   // Upload progress helper function
   const uploadWithProgress = (file, type, onProgress) => {
@@ -427,27 +416,31 @@ export default function OfflineAdmission() {
             </div>
 
             {/* Section A — Download Form Card with PDF Preview */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-md space-y-6 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 gap-3">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF]">Section A</span>
-                  <h2 className="text-xl font-extrabold text-slate-900">Download Official Admission Form</h2>
+                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">Download Official Admission Form</h2>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E40FF] flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E40FF] flex items-center justify-center font-bold shrink-0">
                   <Download size={20} />
                 </div>
               </div>
 
               {/* PDF Preview Card */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-5">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-14 h-16 rounded-xl bg-red-50 text-red-600 border border-red-200 flex flex-col items-center justify-center shrink-0 shadow-xs">
-                    <FileText size={28} />
-                    <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">PDF</span>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 w-full overflow-hidden">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 w-full min-w-0">
+                  <div className="w-12 h-14 sm:w-14 sm:h-16 rounded-xl bg-red-50 text-red-600 border border-red-200 flex flex-col items-center justify-center shrink-0 shadow-xs">
+                    <FileText size={24} />
+                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider mt-0.5">PDF</span>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base truncate">Buddha College of Nursing — Admission Form.pdf</h3>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">Official Blank Form • File Size: ~1.2 MB</p>
+                  <div className="min-w-0 flex-1 w-full">
+                    <h3 className="font-extrabold text-slate-900 text-xs sm:text-base leading-snug break-words">
+                      Buddha College of Nursing — Admission Form.pdf
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
+                      Official Blank Form • File Size: ~1.2 MB
+                    </p>
                   </div>
                 </div>
                 <a
@@ -455,37 +448,10 @@ export default function OfflineAdmission() {
                   target="_blank"
                   rel="noopener noreferrer"
                   download="Buddha_College_of_Nursing_Admission_Form.pdf"
-                  className="w-full sm:w-auto min-h-[44px] px-6 py-3.5 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 border-none no-underline shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto min-h-[44px] px-5 py-3 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 border-none no-underline shrink-0 cursor-pointer text-center"
                 >
-                  <Download size={18} /> Download Blank Form (PDF)
+                  <Download size={16} /> Download Blank Form (PDF)
                 </a>
-              </div>
-
-              {/* Interactive Document Checklist */}
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200/80 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                    <CheckSquare size={16} className="text-[#1E40FF]" /> Interactive Gathering Checklist
-                  </h3>
-                  <span className="text-xs font-extrabold text-[#1E40FF]">
-                    {Object.values(checkedDocs).filter(Boolean).length} of {CHECKLIST_ITEMS.length} Gathered
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-semibold text-slate-700">
-                  {CHECKLIST_ITEMS.map(item => (
-                    <label key={item.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                      checkedDocs[item.id] ? 'bg-emerald-50/80 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100/60'
-                    }`}>
-                      <input
-                        type="checkbox"
-                        checked={!!checkedDocs[item.id]}
-                        onChange={() => setCheckedDocs(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                      />
-                      <span>{item.label}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
             </div>
 

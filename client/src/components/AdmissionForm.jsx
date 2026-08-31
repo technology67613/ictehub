@@ -4,7 +4,7 @@ import {
   CheckCircle2, ChevronRight, ChevronLeft, Save, FileText, Upload,
   Trash2, Plus, AlertCircle, Edit3, User, BookOpen, MapPin, Phone,
   GraduationCap, Shield, Building, RotateCcw, Info, Eye, EyeOff, Check,
-  FileCheck, File, RefreshCw, Loader2, Key, MessageCircle, ArrowRight, Sparkles, CreditCard
+  FileCheck, File, RefreshCw, Loader2, Key, MessageCircle, ArrowRight, Laptop, LayoutDashboard, CreditCard
 } from 'lucide-react';
 import { getSessionId, getLeadSource, linkLeadToSession } from '../utils/tracking';
 
@@ -1041,7 +1041,7 @@ export default function AdmissionForm() {
                   onClick={handleGoToDashboard}
                   className="flex-1 py-4 px-6 rounded-2xl bg-[#1E40FF] hover:bg-blue-600 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 cursor-pointer border-none"
                 >
-                  <Sparkles size={16} /> Go to My Dashboard <ArrowRight size={16} />
+                  <LayoutDashboard size={16} /> Go to My Dashboard <ArrowRight size={16} />
                 </button>
                 <button
                   type="button"
@@ -1181,7 +1181,7 @@ export default function AdmissionForm() {
             <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20 pointer-events-none" />
             <div className="relative z-10 flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
-                <Sparkles size={24} />
+                <Laptop size={24} />
               </div>
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 block mb-1">Recommended • Online Portal</span>

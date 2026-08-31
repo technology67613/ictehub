@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, Award, XCircle, AlertCircle, FileText,
   Eye, EyeOff, Upload, Phone, Mail, MapPin, User, Calendar,
   GraduationCap, Shield, Lock, Key, Copy, Check, ExternalLink,
-  RefreshCw, Loader2, Sparkles, Building2, HelpCircle, ArrowRight,
+  RefreshCw, Loader2, Building2, HelpCircle, ArrowRight,
   CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users, Settings
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
@@ -312,7 +312,7 @@ export default function StudentDashboard({ user, handleLogout }) {
         return {
           label: 'Congratulations! Admitted 🎉',
           bg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-          icon: <Sparkles size={16} className="text-emerald-600" />,
+          icon: <Award size={16} className="text-emerald-600" />,
           step: 4,
         };
       default:
