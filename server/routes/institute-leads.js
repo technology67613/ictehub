@@ -87,6 +87,31 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 });
 
 /**
+ * @route   GET /institute-leads/my
+ * @desc    Get assigned institute leads for logged-in telecaller (Telecaller only)
+ * @access  Private/Telecaller
+ */
+router.get('/my', protect, authorize('telecaller'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { data: leads, error } = await supabase
+      .from('institute_leads')
+      .select('*, institute_courses(name)')
+      .eq('assigned_telecaller_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return res.json(leads || []);
+  } catch (error) {
+    console.error('Error fetching my institute leads:', error);
+    return res.status(500).json({ message: 'Server error fetching your institute leads', error: error.message });
+  }
+});
+
+/**
  * @route   PUT /institute-leads/:id
  * @desc    Update lead status or assign telecaller (Admin or Assigned Telecaller)
  * @access  Private

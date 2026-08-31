@@ -60,12 +60,21 @@ router.post('/', optionalProtect, (req, res, next) => {
     let folder = '';
 
     if (type === 'college-logo') {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Authentication required: Only admins can upload college logos.' });
+      }
       bucketName = 'college-logos';
       folder = 'logos';
     } else if (type === 'profile-picture') {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required to upload profile pictures.' });
+      }
       bucketName = 'profile-pictures';
       folder = 'profiles';
     } else if (type === 'admission-document') {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required to upload admission documents.' });
+      }
       bucketName = 'admission-documents';
       folder = 'documents';
     } else {
