@@ -113,7 +113,7 @@ export default function CheckStatus() {
             <button
               type="submit"
               disabled={loading || !phone.trim() || !name.trim()}
-              className="bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white font-bold text-xs uppercase tracking-wider w-full sm:w-auto self-end px-8 py-3.5 rounded-xl shadow-lg shadow-[#1E40FF]/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="bg-[#1E40FF] hover:bg-[#1E40FF]/90 text-white font-bold text-xs uppercase tracking-wider w-full min-h-[44px] px-8 py-3.5 rounded-xl shadow-lg shadow-[#1E40FF]/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer border-none"
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
               Check Status

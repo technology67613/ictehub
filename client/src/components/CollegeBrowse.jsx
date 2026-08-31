@@ -101,7 +101,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
 
         <button
           onClick={() => { setPreselectedCollegeId(null); setIsFormOpen(true); }}
-          className="relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all overflow-hidden group outline-none"
+          className="relative w-full sm:w-auto min-h-[44px] flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all overflow-hidden group outline-none cursor-pointer border-none"
         >
           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           Interested? Get a Free Consultation
@@ -129,9 +129,9 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
           )}
         </div>
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-nowrap overflow-x-auto w-full md:w-auto pb-2 md:pb-0 shrink-0">
           <button
-            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
+            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 whitespace-nowrap min-h-[44px] cursor-pointer border-none ${
               activeMode === 'All' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
             onClick={() => handleModeChange('All')}
@@ -139,7 +139,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
             All <span className={`px-2 py-0.5 rounded text-[10px] ${activeMode === 'All' ? 'bg-white/20' : 'bg-white shadow-sm'}`}>{totalCount}</span>
           </button>
           <button
-            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
+            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 whitespace-nowrap min-h-[44px] cursor-pointer border-none ${
               activeMode === 'Online' ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
             onClick={() => handleModeChange('Online')}
@@ -147,7 +147,7 @@ const CollegeBrowse = ({ searchQuery, setSearchQuery, activeMode, setActiveMode,
             Online <span className={`px-2 py-0.5 rounded text-[10px] ${activeMode === 'Online' ? 'bg-white/20' : 'bg-white shadow-sm'}`}>{onlineCount}</span>
           </button>
           <button
-            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
+            className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 whitespace-nowrap min-h-[44px] cursor-pointer border-none ${
               activeMode === 'Offline' ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
             onClick={() => handleModeChange('Offline')}

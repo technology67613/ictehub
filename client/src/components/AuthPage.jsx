@@ -130,7 +130,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                 setError('');
                 setSuccess('');
               }}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer border-none ${
+              className={`flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer border-none ${
                 loginType === 'student'
                   ? 'bg-[#1E40FF] text-white shadow-md shadow-blue-500/20'
                   : 'bg-transparent text-slate-600 hover:text-slate-900'
@@ -145,7 +145,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                 setError('');
                 setSuccess('');
               }}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer border-none ${
+              className={`flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer border-none ${
                 loginType === 'staff'
                   ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20'
                   : 'bg-transparent text-slate-600 hover:text-slate-900'
@@ -261,7 +261,7 @@ const AuthPage = ({ onAuthSuccess }) => {
 
             <button
               type="submit"
-              className={`relative w-full mt-2 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-white shadow-lg transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 overflow-hidden cursor-pointer border-none ${
+              className={`relative w-full min-h-[44px] mt-2 py-3.5 rounded-xl font-extrabold text-xs uppercase tracking-wider text-white shadow-lg transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 overflow-hidden cursor-pointer border-none ${
                 loginType === 'student'
                   ? 'bg-[#1E40FF] hover:bg-blue-700 shadow-blue-500/30'
                   : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/30'

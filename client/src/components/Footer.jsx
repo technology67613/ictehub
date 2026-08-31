@@ -9,11 +9,11 @@ export default function Footer({ setView }) {
       <div className="max-w-[1800px] mx-auto space-y-10">
         
         {/* Top Grid Section: College Info | Quick Links | For Partners | Payment QR | Legal */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-6 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-6 items-start text-center sm:text-left">
           
           {/* 1. College Info */}
-          <div className="space-y-4 sm:col-span-2 md:col-span-3 lg:col-span-1">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setView && setView('home')}>
+          <div className="space-y-4 sm:col-span-2 md:col-span-3 lg:col-span-1 flex flex-col items-center sm:items-start">
+            <div className="flex items-center gap-2.5 cursor-pointer justify-center sm:justify-start" onClick={() => setView && setView('home')}>
               <div className="bg-white px-3.5 py-2 rounded-2xl inline-flex items-center shadow-inner">
                 <img src="/logo.png" className="h-10 w-auto object-contain" alt="Buddha College of Nursing" />
               </div>
@@ -77,7 +77,7 @@ export default function Footer({ setView }) {
           </div>
 
           {/* 4. Payment QR */}
-          <div className="space-y-3 flex flex-col items-start sm:items-start">
+          <div className="space-y-3 flex flex-col items-center sm:items-start">
             <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300">Payment</h4>
             <div className="bg-white p-2 rounded-xl shadow-lg border border-slate-800 inline-block w-[170px] sm:w-[185px] lg:w-[190px] mx-auto sm:mx-0">
               <img 
@@ -116,19 +116,19 @@ export default function Footer({ setView }) {
         <hr className="border-slate-900" />
 
         {/* Contact Info Row */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-900 pb-6 text-xs font-bold text-slate-500">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-900 pb-6 text-xs font-bold text-slate-500 text-center sm:text-left">
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
             <MapPin size={14} className="text-[#1E40FF] shrink-0" />
             <span>Tamulia, Seraikela-Kharsawan, Jharkhand – 831020</span>
           </div>
-          <a href="mailto:buddhacollegeofnursing@gmail.com" className="flex items-center gap-2 hover:text-[#1E40FF] transition-colors">
+          <a href="mailto:buddhacollegeofnursing@gmail.com" className="flex items-center gap-2 justify-center sm:justify-start hover:text-[#1E40FF] transition-colors">
             <Mail size={14} className="text-[#1E40FF] shrink-0" />
             <span>buddhacollegeofnursing@gmail.com</span>
           </a>
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest text-center sm:text-left">
           <span>© 2026 BUDDHA COLLEGE OF NURSING. ALL RIGHTS RESERVED.</span>
           <span>BUILT WITH CARE IN INDIA</span>
         </div>

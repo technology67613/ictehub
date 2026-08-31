@@ -33,7 +33,6 @@ const INITIAL_FORM_STATE = {
   program_type: 'UG Degree',
   course: 'BCA',
   specialization: '',
-  preferred_college_type: 'Both',
   academic_session: '2025-26',
   category: 'General',
 
@@ -250,6 +249,7 @@ export default function AdmissionForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState({});
+  const [lastSavedTime, setLastSavedTime] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState('');
 
@@ -350,6 +350,8 @@ export default function AdmissionForm() {
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem('admission_draft', JSON.stringify(draftObj));
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setLastSavedTime(timeStr);
       if (showToastMsg) {
         setSavedToast('Draft saved to localStorage!');
         setTimeout(() => setSavedToast(''), 3000);
@@ -786,7 +788,7 @@ export default function AdmissionForm() {
           program_type: formData.program_type,
           course: formData.course,
           specialization: formData.specialization || null,
-          preferred_college_type: formData.preferred_college_type || null,
+          preferred_college_type: 'offline',
           academic_session: formData.academic_session || '2025-26',
           category: formData.category || 'General',
           
@@ -1161,25 +1163,60 @@ export default function AdmissionForm() {
 
       <div className="max-w-5xl mx-auto space-y-8">
         
-        {/* Choice Banner — How Would You Like to Apply? */}
-        <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20" />
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Choose Application Method</p>
-              <h2 className="text-xl font-black">How would you like to apply?</h2>
-              <p className="text-slate-300 text-xs mt-1">You can fill the online form step-by-step, or download and upload an offline PDF form.</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <div className="px-5 py-3 rounded-xl bg-white text-[#1E40FF] font-extrabold text-sm border-2 border-white shadow-lg text-center">
-                ✓ Fill Online Form
+        {/* Prominent Trust Banner */}
+        <div className="bg-[#EEF2FF] border border-blue-200/80 rounded-2xl py-3 px-5 text-center text-xs font-bold text-[#1E40FF] flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 shadow-xs">
+          <span className="inline-flex items-center gap-1.5">
+            <CheckCircle2 size={16} className="text-[#1E40FF] shrink-0" /> Affiliated by Health Education & Family Welfare Dept, JNRC Ranchi, Govt. of Jharkhand
+          </span>
+          <span className="hidden md:inline text-blue-300">•</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Shield size={16} className="text-[#1E40FF] shrink-0" /> Recognized by Indian Nursing Council
+          </span>
+        </div>
+
+        {/* Choice Banner — Side-by-Side Visual Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Online Application Card */}
+          <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl border border-indigo-800/40 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20 pointer-events-none" />
+            <div className="relative z-10 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
+                <Sparkles size={24} />
               </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 block mb-1">Recommended • Online Portal</span>
+                <h3 className="text-lg font-black text-white">Fill Online Application Form</h3>
+                <p className="text-slate-300 text-xs mt-1 leading-relaxed">Complete all 8 application steps digitally from any device with auto-saving drafts and instant tracking.</p>
+              </div>
+            </div>
+            <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">✓ Complete Digitally</span>
+              <div className="px-4 py-2 rounded-xl bg-white text-[#1E40FF] font-extrabold text-xs shadow-md">
+                ✓ Active Form
+              </div>
+            </div>
+          </div>
+
+          {/* Offline Application Card */}
+          <div className="bg-white text-slate-800 rounded-3xl p-6 shadow-md border border-slate-200 flex flex-col justify-between relative overflow-hidden hover:border-indigo-300 transition-all">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
+                <FileText size={24} />
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 block mb-1">Physical Form Download</span>
+                <h3 className="text-lg font-black text-slate-900">Download & Submit Physical Form</h3>
+                <p className="text-slate-500 text-xs mt-1 leading-relaxed">Print official paper form, fill by hand, sign, and upload scanned copy along with supporting documents.</p>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400">PDF Application</span>
               <button
                 type="button"
                 onClick={() => navigate('/apply/offline')}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/30 transition-all cursor-pointer text-center"
+                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors cursor-pointer border-none"
               >
-                Download & Upload Offline ↗
+                Download & Upload ↗
               </button>
             </div>
           </div>
@@ -1210,21 +1247,33 @@ export default function AdmissionForm() {
           </div>
         </div>
 
-        {/* Progress Bar & Step Tracker */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+        {/* Horizontal Pill Progress Bar & Step Tracker */}
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-            <span>Step {currentStep} of 8</span>
+            <span className="text-slate-900 font-extrabold">Step {currentStep} of 8 — {stepsList.find(s => s.num === currentStep)?.title}</span>
             <span className="text-[#1E40FF] font-extrabold">{Math.round((currentStep / 8) * 100)}% Completed</span>
           </div>
 
-          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-[#1E40FF] to-indigo-600 transition-all duration-500 ease-out"
               style={{ width: `${(currentStep / 8) * 100}%` }}
             ></div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          {/* Mobile Pill Progress Badge */}
+          <div className="md:hidden flex items-center justify-between p-3 bg-[#EEF2FF] border border-indigo-100 rounded-2xl">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#1E40FF] text-white text-xs font-bold flex items-center justify-center shrink-0">
+                {currentStep}
+              </span>
+              <span className="text-xs font-extrabold text-slate-900">{stepsList.find(s => s.num === currentStep)?.title}</span>
+            </div>
+            <span className="text-[11px] font-extrabold text-[#1E40FF]">{currentStep}/8</span>
+          </div>
+
+          {/* Desktop Horizontal Step Pills */}
+          <div className="hidden md:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
             {stepsList.map((step) => {
               const isDone = step.num < currentStep;
               const isCurrent = step.num === currentStep;
@@ -1237,29 +1286,20 @@ export default function AdmissionForm() {
                     if (isDone) setCurrentStep(step.num);
                   }}
                   disabled={!isDone && !isCurrent}
-                  className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all shrink-0 cursor-pointer border ${
                     isCurrent
-                      ? 'bg-[#EEF2FF] border-[#1E40FF] text-[#1E40FF] shadow-sm'
+                      ? 'bg-[#1E40FF] text-white border-[#1E40FF] shadow-sm'
                       : isDone
-                      ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      : 'bg-slate-50/50 border-slate-100 text-slate-300 cursor-not-allowed'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
-                      isDone
-                        ? 'bg-emerald-500 text-white'
-                        : isCurrent
-                        ? 'bg-[#1E40FF] text-white'
-                        : 'bg-slate-200 text-slate-500'
-                    }`}>
-                      {isDone ? <Check size={12} /> : step.num}
-                    </span>
-                    {isDone && <span className="text-[9px] font-extrabold text-emerald-600 uppercase">Done</span>}
-                  </div>
-                  <div>
-                    <span className="block text-[11px] font-bold leading-tight">{step.title}</span>
-                  </div>
+                  <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold ${
+                    isCurrent ? 'bg-white text-[#1E40FF]' : isDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    {isDone ? <Check size={10} /> : step.num}
+                  </span>
+                  <span className="whitespace-nowrap">{step.title}</span>
                 </button>
               );
             })}
@@ -1278,13 +1318,16 @@ export default function AdmissionForm() {
           {/* STEP 1: COURSE DETAILS */}
           {currentStep === 1 && (
             <div className="space-y-8">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-                  <GraduationCap className="text-[#1E40FF]" size={24} /> Step 1 — Course Details
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Select your program for admission to Buddha College of Nursing.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <GraduationCap className="text-[#1E40FF]" size={24} /> Step 1 — Course Details
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">
+                    Select your program level, course, academic session, and category for admission.
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold text-slate-400 shrink-0"><span className="text-red-500">*</span> Required fields</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1345,36 +1388,6 @@ export default function AdmissionForm() {
                   </div>
                 )}
 
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">Preferred College Type</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { value: 'Online', label: 'Online' },
-                      { value: 'Offline', label: 'Offline' },
-                      { value: 'Both', label: 'Both' }
-                    ].map((mode) => (
-                      <label
-                        key={mode.value}
-                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border cursor-pointer text-center ${
-                          formData.preferred_college_type === mode.value
-                            ? 'bg-[#EEF2FF] border-[#1E40FF] text-[#1E40FF] font-extrabold'
-                            : 'bg-white border-slate-200 text-slate-600 font-semibold'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="preferred_college_type"
-                          value={mode.value}
-                          checked={formData.preferred_college_type === mode.value}
-                          onChange={(e) => setFormData(prev => ({ ...prev, preferred_college_type: e.target.value }))}
-                          className="hidden"
-                        />
-                        <span className="text-sm">{mode.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Academic Session *</label>
                   <select
@@ -1408,10 +1421,16 @@ export default function AdmissionForm() {
           {/* STEP 2: PERSONAL DETAILS */}
           {currentStep === 2 && (
             <div className="space-y-8">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-                  <User className="text-[#1E40FF]" size={24} /> Step 2 — Personal Details
-                </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <User className="text-[#1E40FF]" size={24} /> Step 2 — Personal Details
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">
+                    This information will appear on your ID card and official university enrollment records.
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold text-slate-400 shrink-0"><span className="text-red-500">*</span> Required fields</span>
               </div>
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
@@ -2142,7 +2161,6 @@ export default function AdmissionForm() {
                     <div><span className="text-slate-400 font-medium block">Program</span><span className="font-bold text-slate-800">{formData.program_type}</span></div>
                     <div><span className="text-slate-400 font-medium block">Course</span><span className="font-bold text-slate-800">{formData.course}</span></div>
                     {formData.specialization && <div><span className="text-slate-400 font-medium block">Specialization</span><span className="font-bold text-slate-800">{formData.specialization}</span></div>}
-                    <div><span className="text-slate-400 font-medium block">Preferred Mode</span><span className="font-bold text-slate-800">{formData.preferred_college_type}</span></div>
                     <div><span className="text-slate-400 font-medium block">Academic Session</span><span className="font-bold text-slate-800">{formData.academic_session}</span></div>
                     <div><span className="text-slate-400 font-medium block">Category</span><span className="font-bold text-slate-800">{formData.category}</span></div>
                   </div>
@@ -2249,22 +2267,22 @@ export default function AdmissionForm() {
           )}
 
           {/* Controls Footer */}
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+          <div className="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full">
             {currentStep > 1 ? (
               <button
                 type="button"
                 onClick={handlePrevStep}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] justify-center inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase cursor-pointer"
               >
                 <ChevronLeft size={16} /> Back
               </button>
-            ) : <div></div>}
+            ) : <div className="hidden sm:block"></div>}
 
             {currentStep < 8 ? (
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-bold text-xs uppercase cursor-pointer border-none shadow-lg shadow-blue-500/20"
+                className="w-full sm:w-auto min-h-[44px] justify-center inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-bold text-xs uppercase cursor-pointer border-none shadow-lg shadow-blue-500/20"
               >
                 Save & Continue <ChevronRight size={16} />
               </button>
@@ -2272,7 +2290,7 @@ export default function AdmissionForm() {
               <button
                 type="submit"
                 disabled={submitting || !formData.declaration_accepted}
-                className={`inline-flex items-center gap-2 px-10 py-4 rounded-xl font-extrabold text-xs uppercase border-none ${
+                className={`w-full sm:w-auto min-h-[44px] justify-center inline-flex items-center gap-2 px-10 py-3.5 rounded-xl font-extrabold text-xs uppercase border-none ${
                   submitting || !formData.declaration_accepted
                     ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                     : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 cursor-pointer'
@@ -2284,6 +2302,13 @@ export default function AdmissionForm() {
           </div>
 
         </form>
+
+        {/* Subtle Bottom Right Draft Timestamp */}
+        {lastSavedTime && (
+          <div className="fixed bottom-4 right-4 z-50 bg-slate-900/90 text-white text-[11px] font-bold px-3.5 py-2 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 border border-white/10 animate-in fade-in">
+            <CheckCircle2 size={14} className="text-emerald-400" /> Draft saved at {lastSavedTime}
+          </div>
+        )}
 
       </div>
     </div>

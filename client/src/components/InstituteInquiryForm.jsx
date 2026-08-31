@@ -264,7 +264,7 @@ const InstituteInquiryForm = ({ isOpen, onClose, preselectedCourseId, setView })
               <button
                 type="submit"
                 disabled={loading}
-                className="relative w-full mt-2 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-50 hover:to-purple-50 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 overflow-hidden group outline-none disabled:opacity-70 disabled:transform-none disabled:shadow-none"
+                className="relative w-full min-h-[44px] mt-2 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-50 hover:to-purple-50 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 overflow-hidden group outline-none cursor-pointer border-none disabled:opacity-70 disabled:transform-none disabled:shadow-none"
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                 {loading ? (

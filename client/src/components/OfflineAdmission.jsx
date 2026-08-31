@@ -46,6 +46,17 @@ export default function OfflineAdmission() {
   const [submitting, setSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState('');
   const [submittedCredentials, setSubmittedCredentials] = useState(null);
+  const [checkedDocs, setCheckedDocs] = useState({});
+
+  const CHECKLIST_ITEMS = [
+    { id: 'c10', label: 'High School Marksheet (10th)' },
+    { id: 'c10c', label: 'High School Passing Certificate' },
+    { id: 'c12', label: 'Intermediate Marksheet (12th)' },
+    { id: 'c12c', label: 'Intermediate Passing Certificate' },
+    { id: 'tc', label: 'Transfer / Migration Certificate' },
+    { id: 'caste', label: 'Caste / Domicile / Income Certificate' },
+    { id: 'photo', label: '10 Colored Passport Size Photographs' }
+  ];
 
   // Upload progress helper function
   const uploadWithProgress = (file, type, onProgress) => {
@@ -362,84 +373,118 @@ export default function OfflineAdmission() {
           </div>
         ) : (
           <>
-            {/* Page Header */}
-            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
-              <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
-              <div className="relative z-10 space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-extrabold uppercase tracking-wider backdrop-blur-md">
-                  <FileText size={14} className="text-amber-400" /> Offline Admission Mode
+            {/* Page Hero */}
+            <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <img src="/logo.png" alt="Buddha College of Nursing" className="h-10 w-auto bg-white p-1.5 rounded-xl shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-extrabold uppercase tracking-wider backdrop-blur-md">
+                    <ShieldCheck size={14} className="text-emerald-400" /> Affiliated & INC Recognized
+                  </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
-                  Download & Upload Offline Admission Form
-                </h1>
-                <p className="text-slate-300 text-sm sm:text-base max-w-2xl font-normal leading-relaxed">
-                  Prefer paper applications? Download the official admission form, fill it out manually, and upload the scanned copy along with required documents below.
-                </p>
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+                    Apply Offline
+                  </h1>
+                  <p className="text-slate-300 text-sm sm:text-base max-w-2xl font-normal leading-relaxed mt-1">
+                    Download the official admission form, fill it out manually, and upload the scanned copy along with required documents.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Section A — Download Form */}
+            {/* Visual Step-by-Step Instructions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E40FF] font-black text-sm flex items-center justify-center shrink-0">1</div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Download Form</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Get official PDF form</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 font-black text-sm flex items-center justify-center shrink-0">2</div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Fill Details</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Fill form by hand & sign</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 font-black text-sm flex items-center justify-center shrink-0">3</div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Attach Photo</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Affix passport photo</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-black text-sm flex items-center justify-center shrink-0">4</div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Upload Here</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Submit scanned copy</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section A — Download Form Card with PDF Preview */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF]">Section A</span>
-                  <h2 className="text-xl font-extrabold text-slate-900">Download Admission Form</h2>
+                  <h2 className="text-xl font-extrabold text-slate-900">Download Official Admission Form</h2>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E40FF] flex items-center justify-center font-bold">
                   <Download size={20} />
                 </div>
               </div>
 
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Download the form, fill it by hand, get it signed, then upload the filled form along with your documents below.
-              </p>
+              {/* PDF Preview Card */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-5">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-14 h-16 rounded-xl bg-red-50 text-red-600 border border-red-200 flex flex-col items-center justify-center shrink-0 shadow-xs">
+                    <FileText size={28} />
+                    <span className="text-[9px] font-black uppercase tracking-wider mt-0.5">PDF</span>
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base truncate">Buddha College of Nursing — Admission Form.pdf</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">Official Blank Form • File Size: ~1.2 MB</p>
+                  </div>
+                </div>
+                <a
+                  href={BLANK_FORM_PDF_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download="Buddha_College_of_Nursing_Admission_Form.pdf"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-3.5 rounded-xl bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 border-none no-underline shrink-0 cursor-pointer"
+                >
+                  <Download size={18} /> Download Blank Form (PDF)
+                </a>
+              </div>
 
-              {/* Large Download Button */}
-              <a
-                href={BLANK_FORM_PDF_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                download="Buddha_College_of_Nursing_Admission_Form.pdf"
-                className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-base transition-all shadow-lg shadow-blue-500/25 no-underline cursor-pointer group"
-              >
-                <Download size={22} className="group-hover:translate-y-0.5 transition-transform" />
-                <span>Download Blank Form (PDF)</span>
-              </a>
-
-              {/* Document Checklist */}
+              {/* Interactive Document Checklist */}
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200/80 space-y-4">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                  <CheckSquare size={16} className="text-[#1E40FF]" /> Required Documents Checklist (To be attached with paper form)
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-semibold text-slate-700">
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>High School Marksheet (10th)</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>High School Passing Certificate</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>Intermediate Marksheet (12th)</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>Intermediate Passing Certificate</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>Transfer / Migration Certificate</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>Caste / Domicile / Income Certificate</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-2xs sm:col-span-2">
-                    <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span>10 Colored Passport Size Photographs</span>
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <CheckSquare size={16} className="text-[#1E40FF]" /> Interactive Gathering Checklist
+                  </h3>
+                  <span className="text-xs font-extrabold text-[#1E40FF]">
+                    {Object.values(checkedDocs).filter(Boolean).length} of {CHECKLIST_ITEMS.length} Gathered
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-semibold text-slate-700">
+                  {CHECKLIST_ITEMS.map(item => (
+                    <label key={item.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      checkedDocs[item.id] ? 'bg-emerald-50/80 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-100/60'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={!!checkedDocs[item.id]}
+                        onChange={() => setCheckedDocs(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
@@ -521,7 +566,7 @@ export default function OfflineAdmission() {
                 {/* Course Applied (GNM / ANM Radio buttons) */}
                 <div className="space-y-2 sm:col-span-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Course Applied *</label>
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <label className={`flex-1 flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${course === 'GNM' ? 'border-[#1E40FF] bg-[#EEF2FF] shadow-xs' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
                       <input
                         type="radio"
@@ -602,12 +647,12 @@ export default function OfflineAdmission() {
 
               {/* Upload Supporting Documents (multiple files, up to 10) */}
               <div className="space-y-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Upload Supporting Documents</label>
                     <p className="text-xs text-slate-400">Attach marksheets, certificates, photos (up to 10 files)</p>
                   </div>
-                  <label className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider cursor-pointer border-none transition-all inline-flex items-center gap-1.5">
+                  <label className="w-full sm:w-auto min-h-[44px] justify-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider cursor-pointer border-none transition-all inline-flex items-center gap-1.5">
                     <Plus size={14} /> Add Documents
                     <input
                       type="file"

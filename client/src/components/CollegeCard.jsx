@@ -104,7 +104,7 @@ const CollegeCard = ({ college, onInquire }) => {
           
           <button
             onClick={handleInquireClick}
-            className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 group/btn outline-none"
+            className="w-full min-h-[44px] py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 group/btn outline-none cursor-pointer border-none"
           >
             Request Info <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
           </button>
