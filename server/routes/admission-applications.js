@@ -52,7 +52,17 @@ router.post('/', async (req, res) => {
       scholarship_required,
       heard_about_us,
       source,
-      qualifications
+      qualifications,
+      application_type,
+      offline_form_url,
+      marital_status,
+      identification_mark,
+      father_contact,
+      payment_option,
+      payment_amount,
+      dd_number,
+      dd_date,
+      bank_name
     } = req.body;
 
     if (!full_name || !primary_mobile) {
@@ -117,6 +127,16 @@ router.post('/', async (req, res) => {
       heard_about_us: heard_about_us || null,
       status: 'submitted',
       source: source || 'direct',
+      application_type: application_type || 'online',
+      offline_form_url: offline_form_url || null,
+      marital_status: marital_status || null,
+      identification_mark: identification_mark || null,
+      father_contact: father_contact || null,
+      payment_option: payment_option || null,
+      payment_amount: payment_amount || null,
+      dd_number: dd_number || null,
+      dd_date: dd_date || null,
+      bank_name: bank_name || null,
       submitted_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

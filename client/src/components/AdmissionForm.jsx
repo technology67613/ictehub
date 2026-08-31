@@ -4,7 +4,7 @@ import {
   CheckCircle2, ChevronRight, ChevronLeft, Save, FileText, Upload,
   Trash2, Plus, AlertCircle, Edit3, User, BookOpen, MapPin, Phone,
   GraduationCap, Shield, Building, RotateCcw, Info, Eye, EyeOff, Check,
-  FileCheck, File, RefreshCw, Loader2, Key, MessageCircle, ArrowRight, Sparkles
+  FileCheck, File, RefreshCw, Loader2, Key, MessageCircle, ArrowRight, Sparkles, CreditCard
 } from 'lucide-react';
 import { getSessionId, getLeadSource, linkLeadToSession } from '../utils/tracking';
 
@@ -40,9 +40,12 @@ const INITIAL_FORM_STATE = {
   // Step 2: Personal Details
   full_name: '',
   father_name: '',
+  father_contact: '',
   mother_name: '',
   dob: '',
   gender: 'Male',
+  marital_status: 'Single',
+  identification_mark: '',
   nationality: 'Indian',
   blood_group: '',
   aadhaar_number: '',
@@ -109,7 +112,14 @@ const INITIAL_FORM_STATE = {
   // Step 6: Documents
   documents: {},
 
-  // Step 7: Review & Declaration
+  // Step 7: Payment Details
+  payment_option: 'Cash',
+  payment_amount: '',
+  dd_number: '',
+  dd_date: '',
+  bank_name: '',
+
+  // Step 8: Review & Declaration
   declaration_accepted: false,
 };
 
@@ -569,6 +579,10 @@ export default function AdmissionForm() {
       if (!formData.blood_group) newErrors.blood_group = 'Blood group is required';
       if (!formData.photo_url) newErrors.photo_url = 'Passport size photograph is required';
 
+      if (formData.father_contact && !/^[6-9]\d{9}$/.test(formData.father_contact.trim())) {
+        newErrors.father_contact = "Father's contact must be a valid 10-digit mobile number";
+      }
+
       if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number.replace(/\s/g, ''))) {
         newErrors.aadhaar_number = 'Aadhaar Number must be 12 digits';
       }
@@ -648,6 +662,23 @@ export default function AdmissionForm() {
     }
 
     if (stepNumber === 7) {
+      if (formData.payment_option === 'Demand Draft') {
+        if (!formData.payment_amount || !formData.payment_amount.trim()) {
+          newErrors.payment_amount = 'Amount is required for Demand Draft';
+        }
+        if (!formData.dd_number || !formData.dd_number.trim()) {
+          newErrors.dd_number = 'DD No. / Transaction ID is required';
+        }
+        if (!formData.dd_date) {
+          newErrors.dd_date = 'DD Date is required';
+        }
+        if (!formData.bank_name || !formData.bank_name.trim()) {
+          newErrors.bank_name = 'Bank Name and Branch is required';
+        }
+      }
+    }
+
+    if (stepNumber === 8) {
       if (!formData.declaration_accepted) {
         newErrors.declaration_accepted = 'You must accept the declaration to submit your application';
       }
@@ -703,7 +734,7 @@ export default function AdmissionForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     let isValid = true;
-    for (let s = 1; s <= 7; s++) {
+    for (let s = 1; s <= 8; s++) {
       if (!validateStep(s)) {
         isValid = false;
         setCurrentStep(s);
@@ -794,6 +825,15 @@ export default function AdmissionForm() {
           scholarship_required: formData.scholarship_required === 'Yes',
           heard_about_us: formData.hear_about_us || formData.heard_about_us || null,
           source: finalSource,
+          application_type: 'online',
+          marital_status: formData.marital_status || null,
+          identification_mark: formData.identification_mark || null,
+          father_contact: formData.father_contact || null,
+          payment_option: formData.payment_option || null,
+          payment_amount: formData.payment_option === 'Demand Draft' ? (formData.payment_amount || null) : null,
+          dd_number: formData.payment_option === 'Demand Draft' ? (formData.dd_number || null) : null,
+          dd_date: formData.payment_option === 'Demand Draft' ? (formData.dd_date || null) : null,
+          bank_name: formData.payment_option === 'Demand Draft' ? (formData.bank_name || null) : null,
           
           qualifications: Array.isArray(formData.qualifications) ? formData.qualifications.map((q, idx) => ({
             examination: q.level || q.examination || '',
@@ -1076,7 +1116,8 @@ export default function AdmissionForm() {
     { num: 4, title: 'Qualifications', subtitle: 'Academic records' },
     { num: 5, title: 'Additional Info', subtitle: 'Preferences & emergency' },
     { num: 6, title: 'Documents', subtitle: 'Upload certificates' },
-    { num: 7, title: 'Review & Submit', subtitle: 'Final verification' }
+    { num: 7, title: 'Payment Details', subtitle: 'Fee & DD info' },
+    { num: 8, title: 'Review & Submit', subtitle: 'Final verification' }
   ];
 
   return (
@@ -1120,6 +1161,30 @@ export default function AdmissionForm() {
 
       <div className="max-w-5xl mx-auto space-y-8">
         
+        {/* Choice Banner — How Would You Like to Apply? */}
+        <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-300 mb-1">Choose Application Method</p>
+              <h2 className="text-xl font-black">How would you like to apply?</h2>
+              <p className="text-slate-300 text-xs mt-1">You can fill the online form step-by-step, or download and upload an offline PDF form.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              <div className="px-5 py-3 rounded-xl bg-white text-[#1E40FF] font-extrabold text-sm border-2 border-white shadow-lg text-center">
+                ✓ Fill Online Form
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/apply/offline')}
+                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/30 transition-all cursor-pointer text-center"
+              >
+                Download & Upload Offline ↗
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Main Portal Header */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
@@ -1148,18 +1213,18 @@ export default function AdmissionForm() {
         {/* Progress Bar & Step Tracker */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-            <span>Step {currentStep} of 7</span>
-            <span className="text-[#1E40FF] font-extrabold">{Math.round((currentStep / 7) * 100)}% Completed</span>
+            <span>Step {currentStep} of 8</span>
+            <span className="text-[#1E40FF] font-extrabold">{Math.round((currentStep / 8) * 100)}% Completed</span>
           </div>
 
           <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-[#1E40FF] to-indigo-600 transition-all duration-500 ease-out"
-              style={{ width: `${(currentStep / 7) * 100}%` }}
+              style={{ width: `${(currentStep / 8) * 100}%` }}
             ></div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {stepsList.map((step) => {
               const isDone = step.num < currentStep;
               const isCurrent = step.num === currentStep;
@@ -1467,6 +1532,48 @@ export default function AdmissionForm() {
                   />
                   {errors.aadhaar_number && <p className="text-xs text-red-500 font-semibold">{errors.aadhaar_number}</p>}
                 </div>
+
+                {/* Marital Status */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Marital Status</label>
+                  <select
+                    value={formData.marital_status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, marital_status: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold"
+                  >
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Divorced">Divorced</option>
+                    <option value="Widowed">Widowed</option>
+                  </select>
+                </div>
+
+                {/* Identification Mark */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Identification Mark</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mole on left cheek"
+                    value={formData.identification_mark}
+                    onChange={(e) => setFormData(prev => ({ ...prev, identification_mark: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                  />
+                </div>
+
+                {/* Father's Contact Number */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Father's Contact Number</label>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    placeholder="Father's 10-digit mobile"
+                    value={formData.father_contact}
+                    onChange={(e) => setFormData(prev => ({ ...prev, father_contact: e.target.value.replace(/\D/g, '') }))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                  />
+                  {errors.father_contact && <p className="text-xs text-red-500 font-semibold">{errors.father_contact}</p>}
+                </div>
+
               </div>
             </div>
           )}
@@ -1926,12 +2033,101 @@ export default function AdmissionForm() {
             </div>
           )}
 
-          {/* STEP 7: REVIEW & DECLARATION */}
+          {/* STEP 7: PAYMENT DETAILS */}
           {currentStep === 7 && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 pb-4">
                 <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-                  <CheckCircle2 className="text-[#1E40FF]" size={24} /> Step 7 — Review & Declaration
+                  <CreditCard className="text-[#1E40FF]" size={24} /> Step 7 — Payment Details
+                </h2>
+                <p className="text-slate-500 text-sm mt-1">Select your preferred payment method for the application fee.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Payment Option */}
+                <div className="sm:col-span-2 space-y-3">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Payment Method *</label>
+                  <div className="flex gap-4">
+                    {['Cash', 'Demand Draft'].map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, payment_option: opt }))}
+                        className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition-all cursor-pointer ${
+                          formData.payment_option === opt
+                            ? 'border-[#1E40FF] bg-[#EEF2FF] text-[#1E40FF]'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        {opt === 'Cash' ? '💵 Cash' : '🏦 Demand Draft'}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.payment_option && <p className="text-xs text-red-500 font-semibold">{errors.payment_option}</p>}
+                </div>
+
+                {formData.payment_option === 'Demand Draft' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">DD Amount (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 1000"
+                        value={formData.payment_amount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, payment_amount: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">DD Number</label>
+                      <input
+                        type="text"
+                        placeholder="Demand Draft number"
+                        value={formData.dd_number}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dd_number: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">DD Date</label>
+                      <input
+                        type="date"
+                        value={formData.dd_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dd_date: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Bank Name</label>
+                      <input
+                        type="text"
+                        placeholder="Bank name"
+                        value={formData.bank_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {formData.payment_option === 'Cash' && (
+                  <div className="sm:col-span-2 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 font-semibold">
+                    ✅ You have selected Cash payment. Please bring the application fee in cash when visiting the college.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 8: REVIEW & DECLARATION */}
+          {currentStep === 8 && (
+            <div className="space-y-8">
+              <div className="border-b border-slate-100 pb-4">
+                <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 className="text-[#1E40FF]" size={24} /> Step 8 — Review & Declaration
                 </h2>
               </div>
 
@@ -2064,7 +2260,7 @@ export default function AdmissionForm() {
               </button>
             ) : <div></div>}
 
-            {currentStep < 7 ? (
+            {currentStep < 8 ? (
               <button
                 type="button"
                 onClick={handleNextStep}

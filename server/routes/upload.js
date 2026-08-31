@@ -3,10 +3,10 @@ const router = express.Router();
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
 
-// Setup multer memory storage with 5MB limit and support for image + PDF types
+// Setup multer memory storage with 10MB limit and support for image + PDF types
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -34,7 +34,7 @@ router.post('/', optionalProtect, (req, res, next) => {
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ message: 'File size limit exceeded. Maximum file size is 5MB.' });
+          return res.status(400).json({ message: 'File size limit exceeded. Maximum file size is 10MB.' });
         }
         return res.status(400).json({ message: `Upload error: ${err.message}` });
       }
