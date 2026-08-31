@@ -1,4 +1,5 @@
 # Buddha College of Nursing — PROJECT BRIEF (UPDATED)
+# Refer to MASTER_PRD.md for complete Master Audit & Production Specs
 # Paste this entire document at the start of every AI chat session.
 # Last updated: June 2026
 

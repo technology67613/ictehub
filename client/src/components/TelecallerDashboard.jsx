@@ -343,6 +343,8 @@ export default function TelecallerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [activeTab, setActiveTab] = useState('college'); // 'college' | 'institute'
+  const [instituteLeads, setInstituteLeads] = useState([]);
   const [searchVal, setSearchVal] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -362,6 +364,7 @@ export default function TelecallerDashboard() {
 
   useEffect(() => {
     fetchLeads();
+    fetchInstituteLeads();
     fetchColleges();
   }, []);
 
@@ -372,9 +375,21 @@ export default function TelecallerDashboard() {
       const data = await res.json();
       setLeads(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Could not load leads.');
+      setError('Could not load college leads.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInstituteLeads = async () => {
+    try {
+      const res = await fetch(`${API}/institute-leads/my`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        setInstituteLeads(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Could not load institute leads', err);
     }
   };
 

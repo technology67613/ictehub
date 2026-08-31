@@ -340,7 +340,7 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
 
 /**
  * @route   GET /admission-applications/:id
- * @desc    Get detailed admission application by ID (Admin or owner student)
+ * @desc    Get detailed admission application by ID (Admin, assigned Telecaller, or owner Student)
  * @access  Private
  */
 router.get('/:id', protect, async (req, res) => {
@@ -367,14 +367,17 @@ router.get('/:id', protect, async (req, res) => {
 
     const application = apps[0];
 
-    // Authorization check: Admins can view any, students can only view their own
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'telecaller';
+    // Authorization check
+    const isAdmin = req.user.role === 'admin';
+    const isAssignedTelecaller = req.user.role === 'telecaller' && (
+      application.leads && application.leads.assigned_telecaller_id === req.user.id
+    );
     const isOwner = req.user.role === 'student' && (
       application.student_user_id === req.user.id ||
       (application.leads && application.leads.student_user_id === req.user.id)
     );
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin && !isAssignedTelecaller && !isOwner) {
       return res.status(403).json({ message: 'Not authorized to view this application.' });
     }
 
@@ -393,13 +396,37 @@ router.get('/:id', protect, async (req, res) => {
 
 /**
  * @route   GET /admission-applications/qualifications/:applicationId
- * @desc    Get qualifications for an application
+ * @desc    Get qualifications for an application (Admin, assigned Telecaller, or owner Student)
  * @access  Private
  */
 router.get('/qualifications/:applicationId', protect, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { applicationId } = req.params;
+
+    // Verify parent application ownership/assignment
+    const { data: apps, error: appErr } = await supabase
+      .from('admission_applications')
+      .select('*, leads(*)')
+      .eq('id', applicationId);
+
+    if (appErr || !apps || apps.length === 0) {
+      return res.status(404).json({ message: 'Admission application not found.' });
+    }
+
+    const application = apps[0];
+    const isAdmin = req.user.role === 'admin';
+    const isAssignedTelecaller = req.user.role === 'telecaller' && (
+      application.leads && application.leads.assigned_telecaller_id === req.user.id
+    );
+    const isOwner = req.user.role === 'student' && (
+      application.student_user_id === req.user.id ||
+      (application.leads && application.leads.student_user_id === req.user.id)
+    );
+
+    if (!isAdmin && !isAssignedTelecaller && !isOwner) {
+      return res.status(403).json({ message: 'Not authorized to view qualifications for this application.' });
+    }
 
     const { data: quals, error } = await supabase
       .from('admission_qualifications')
@@ -417,14 +444,33 @@ router.get('/qualifications/:applicationId', protect, async (req, res) => {
 
 /**
  * @route   PUT /admission-applications/:id
- * @desc    Update admission application status or details (Admin/Telecaller)
- * @access  Private
+ * @desc    Update admission application status or details (Admin or assigned Telecaller)
+ * @access  Private/Admin or Telecaller
  */
 router.put('/:id', protect, async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     const { id } = req.params;
     const { status, application_status, batch, roll_number, program_type, course, academic_session } = req.body;
+
+    const { data: apps, error: findError } = await supabase
+      .from('admission_applications')
+      .select('*, leads(*)')
+      .eq('id', id);
+
+    if (findError || !apps || apps.length === 0) {
+      return res.status(404).json({ message: 'Admission application not found.' });
+    }
+
+    const application = apps[0];
+    const isAdmin = req.user.role === 'admin';
+    const isAssignedTelecaller = req.user.role === 'telecaller' && (
+      application.leads && application.leads.assigned_telecaller_id === req.user.id
+    );
+
+    if (!isAdmin && !isAssignedTelecaller) {
+      return res.status(403).json({ message: 'Not authorized to update this application.' });
+    }
 
     const updateData = {
       updated_at: new Date().toISOString()

@@ -81,15 +81,40 @@ router.get('/:leadId', protect, async (req, res) => {
   }
 });
 
-// PUT /admission-documents/:id - Admin or Telecaller
+// PUT /admission-documents/:id - Admin or assigned Telecaller
 router.put('/:id', protect, async (req, res) => {
   try {
     const supabase = req.supabase || req.app.get('supabase');
     const { id } = req.params;
     const { verification_status, verification_note } = req.body;
 
+    const { data: doc, error: docErr } = await supabase
+      .from('admission_documents')
+      .select('*, leads(*)')
+      .eq('id', id)
+      .single();
+
+    if (docErr || !doc) {
+      return res.status(404).json({ error: 'Admission document not found.' });
+    }
+
+    const isAdmin = req.user.role === 'admin';
+    const isAssignedTelecaller = req.user.role === 'telecaller' && (
+      doc.leads && doc.leads.assigned_telecaller_id === req.user.id
+    );
+
+    if (!isAdmin && !isAssignedTelecaller) {
+      return res.status(403).json({ error: 'Not authorized to verify or update this document.' });
+    }
+
     const updateData = {};
-    if (verification_status) updateData.verification_status = verification_status;
+    if (verification_status) {
+      const allowed = ['pending', 'verified', 'rejected'];
+      if (!allowed.includes(verification_status)) {
+        return res.status(400).json({ error: 'Invalid verification status value.' });
+      }
+      updateData.verification_status = verification_status;
+    }
     if (verification_note !== undefined) updateData.verification_note = verification_note;
 
     const { data, error } = await supabase
