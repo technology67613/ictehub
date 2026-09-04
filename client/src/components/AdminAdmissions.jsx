@@ -713,8 +713,8 @@ export default function AdminAdmissions({ token }) {
       return {
         ...l,
         formData: parsedForm,
-        courseName: parsedForm.course || 'N/A',
-        programType: parsedForm.program_type || 'N/A',
+        courseName: l.course || parsedForm.course || 'N/A',
+        programType: l.program_type || parsedForm.program_type || 'N/A',
         refId: (l.id || '').substring(0, 8).toUpperCase()
       };
     });
