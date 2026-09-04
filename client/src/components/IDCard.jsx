@@ -35,545 +35,488 @@ export default function IDCard({ application, documents = [] }) {
   const [downloadingImg, setDownloadingImg] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
-  // Extract application / admission_form_data fields
+  // ── Data extraction ──────────────────────────────────────────────────
   const formData = application?.admission_form_data || {};
-  const leadId = application?.lead_id || application?.id || '00000000';
-  const shortLeadId = String(leadId).substring(0, 8).toUpperCase();
-  const formNo = `BCN-${shortLeadId}`;
+  const appData = application || {};
 
-  const course = formData.course || application?.course || 'GNM / ANM';
-  const session = formData.academic_session || application?.academic_session || '';
-  const batch = application?.batch || formData.batch || '';
-  const rollNo = application?.roll_number || application?.roll_no || formData.roll_number || formData.roll_no || '';
+  const studentName = appData.full_name || formData.full_name || application?.name || '';
+  const fatherName = appData.father_name || formData.father_name || '';
+  const motherName = appData.mother_name || formData.mother_name || '';
+  const course = appData.course || formData.course || '';
+  const session = appData.academic_session || formData.academic_session || '';
+  const batch = appData.batch || '';
+  const rollNumber = appData.roll_number || '';
+  const dobFormatted = formatDisplayDob(appData.dob || formData.dob);
+  const primaryMobile = appData.primary_mobile || formData.primary_mobile || application?.phone || '';
+  const city = appData.perm_city || formData.city || '';
+  const state = appData.perm_state || formData.state || '';
+  const pin = appData.perm_pin || formData.pin_code || '';
+  const address = [
+    appData.perm_address_line1 || formData.address_line1,
+    appData.perm_address_line2 || formData.address_line2,
+  ].filter(Boolean).join(', ');
 
-  const fullName = formData.full_name || application?.full_name || application?.name || '';
-  const fatherName = formData.father_name || application?.father_name || '';
-  const motherName = formData.mother_name || application?.mother_name || '';
-  const dobRaw = formData.dob || application?.dob || '';
-  const dobFormatted = formatDisplayDob(dobRaw);
-  const primaryMobile = formData.primary_mobile || application?.primary_mobile || formData.mobile || application?.mobile || '';
-
-  const addrLine1 = formData.perm_address_line1 || formData.address_line1 || application?.perm_address_line1 || application?.address_line1 || '';
-  const addrLine2 = formData.perm_address_line2 || formData.address_line2 || application?.perm_address_line2 || application?.address_line2 || '';
-  const address = [addrLine1, addrLine2].filter(Boolean).join(', ');
-
-  const city = formData.perm_city || application?.perm_city || formData.city || '';
-  const state = formData.perm_state || application?.perm_state || formData.state || '';
-  const pin = formData.perm_pin || application?.perm_pin || formData.pin || formData.pincode || '';
+  const idNumber = 'BCN-' + (application?.id || '00000000').substring(0, 8).toUpperCase();
+  const shortId = (application?.id || '00000000').substring(0, 8).toUpperCase();
 
   // Passport Photo
-  const passportDoc = documents.find(d => d.document_type === 'passport_photo');
-  const photoUrl = passportDoc?.file_url || formData.photo_url || formData.documents?.passport_photo?.file_url || '';
+  const photoUrl =
+    documents?.find((d) => d.document_type === 'passport_photo')?.file_url ||
+    appData.photo_url ||
+    formData.photo_url ||
+    '';
 
-  const examCentre = formData.exam_centre || application?.exam_centre || '';
-  const dateOfExamination = formData.date_of_examination || application?.date_of_examination || '';
+  // ── html2canvas options (shared) ─────────────────────────────────────
+  const getCanvasOptions = () => ({
+    scale: 3,
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: '#ffffff',
+    logging: false,
+    imageTimeout: 15000,
+    onclone: (doc) => {
+      // ensure fonts are loaded in the cloned document
+      const style = doc.createElement('style');
+      style.innerHTML = '* { font-family: "Times New Roman", serif !important; }';
+      doc.head.appendChild(style);
+    },
+  });
 
-  // 1. Download as Image (PNG)
+  // ── 1. Download as PNG ───────────────────────────────────────────────
   const handleDownloadImage = async () => {
     if (!cardRef.current) return;
     setDownloadingImg(true);
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      const image = canvas.toDataURL('image/png', 1.0);
+      await document.fonts.ready;
+      const canvas = await html2canvas(cardRef.current, getCanvasOptions());
       const link = document.createElement('a');
-      link.download = `${formNo}-IDCard.png`;
-      link.href = image;
+      link.download = `BCN-${shortId}-IDCard.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (err) {
-      console.error('Error generating ID card image:', err);
-      alert('Could not download ID Card image. Please try again.');
+      console.error('PNG download error:', err);
+      alert('Download failed. Please try again.');
     } finally {
       setDownloadingImg(false);
     }
   };
 
-  // 2. Download as PDF (A5 Landscape)
+  // ── 2. Download as PDF (A4 Portrait) ─────────────────────────────────
   const handleDownloadPDF = async () => {
     if (!cardRef.current) return;
     setDownloadingPdf(true);
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
+      await document.fonts.ready;
+      const canvas = await html2canvas(cardRef.current, getCanvasOptions());
       const imgData = canvas.toDataURL('image/png', 1.0);
-
-      // A5 Landscape format: 210mm x 148mm
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
-        format: 'a5',
+        format: 'a4',
       });
-
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 148);
-      pdf.save(`${formNo}-IDCard.pdf`);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`BCN-${shortId}-IDCard.pdf`);
     } catch (err) {
-      console.error('Error generating ID card PDF:', err);
-      alert('Could not download ID Card PDF. Please try again.');
+      console.error('PDF download error:', err);
+      alert('PDF download failed. Please try again.');
     } finally {
       setDownloadingPdf(false);
     }
   };
 
-  // 3. Print ID Card
+  // ── 3. Print ID Card ─────────────────────────────────────────────────
   const handlePrint = () => {
     window.print();
   };
 
+  // ── Render ────────────────────────────────────────────────────────────
   return (
-    <div className="w-full overflow-hidden flex flex-col items-center justify-center p-2 sm:p-5 bg-slate-50">
-      {/* Embedded CSS for clean printing */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden !important;
-          }
-          .print-id-card, .print-id-card * {
-            visibility: visible !important;
-          }
-          .print-id-card {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
-
-      {/* Responsive Scaled Wrapper for Official ID Card */}
-      <div className="w-full overflow-x-auto overflow-y-hidden flex justify-center items-start py-2 max-w-full">
-        <div className="transform scale-[0.42] xs:scale-[0.52] sm:scale-75 md:scale-100 origin-top flex-shrink-0 -mb-[270px] xs:-mb-[220px] sm:-mb-[90px] md:mb-0 transition-transform">
+    <div
+      style={{
+        width: '100%',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        backgroundColor: '#f8fafc',
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* Responsive wrapper — scales the 794px card to fit viewport */}
+      <div
+        style={{
+          width: '100%',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          paddingTop: '8px',
+          paddingBottom: '8px',
+        }}
+      >
+        <div
+          style={{
+            transformOrigin: 'top center',
+            flexShrink: 0,
+          }}
+        >
+          {/* ═══════════ ID CARD (all inline styles — no Tailwind) ═══════════ */}
           <div
             ref={cardRef}
             className="print-id-card"
             style={{
-              width: '800px',
-              height: 'auto',
+              width: '794px',
               backgroundColor: '#ffffff',
+              padding: '24px',
+              fontFamily: '"Times New Roman", "Georgia", serif',
               color: '#000000',
-              border: '2px solid #000000',
-              padding: '20px',
               boxSizing: 'border-box',
-              fontFamily: "'Times New Roman', Times, serif",
-              fontSize: '14px',
-              lineHeight: '1.4',
             }}
           >
-        {/* Header Section */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          {/* Left: College circular logo */}
-          <div
-            style={{
-              width: '90px',
-              height: '90px',
-              minWidth: '90px',
-              borderRadius: '50%',
-              border: '2px solid #000000',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '16px',
-              flexShrink: 0,
-              backgroundColor: '#ffffff',
-            }}
-          >
-            <img
-              src="/logo.png"
-              alt="Buddha College Logo"
-              crossOrigin="anonymous"
+            {/* ── HEADER ── */}
+            <div
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '8px',
+                gap: '16px',
               }}
-            />
-          </div>
+            >
+              <img
+                src="/logo.png"
+                alt="Logo"
+                crossOrigin="anonymous"
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  objectFit: 'contain',
+                }}
+              />
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    letterSpacing: '1px',
+                  }}
+                >
+                  BUDDHA COLLEGE OF NURSING
+                </div>
+                <div style={{ fontSize: '13px', fontStyle: 'italic' }}>
+                  (Behind Brahmanand Narayanan Specialty Hospital)
+                </div>
+                <div style={{ fontSize: '13px' }}>
+                  Tamulia, P.S.: Kadali, Dist.: Seraikela-Kharsawan, Jharkhand – 831020
+                </div>
+                <div style={{ fontSize: '13px' }}>
+                  E-mail: buddhacollegeofnursingsn@gmail.com
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                  (Affiliated by: Health Education &amp; Family Welfare Department, JNRC Ranchi,
+                  Govt. of Jharkhand)
+                </div>
+              </div>
+            </div>
 
-          {/* Center text block */}
-          <div style={{ flex: 1, textAlign: 'center', color: '#000000' }}>
-            <h1
-              style={{
-                fontSize: '28px',
-                fontWeight: 'bold',
-                margin: 0,
-                lineHeight: '1.1',
-                letterSpacing: '0.5px',
-                fontFamily: "'Times New Roman', Times, serif",
-                textTransform: 'uppercase',
-                color: '#000000',
-              }}
-            >
-              BUDDHA COLLEGE OF NURSING
-            </h1>
-            <p
-              style={{
-                fontSize: '13px',
-                fontStyle: 'italic',
-                fontWeight: 'bold',
-                margin: '3px 0 0 0',
-                fontFamily: "'Times New Roman', Times, serif",
-              }}
-            >
-              (Behind Brahmanand Narayanan Specialty Hospital)
-            </p>
-            <p
-              style={{
-                fontSize: '13px',
-                fontWeight: 'bold',
-                margin: '2px 0 0 0',
-                fontFamily: "'Times New Roman', Times, serif",
-              }}
-            >
-              Dist.: Seraikela-Kharsawan, Jharkhand – 831020
-            </p>
-            <p
-              style={{
-                fontSize: '13px',
-                fontWeight: 'bold',
-                margin: '2px 0 0 0',
-                fontFamily: "'Times New Roman', Times, serif",
-              }}
-            >
-              Email: buddhacollegeofnursingsn@gmail.com
-            </p>
-            <p
-              style={{
-                fontSize: '12px',
-                fontWeight: 'bold',
-                margin: '3px 0 0 0',
-                fontFamily: "'Times New Roman', Times, serif",
-              }}
-            >
-              (Affiliated by Health Education & Family Welfare Department, JNRC Ranchi, Govt. of Jharkhand)
-            </p>
-          </div>
-        </div>
+            {/* ── Double horizontal line ── */}
+            <div style={{ borderTop: '3px solid black', marginBottom: '2px' }}></div>
+            <div style={{ borderTop: '1px solid black', marginBottom: '8px' }}></div>
 
-        {/* Two thick horizontal black lines below header */}
-        <div style={{ borderTop: '3px solid #000000', margin: '8px 0 2px 0' }} />
-        <div style={{ borderTop: '1px solid #000000', margin: '0 0 10px 0' }} />
+            {/* ── ID CARD BANNER ── */}
+            <div
+              style={{
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                textAlign: 'center',
+                padding: '6px',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                letterSpacing: '4px',
+                marginBottom: '12px',
+              }}
+            >
+              ID CARD
+            </div>
 
-        {/* ID CARD Banner */}
-        <div
-          style={{
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            textAlign: 'center',
-            padding: '6px 0',
-            fontSize: '20px',
-            fontWeight: 'bold',
-            letterSpacing: '3px',
-            marginBottom: '14px',
-            fontFamily: "'Times New Roman', Times, serif",
-            textTransform: 'uppercase',
-          }}
-        >
-          ID CARD
-        </div>
-
-        {/* Main Body (bordered box with rounded corners) */}
-        <div
-          style={{
-            border: '2px solid #000000',
-            borderRadius: '8px',
-            padding: '14px 16px',
-            backgroundColor: '#ffffff',
-            fontFamily: "'Times New Roman', Times, serif",
-          }}
-        >
-          {/* Top row & photo box layout */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1, marginRight: '16px' }}>
-              {/* Top row (single line): Course, Session, Batch */}
+            {/* ── MAIN BODY ── */}
+            <div
+              style={{
+                border: '2px solid black',
+                borderRadius: '4px',
+                padding: '12px',
+                marginBottom: '8px',
+              }}
+            >
+              {/* Row 1: Course, Session, Batch + Photo */}
               <div
                 style={{
                   display: 'flex',
-                  alignItems: 'baseline',
                   justifyContent: 'space-between',
-                  gap: '12px',
-                  fontSize: '14px',
+                  alignItems: 'flex-start',
+                  marginBottom: '8px',
+                  paddingBottom: '8px',
+                  borderBottom: '1px dashed #000',
                 }}
               >
-                <div>
+                <div style={{ flex: 1 }}>
                   <span style={{ fontWeight: 'bold' }}>Course: </span>
-                  <span style={{ fontWeight: 'bold' }}>{course}</span>
-                </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Session: </span>
+                  <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{course}</span>
+                  <span style={{ marginLeft: '32px', fontWeight: 'bold' }}>Session: </span>
                   <span
                     style={{
-                      flex: 1,
-                      borderBottom: '1px solid #000000',
-                      marginLeft: '4px',
-                      paddingLeft: '4px',
-                      fontWeight: 'bold',
-                      minWidth: '60px',
+                      borderBottom: '1px solid #000',
+                      minWidth: '80px',
                       display: 'inline-block',
                     }}
                   >
                     {session}
                   </span>
-                </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Batch: </span>
+                  <span style={{ marginLeft: '32px', fontWeight: 'bold' }}>Batch: </span>
                   <span
                     style={{
-                      flex: 1,
-                      borderBottom: '1px solid #000000',
-                      marginLeft: '4px',
-                      paddingLeft: '4px',
-                      fontWeight: 'bold',
+                      borderBottom: '1px solid #000',
                       minWidth: '60px',
                       display: 'inline-block',
                     }}
                   >
-                    {batch}
+                    {batch || ''}
                   </span>
                 </div>
-              </div>
-
-              {/* Dashed line separating Course/Session/Batch row from Form No. row */}
-              <div style={{ borderTop: '2px dashed #000000', margin: '10px 0' }} />
-
-              {/* Second row: Form No., Roll No. */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '20px', fontSize: '14px' }}>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Form No.: </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      borderBottom: '1px solid #000000',
-                      marginLeft: '4px',
-                      paddingLeft: '4px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {formNo}
-                  </span>
-                </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Roll No.: </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      borderBottom: '1px solid #000000',
-                      marginLeft: '4px',
-                      paddingLeft: '4px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {rollNo}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: passport photo box (100px x 120px) */}
-            <div
-              style={{
-                width: '100px',
-                height: '120px',
-                minWidth: '100px',
-                minHeight: '120px',
-                border: '2px solid #000000',
-                backgroundColor: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '4px',
-                boxSizing: 'border-box',
-                flexShrink: 0,
-              }}
-            >
-              {photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt="Candidate Photograph"
-                  crossOrigin="anonymous"
+                {/* Photo box */}
+                <div
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-              ) : (
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    color: '#000000',
-                    lineHeight: '1.2',
+                    width: '100px',
+                    height: '120px',
+                    border: '1px solid #999',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: '16px',
+                    flexShrink: 0,
+                    backgroundColor: '#f5f5f5',
                   }}
                 >
-                  Paste your recent passport size photograph
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Student"
+                      crossOrigin="anonymous"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '10px',
+                        color: '#666',
+                        padding: '8px',
+                      }}
+                    >
+                      Paste your recent passport size photograph
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 2: Form No, Roll No */}
+              <div style={{ display: 'flex', marginBottom: '6px' }}>
+                <span style={{ fontWeight: 'bold', minWidth: '90px' }}>Form No.: </span>
+                <span
+                  style={{
+                    borderBottom: '1px solid #000',
+                    flex: 1,
+                    marginRight: '32px',
+                  }}
+                >
+                  {idNumber}
                 </span>
-              )}
-            </div>
-          </div>
-
-          {/* Stacked rows (each full-width with bold label + underline value) */}
-          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
-            {/* Name of Candidate */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Name of Candidate:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {fullName}
-              </span>
-            </div>
-
-            {/* Father's Name */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Father's Name:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {fatherName}
-              </span>
-            </div>
-
-            {/* Mother's Name */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Mother's Name:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {motherName}
-              </span>
-            </div>
-
-            {/* Date of Birth */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Date of Birth:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {dobFormatted}
-              </span>
-            </div>
-
-            {/* Contact No. */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Contact No.:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {primaryMobile}
-              </span>
-            </div>
-
-            {/* Address */}
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Address:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {address}
-              </span>
-            </div>
-
-            {/* City, State, Pin */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>City:</span>
-                <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                  {city}
+                <span style={{ fontWeight: 'bold', minWidth: '80px' }}>Roll No.: </span>
+                <span style={{ borderBottom: '1px solid #000', flex: 1 }}>
+                  {rollNumber || ''}
                 </span>
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>State:</span>
-                <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                  {state}
+
+              {/* Stacked field rows */}
+              {[
+                { label: 'Name of Candidate:', value: studentName },
+                { label: "Father's Name:", value: fatherName },
+                { label: "Mother's Name:", value: motherName },
+                { label: 'Date of Birth:', value: dobFormatted },
+                { label: 'Contact No.:', value: primaryMobile },
+                { label: 'Address:', value: address },
+              ].map((field, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    marginBottom: '5px',
+                    alignItems: 'flex-end',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '160px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {field.label}
+                  </span>
+                  <span style={{ borderBottom: '1px solid #000', flex: 1 }}>
+                    {field.value || ''}
+                  </span>
+                </div>
+              ))}
+
+              {/* City, State, Pin row */}
+              <div
+                style={{
+                  display: 'flex',
+                  marginBottom: '5px',
+                  alignItems: 'flex-end',
+                }}
+              >
+                <span style={{ fontWeight: 'bold', minWidth: '40px' }}>City: </span>
+                <span
+                  style={{
+                    borderBottom: '1px solid #000',
+                    flex: 1,
+                    marginRight: '16px',
+                  }}
+                >
+                  {city || ''}
                 </span>
-              </div>
-              <div style={{ width: '160px', display: 'flex', alignItems: 'baseline' }}>
-                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Pin:</span>
-                <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                  {pin}
+                <span style={{ fontWeight: 'bold', minWidth: '50px' }}>State: </span>
+                <span
+                  style={{
+                    borderBottom: '1px solid #000',
+                    flex: 1,
+                    marginRight: '16px',
+                  }}
+                >
+                  {state || ''}
                 </span>
+                <span style={{ fontWeight: 'bold', minWidth: '35px' }}>Pin: </span>
+                <span style={{ borderBottom: '1px solid #000', flex: 1 }}>{pin || ''}</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Bottom bordered section */}
-        <div
-          style={{
-            border: '2px solid #000000',
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginTop: '12px',
-            backgroundColor: '#ffffff',
-            fontFamily: "'Times New Roman', Times, serif",
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', fontSize: '13px' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Exam Centre:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {examCentre}
-              </span>
+            {/* ── BOTTOM SECTION ── */}
+            <div
+              style={{
+                border: '2px solid black',
+                borderRadius: '4px',
+                padding: '12px',
+                marginBottom: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', marginBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold', minWidth: '130px' }}>Exam Centre: </span>
+                <span
+                  style={{
+                    borderBottom: '1px solid #000',
+                    flex: 1,
+                    marginRight: '32px',
+                  }}
+                ></span>
+                <span style={{ fontWeight: 'bold', minWidth: '160px' }}>
+                  Date of Examination:{' '}
+                </span>
+                <span style={{ borderBottom: '1px solid #000', flex: 1 }}></span>
+              </div>
+              <div style={{ display: 'flex' }}>
+                <span style={{ fontWeight: 'bold', minWidth: '180px' }}>
+                  Signature of Candidate:{' '}
+                </span>
+                <span
+                  style={{
+                    borderBottom: '1px solid #000',
+                    flex: 1,
+                    marginRight: '32px',
+                  }}
+                ></span>
+                <span style={{ fontWeight: 'bold', minWidth: '170px' }}>
+                  Signature of Principal:{' '}
+                </span>
+                <span style={{ borderBottom: '1px solid #000', flex: 1 }}></span>
+              </div>
             </div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Date of Examination:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000', paddingLeft: '6px', fontWeight: 'bold' }}>
-                {dateOfExamination}
-              </span>
+
+            {/* ── FOOTER NOTE ── */}
+            <div
+              style={{
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                textAlign: 'center',
+                padding: '6px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+              }}
+            >
+              Note: Candidate must bring this ID card along with a valid ID proof.
             </div>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', marginTop: '28px', fontSize: '13px' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Signature of Candidate:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000' }}></span>
-            </div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap', marginRight: '6px' }}>Signature of Principal:</span>
-              <span style={{ flex: 1, borderBottom: '1px solid #000000' }}></span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div
-          style={{
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            textAlign: 'center',
-            padding: '6px 12px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            marginTop: '12px',
-            fontFamily: "'Times New Roman', Times, serif",
-          }}
-        >
-          Note: Candidate must bring this ID card along with a valid ID proof.
+          {/* ═══════════ END ID CARD ═══════════ */}
         </div>
       </div>
-    </div>
-  </div>
 
-      {/* Download & Print Action Buttons */}
-      <div className="no-print w-full max-w-[800px] mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 px-2">
+      {/* ── Download & Print Action Buttons ── */}
+      <div
+        className="no-print"
+        style={{
+          width: '100%',
+          maxWidth: '800px',
+          marginTop: '24px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
         {/* Download as PNG */}
         <button
           type="button"
           onClick={handleDownloadImage}
           disabled={downloadingImg || downloadingPdf}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-black text-white rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-slate-800 transition-all disabled:opacity-70 border-none w-full sm:w-auto"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            backgroundColor: '#000000',
+            color: '#ffffff',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            minHeight: '44px',
+            cursor: 'pointer',
+            border: 'none',
+            opacity: downloadingImg || downloadingPdf ? 0.7 : 1,
+            transition: 'all 0.2s ease',
+          }}
         >
           {downloadingImg ? (
-            <><Loader2 size={18} className="animate-spin" /> Generating PNG...</>
+            <>
+              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Generating
+              PNG...
+            </>
           ) : (
-            <><Download size={18} /> Download as PNG</>
+            <>
+              <Download size={18} /> Download as PNG
+            </>
           )}
         </button>
 
@@ -582,12 +525,33 @@ export default function IDCard({ application, documents = [] }) {
           type="button"
           onClick={handleDownloadPDF}
           disabled={downloadingImg || downloadingPdf}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-black border-2 border-black rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-slate-100 transition-all disabled:opacity-70 w-full sm:w-auto"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            backgroundColor: '#ffffff',
+            color: '#000000',
+            border: '2px solid #000000',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            minHeight: '44px',
+            cursor: 'pointer',
+            opacity: downloadingImg || downloadingPdf ? 0.7 : 1,
+            transition: 'all 0.2s ease',
+          }}
         >
           {downloadingPdf ? (
-            <><Loader2 size={18} className="animate-spin" /> Generating PDF...</>
+            <>
+              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Generating
+              PDF...
+            </>
           ) : (
-            <><FileText size={18} /> Download as PDF</>
+            <>
+              <FileText size={18} /> Download as PDF
+            </>
           )}
         </button>
 
@@ -596,11 +560,35 @@ export default function IDCard({ application, documents = [] }) {
           type="button"
           onClick={handlePrint}
           disabled={downloadingImg || downloadingPdf}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm min-h-[44px] cursor-pointer hover:bg-black transition-all border-none w-full sm:w-auto"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            backgroundColor: '#0f172a',
+            color: '#ffffff',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            minHeight: '44px',
+            cursor: 'pointer',
+            border: 'none',
+            opacity: downloadingImg || downloadingPdf ? 0.7 : 1,
+            transition: 'all 0.2s ease',
+          }}
         >
           <Printer size={18} /> Print
         </button>
       </div>
+
+      {/* Spin animation for loader icons (since we don't use Tailwind here) */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
