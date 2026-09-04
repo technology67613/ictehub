@@ -79,6 +79,8 @@ export default function IDCard({ application, documents = [] }) {
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        scrollY: 0,
+        scrollX: 0,
       });
       const link = document.createElement('a');
       link.download = `BCN-${shortId}-IDCard.png`;
@@ -107,6 +109,8 @@ export default function IDCard({ application, documents = [] }) {
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        scrollY: 0,
+        scrollX: 0,
       });
       const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
@@ -114,12 +118,12 @@ export default function IDCard({ application, documents = [] }) {
         unit: 'mm',
         format: 'a4',
       });
-      
+
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
-      const margin = 8; // 8mm margin for crisp centered alignment
-      const imgWidth = pageWidth - (margin * 2);
+      const margin = 8; // 8mm margin
+      const imgWidth = pageWidth - margin * 2;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       pdf.save(`BCN-${shortId}-IDCard.pdf`);
     } catch (err) {
@@ -134,7 +138,6 @@ export default function IDCard({ application, documents = [] }) {
   const handlePrint = () => {
     if (!cardRef.current) return;
 
-    // Create an isolated hidden iframe for 1-page guaranteed printing
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -173,6 +176,9 @@ export default function IDCard({ application, documents = [] }) {
             .card-wrapper {
               width: 100%;
               max-width: 794px;
+            }
+            table {
+              border-collapse: collapse;
             }
           </style>
         </head>
@@ -242,59 +248,58 @@ export default function IDCard({ application, documents = [] }) {
               fontFamily: '"Times New Roman", "Georgia", serif',
               color: '#000000',
               boxSizing: 'border-box',
-              lineHeight: '1.3',
+              lineHeight: '1.25',
             }}
           >
             {/* ── HEADER ── */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '10px',
-                gap: '16px',
-              }}
-            >
-              <img
-                src="/logo.png"
-                alt="Logo"
-                crossOrigin="anonymous"
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  objectFit: 'contain',
-                  flexShrink: 0,
-                }}
-              />
-              <div style={{ textAlign: 'center', flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 'bold',
-                    letterSpacing: '1px',
-                    lineHeight: '1.15',
-                  }}
-                >
-                  BUDDHA COLLEGE OF NURSING
-                </div>
-                <div style={{ fontSize: '13px', fontStyle: 'italic', marginTop: '2px' }}>
-                  (Behind Brahmanand Narayanan Specialty Hospital)
-                </div>
-                <div style={{ fontSize: '13px', marginTop: '2px' }}>
-                  Tamulia, P.S.: Kadali, Dist.: Seraikela-Kharsawan, Jharkhand – 831020
-                </div>
-                <div style={{ fontSize: '13px', marginTop: '2px' }}>
-                  E-mail: buddhacollegeofnursingsn@gmail.com
-                </div>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', marginTop: '3px' }}>
-                  (Affiliated by: Health Education &amp; Family Welfare Department, JNRC Ranchi,
-                  Govt. of Jharkhand)
-                </div>
-              </div>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '85px', verticalAlign: 'middle', paddingRight: '12px' }}>
+                    <img
+                      src="/logo.png"
+                      alt="Logo"
+                      crossOrigin="anonymous"
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'contain',
+                        display: 'block',
+                      }}
+                    />
+                  </td>
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                    <div
+                      style={{
+                        fontSize: '26px',
+                        fontWeight: 'bold',
+                        letterSpacing: '1px',
+                        lineHeight: '1.15',
+                      }}
+                    >
+                      BUDDHA COLLEGE OF NURSING
+                    </div>
+                    <div style={{ fontSize: '13px', fontStyle: 'italic', marginTop: '2px' }}>
+                      (Behind Brahmanand Narayanan Specialty Hospital)
+                    </div>
+                    <div style={{ fontSize: '13px', marginTop: '2px' }}>
+                      Tamulia, P.S.: Kadali, Dist.: Seraikela-Kharsawan, Jharkhand – 831020
+                    </div>
+                    <div style={{ fontSize: '13px', marginTop: '2px' }}>
+                      E-mail: buddhacollegeofnursingsn@gmail.com
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', marginTop: '3px' }}>
+                      (Affiliated by: Health Education &amp; Family Welfare Department, JNRC Ranchi,
+                      Govt. of Jharkhand)
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
             {/* ── Double horizontal line ── */}
-            <div style={{ borderTop: '3px solid black', marginBottom: '3px' }}></div>
-            <div style={{ borderTop: '1px solid black', marginBottom: '10px' }}></div>
+            <div style={{ borderTop: '3px solid #000000', marginBottom: '3px' }}></div>
+            <div style={{ borderTop: '1px solid #000000', marginBottom: '10px' }}></div>
 
             {/* ── ID CARD BANNER ── */}
             <div
@@ -302,7 +307,7 @@ export default function IDCard({ application, documents = [] }) {
                 backgroundColor: '#000000',
                 color: '#ffffff',
                 textAlign: 'center',
-                padding: '6px',
+                padding: '6px 0',
                 fontSize: '18px',
                 fontWeight: 'bold',
                 letterSpacing: '4px',
@@ -315,219 +320,235 @@ export default function IDCard({ application, documents = [] }) {
             {/* ── MAIN BODY ── */}
             <div
               style={{
-                border: '2px solid black',
+                border: '2px solid #000000',
                 borderRadius: '4px',
                 padding: '12px 14px',
                 marginBottom: '8px',
               }}
             >
               {/* Row 1: Course, Session, Batch + Photo */}
-              <div
+              <table
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '8px',
-                  paddingBottom: '8px',
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  marginBottom: '6px',
                   borderBottom: '1px dashed #000000',
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    marginRight: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}
-                >
-                  {/* Course (Full width of left area so long names never break) */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <span
+                <tbody>
+                  <tr>
+                    {/* Left Column: Course, Session & Batch */}
+                    <td style={{ verticalAlign: 'top', paddingRight: '16px', paddingBottom: '8px' }}>
+                      {/* Course */}
+                      <table
+                        style={{
+                          width: '100%',
+                          borderCollapse: 'collapse',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        <tbody>
+                          <tr>
+                            <td
+                              style={{
+                                width: '65px',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '4px 0',
+                                verticalAlign: 'bottom',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Course:
+                            </td>
+                            <td
+                              style={{
+                                borderBottom: '1px solid #000000',
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                                fontSize: '14px',
+                                padding: '4px 8px',
+                                verticalAlign: 'bottom',
+                              }}
+                            >
+                              {course}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* Session & Batch */}
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <tbody>
+                          <tr>
+                            <td
+                              style={{
+                                width: '65px',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '4px 0',
+                                verticalAlign: 'bottom',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Session:
+                            </td>
+                            <td
+                              style={{
+                                borderBottom: '1px solid #000000',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '4px 8px',
+                                verticalAlign: 'bottom',
+                                minWidth: '90px',
+                              }}
+                            >
+                              {session}
+                            </td>
+                            <td style={{ width: '20px' }}></td>
+                            <td
+                              style={{
+                                width: '50px',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '4px 0',
+                                verticalAlign: 'bottom',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Batch:
+                            </td>
+                            <td
+                              style={{
+                                borderBottom: '1px solid #000000',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '4px 8px',
+                                verticalAlign: 'bottom',
+                                minWidth: '80px',
+                              }}
+                            >
+                              {batch || ''}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+
+                    {/* Right Column: Photo Box */}
+                    <td
                       style={{
-                        fontWeight: 'bold',
-                        minWidth: '65px',
-                        fontSize: '14px',
-                        paddingBottom: '2px',
+                        width: '105px',
+                        verticalAlign: 'top',
+                        paddingBottom: '8px',
                       }}
                     >
-                      Course:
-                    </span>
-                    <span
-                      style={{
-                        borderBottom: '1px solid #000000',
-                        flex: 1,
-                        paddingLeft: '8px',
-                        paddingBottom: '2px',
-                        fontWeight: 'bold',
-                        textTransform: 'uppercase',
-                        fontSize: '14px',
-                        minHeight: '20px',
-                      }}
-                    >
-                      {course}
-                    </span>
-                  </div>
+                      <div
+                        style={{
+                          width: '105px',
+                          height: '125px',
+                          border: '1px solid #888888',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#f8f8f8',
+                          overflow: 'hidden',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        {photoUrl ? (
+                          <img
+                            src={photoUrl}
+                            alt="Student"
+                            crossOrigin="anonymous"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              fontSize: '10px',
+                              color: '#666666',
+                              padding: '6px',
+                              lineHeight: '1.25',
+                            }}
+                          >
+                            Paste your recent passport size photograph
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-                  {/* Session & Batch */}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                      <span
-                        style={{
-                          fontWeight: 'bold',
-                          minWidth: '65px',
-                          fontSize: '14px',
-                          paddingBottom: '2px',
-                        }}
-                      >
-                        Session:
-                      </span>
-                      <span
-                        style={{
-                          borderBottom: '1px solid #000000',
-                          flex: 1,
-                          paddingLeft: '8px',
-                          paddingBottom: '2px',
-                          fontWeight: 'bold',
-                          fontSize: '14px',
-                          minHeight: '20px',
-                        }}
-                      >
-                        {session}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                      <span
-                        style={{
-                          fontWeight: 'bold',
-                          minWidth: '50px',
-                          fontSize: '14px',
-                          paddingBottom: '2px',
-                        }}
-                      >
-                        Batch:
-                      </span>
-                      <span
-                        style={{
-                          borderBottom: '1px solid #000000',
-                          flex: 1,
-                          paddingLeft: '8px',
-                          paddingBottom: '2px',
-                          fontWeight: 'bold',
-                          fontSize: '14px',
-                          minHeight: '20px',
-                        }}
-                      >
-                        {batch || ''}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Photo box */}
-                <div
-                  style={{
-                    width: '105px',
-                    height: '125px',
-                    border: '1px solid #888888',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    backgroundColor: '#f8f8f8',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {photoUrl ? (
-                    <img
-                      src={photoUrl}
-                      alt="Student"
-                      crossOrigin="anonymous"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        fontSize: '10px',
-                        color: '#666666',
-                        padding: '6px',
-                        lineHeight: '1.25',
-                      }}
-                    >
-                      Paste your recent passport size photograph
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 2: Form No, Roll No */}
-              <div
+              {/* Row 2: Form No & Roll No */}
+              <table
                 style={{
-                  display: 'flex',
+                  width: '100%',
+                  borderCollapse: 'collapse',
                   marginBottom: '6px',
-                  alignItems: 'flex-end',
-                  gap: '24px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '85px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Form No.:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {idNumber}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '75px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Roll No.:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {rollNumber || ''}
-                  </span>
-                </div>
-              </div>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        width: '85px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Form No.:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                      }}
+                    >
+                      {idNumber}
+                    </td>
+                    <td style={{ width: '24px' }}></td>
+                    <td
+                      style={{
+                        width: '75px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Roll No.:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                      }}
+                    >
+                      {rollNumber || ''}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-              {/* Stacked field rows */}
+              {/* Stacked field rows: Name, Parents, DOB, Contact, Address */}
               {[
                 { label: 'Name of Candidate:', value: studentName },
                 { label: "Father's Name:", value: fatherName },
@@ -536,235 +557,241 @@ export default function IDCard({ application, documents = [] }) {
                 { label: 'Contact No.:', value: primaryMobile },
                 { label: 'Address:', value: address },
               ].map((field, i) => (
-                <div
+                <table
                   key={i}
                   style={{
-                    display: 'flex',
+                    width: '100%',
+                    borderCollapse: 'collapse',
                     marginBottom: '6px',
-                    alignItems: 'flex-end',
                   }}
                 >
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '165px',
-                      flexShrink: 0,
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    {field.label}
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {field.value || ''}
-                  </span>
-                </div>
+                  <tbody>
+                    <tr>
+                      <td
+                        style={{
+                          width: '165px',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          padding: '4px 0',
+                          verticalAlign: 'bottom',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {field.label}
+                      </td>
+                      <td
+                        style={{
+                          borderBottom: '1px solid #000000',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          padding: '4px 8px',
+                          verticalAlign: 'bottom',
+                        }}
+                      >
+                        {field.value || ''}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               ))}
 
               {/* City, State, Pin row */}
-              <div
+              <table
                 style={{
-                  display: 'flex',
+                  width: '100%',
+                  borderCollapse: 'collapse',
                   marginBottom: '4px',
-                  alignItems: 'flex-end',
-                  gap: '16px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '40px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    City:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {city || ''}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '48px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    State:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {state || ''}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', width: '160px' }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '36px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Pin:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      paddingLeft: '8px',
-                      paddingBottom: '2px',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      minHeight: '20px',
-                    }}
-                  >
-                    {pin || ''}
-                  </span>
-                </div>
-              </div>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        width: '45px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      City:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                      }}
+                    >
+                      {city || ''}
+                    </td>
+                    <td style={{ width: '16px' }}></td>
+                    <td
+                      style={{
+                        width: '48px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      State:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                      }}
+                    >
+                      {state || ''}
+                    </td>
+                    <td style={{ width: '16px' }}></td>
+                    <td
+                      style={{
+                        width: '38px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Pin:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                        width: '120px',
+                      }}
+                    >
+                      {pin || ''}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* ── BOTTOM SECTION ── */}
             <div
               style={{
-                border: '2px solid black',
+                border: '2px solid #000000',
                 borderRadius: '4px',
                 padding: '12px 14px',
                 marginBottom: '8px',
               }}
             >
-              <div
+              <table
                 style={{
-                  display: 'flex',
+                  width: '100%',
+                  borderCollapse: 'collapse',
                   marginBottom: '16px',
-                  alignItems: 'flex-end',
-                  gap: '24px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '105px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Exam Centre:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      minHeight: '20px',
-                      paddingBottom: '2px',
-                    }}
-                  ></span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '155px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Date of Examination:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      minHeight: '20px',
-                      paddingBottom: '2px',
-                    }}
-                  ></span>
-                </div>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  marginTop: '18px',
-                  alignItems: 'flex-end',
-                  gap: '24px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '175px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Signature of Candidate:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      minHeight: '20px',
-                      paddingBottom: '2px',
-                    }}
-                  ></span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      minWidth: '165px',
-                      fontSize: '14px',
-                      paddingBottom: '2px',
-                    }}
-                  >
-                    Signature of Principal:
-                  </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000000',
-                      flex: 1,
-                      minHeight: '20px',
-                      paddingBottom: '2px',
-                    }}
-                  ></span>
-                </div>
-              </div>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        width: '105px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Exam Centre:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                        height: '24px',
+                      }}
+                    ></td>
+                    <td style={{ width: '24px' }}></td>
+                    <td
+                      style={{
+                        width: '155px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Date of Examination:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                        height: '24px',
+                      }}
+                    ></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }}>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        width: '175px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Signature of Candidate:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                        height: '24px',
+                      }}
+                    ></td>
+                    <td style={{ width: '24px' }}></td>
+                    <td
+                      style={{
+                        width: '165px',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        padding: '4px 0',
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Signature of Principal:
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        padding: '4px 8px',
+                        verticalAlign: 'bottom',
+                        height: '24px',
+                      }}
+                    ></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* ── FOOTER NOTE ── */}
