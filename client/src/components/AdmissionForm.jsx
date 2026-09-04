@@ -191,6 +191,21 @@ function sanitizeFormData(data) {
 }
 
 /**
+ * Generate academic session options based on course type.
+ * ANM = 2-year spans, GNM = 3-year spans, others = null (text input).
+ */
+function getSessionOptions(course) {
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear, currentYear + 1, currentYear + 2];
+  if (course === 'ANM') {
+    return years.map(y => `${y}-${(y + 2).toString().slice(-2)}`);
+  } else if (course === 'GNM') {
+    return years.map(y => `${y}-${(y + 3).toString().slice(-2)}`);
+  }
+  return null; // show text input
+}
+
+/**
  * Reusable helper function for uploading files with XMLHttpRequest to track progress
  * and attach the Authorization header automatically.
  */
@@ -1346,7 +1361,8 @@ export default function AdmissionForm() {
                         setFormData(prev => ({
                           ...prev,
                           course: selectedCourseName,
-                          program_type: matched?.program_type || matched?.category || 'Nursing'
+                          program_type: matched?.program_type || matched?.category || 'Nursing',
+                          academic_session: ''
                         }));
                       }}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-[#1E40FF] text-sm"
@@ -1390,14 +1406,45 @@ export default function AdmissionForm() {
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Academic Session *</label>
-                  <select
-                    value={formData.academic_session}
-                    onChange={(e) => setFormData(prev => ({ ...prev, academic_session: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 text-sm"
-                  >
-                    <option value="2025-26">2025-26</option>
-                    <option value="2026-27">2026-27</option>
-                  </select>
+                  {(() => {
+                    const sessionOpts = getSessionOptions(formData.course);
+                    if (sessionOpts) {
+                      return (
+                        <>
+                          <select
+                            value={formData.academic_session}
+                            onChange={(e) => setFormData(prev => ({ ...prev, academic_session: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 text-sm"
+                          >
+                            <option value="">— Select Session —</option>
+                            {sessionOpts.map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                          <p className="text-[11px] font-medium text-slate-400 mt-1">
+                            {formData.course === 'ANM' ? '2-year program (e.g. 2025-27)' : '3-year program (e.g. 2025-28)'}
+                          </p>
+                        </>
+                      );
+                    }
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          value={formData.academic_session}
+                          onChange={(e) => setFormData(prev => ({ ...prev, academic_session: e.target.value }))}
+                          placeholder="e.g. 2025-26"
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800 text-sm"
+                        />
+                        <p className="text-[11px] font-medium text-slate-400 mt-1">Select a course first to see session options</p>
+                      </>
+                    );
+                  })()}
+                  {errors.academic_session && (
+                    <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1">
+                      <AlertCircle size={12} /> {errors.academic_session}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
