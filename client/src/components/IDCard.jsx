@@ -66,29 +66,20 @@ export default function IDCard({ application, documents = [] }) {
     formData.photo_url ||
     '';
 
-  // ── html2canvas options (shared) ─────────────────────────────────────
-  const getCanvasOptions = () => ({
-    scale: 3,
-    useCORS: true,
-    allowTaint: false,
-    backgroundColor: '#ffffff',
-    logging: false,
-    imageTimeout: 15000,
-    onclone: (doc) => {
-      // ensure fonts are loaded in the cloned document
-      const style = doc.createElement('style');
-      style.innerHTML = '* { font-family: "Times New Roman", serif !important; }';
-      doc.head.appendChild(style);
-    },
-  });
-
   // ── 1. Download as PNG ───────────────────────────────────────────────
   const handleDownloadImage = async () => {
     if (!cardRef.current) return;
     setDownloadingImg(true);
     try {
       await document.fonts.ready;
-      const canvas = await html2canvas(cardRef.current, getCanvasOptions());
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+      });
       const link = document.createElement('a');
       link.download = `BCN-${shortId}-IDCard.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
@@ -103,22 +94,33 @@ export default function IDCard({ application, documents = [] }) {
     }
   };
 
-  // ── 2. Download as PDF (A4 Portrait) ─────────────────────────────────
+  // ── 2. Download as PDF (Centered on A4) ──────────────────────────────
   const handleDownloadPDF = async () => {
     if (!cardRef.current) return;
     setDownloadingPdf(true);
     try {
       await document.fonts.ready;
-      const canvas = await html2canvas(cardRef.current, getCanvasOptions());
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+      });
       const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const margin = 8; // 8mm margin for crisp centered alignment
+      const imgWidth = pageWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       pdf.save(`BCN-${shortId}-IDCard.pdf`);
     } catch (err) {
       console.error('PDF download error:', err);
@@ -128,9 +130,71 @@ export default function IDCard({ application, documents = [] }) {
     }
   };
 
-  // ── 3. Print ID Card ─────────────────────────────────────────────────
+  // ── 3. Print ID Card (Isolated 1-Page Iframe Print) ───────────────────
   const handlePrint = () => {
-    window.print();
+    if (!cardRef.current) return;
+
+    // Create an isolated hidden iframe for 1-page guaranteed printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>BCN ID Card - ${shortId}</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 8mm;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+              font-family: "Times New Roman", "Georgia", serif;
+            }
+            body {
+              background: #ffffff;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .card-wrapper {
+              width: 100%;
+              max-width: 794px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card-wrapper">
+            ${cardRef.current.outerHTML}
+          </div>
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+              setTimeout(function() {
+                if (window.frameElement && window.frameElement.parentNode) {
+                  window.frameElement.parentNode.removeChild(window.frameElement);
+                }
+              }, 1500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    doc.close();
   };
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -143,12 +207,12 @@ export default function IDCard({ application, documents = [] }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px',
+        padding: '16px',
         backgroundColor: '#f8fafc',
         boxSizing: 'border-box',
       }}
     >
-      {/* Responsive wrapper — scales the 794px card to fit viewport */}
+      {/* Responsive scroll wrapper for card */}
       <div
         style={{
           width: '100%',
@@ -178,6 +242,7 @@ export default function IDCard({ application, documents = [] }) {
               fontFamily: '"Times New Roman", "Georgia", serif',
               color: '#000000',
               boxSizing: 'border-box',
+              lineHeight: '1.3',
             }}
           >
             {/* ── HEADER ── */}
@@ -185,7 +250,7 @@ export default function IDCard({ application, documents = [] }) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                marginBottom: '8px',
+                marginBottom: '10px',
                 gap: '16px',
               }}
             >
@@ -197,28 +262,30 @@ export default function IDCard({ application, documents = [] }) {
                   width: '80px',
                   height: '80px',
                   objectFit: 'contain',
+                  flexShrink: 0,
                 }}
               />
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <div
                   style={{
-                    fontSize: '28px',
+                    fontSize: '26px',
                     fontWeight: 'bold',
                     letterSpacing: '1px',
+                    lineHeight: '1.15',
                   }}
                 >
                   BUDDHA COLLEGE OF NURSING
                 </div>
-                <div style={{ fontSize: '13px', fontStyle: 'italic' }}>
+                <div style={{ fontSize: '13px', fontStyle: 'italic', marginTop: '2px' }}>
                   (Behind Brahmanand Narayanan Specialty Hospital)
                 </div>
-                <div style={{ fontSize: '13px' }}>
+                <div style={{ fontSize: '13px', marginTop: '2px' }}>
                   Tamulia, P.S.: Kadali, Dist.: Seraikela-Kharsawan, Jharkhand – 831020
                 </div>
-                <div style={{ fontSize: '13px' }}>
+                <div style={{ fontSize: '13px', marginTop: '2px' }}>
                   E-mail: buddhacollegeofnursingsn@gmail.com
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', marginTop: '3px' }}>
                   (Affiliated by: Health Education &amp; Family Welfare Department, JNRC Ranchi,
                   Govt. of Jharkhand)
                 </div>
@@ -226,8 +293,8 @@ export default function IDCard({ application, documents = [] }) {
             </div>
 
             {/* ── Double horizontal line ── */}
-            <div style={{ borderTop: '3px solid black', marginBottom: '2px' }}></div>
-            <div style={{ borderTop: '1px solid black', marginBottom: '8px' }}></div>
+            <div style={{ borderTop: '3px solid black', marginBottom: '3px' }}></div>
+            <div style={{ borderTop: '1px solid black', marginBottom: '10px' }}></div>
 
             {/* ── ID CARD BANNER ── */}
             <div
@@ -236,10 +303,10 @@ export default function IDCard({ application, documents = [] }) {
                 color: '#ffffff',
                 textAlign: 'center',
                 padding: '6px',
-                fontSize: '20px',
+                fontSize: '18px',
                 fontWeight: 'bold',
                 letterSpacing: '4px',
-                marginBottom: '12px',
+                marginBottom: '10px',
               }}
             >
               ID CARD
@@ -250,7 +317,7 @@ export default function IDCard({ application, documents = [] }) {
               style={{
                 border: '2px solid black',
                 borderRadius: '4px',
-                padding: '12px',
+                padding: '12px 14px',
                 marginBottom: '8px',
               }}
             >
@@ -262,45 +329,113 @@ export default function IDCard({ application, documents = [] }) {
                   alignItems: 'flex-start',
                   marginBottom: '8px',
                   paddingBottom: '8px',
-                  borderBottom: '1px dashed #000',
+                  borderBottom: '1px dashed #000000',
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontWeight: 'bold' }}>Course: </span>
-                  <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{course}</span>
-                  <span style={{ marginLeft: '32px', fontWeight: 'bold' }}>Session: </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000',
-                      minWidth: '80px',
-                      display: 'inline-block',
-                    }}
-                  >
-                    {session}
-                  </span>
-                  <span style={{ marginLeft: '32px', fontWeight: 'bold' }}>Batch: </span>
-                  <span
-                    style={{
-                      borderBottom: '1px solid #000',
-                      minWidth: '60px',
-                      display: 'inline-block',
-                    }}
-                  >
-                    {batch || ''}
-                  </span>
+                <div
+                  style={{
+                    flex: 1,
+                    marginRight: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  {/* Course (Full width of left area so long names never break) */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <span
+                      style={{
+                        fontWeight: 'bold',
+                        minWidth: '65px',
+                        fontSize: '14px',
+                        paddingBottom: '2px',
+                      }}
+                    >
+                      Course:
+                    </span>
+                    <span
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        flex: 1,
+                        paddingLeft: '8px',
+                        paddingBottom: '2px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        fontSize: '14px',
+                        minHeight: '20px',
+                      }}
+                    >
+                      {course}
+                    </span>
+                  </div>
+
+                  {/* Session & Batch */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                      <span
+                        style={{
+                          fontWeight: 'bold',
+                          minWidth: '65px',
+                          fontSize: '14px',
+                          paddingBottom: '2px',
+                        }}
+                      >
+                        Session:
+                      </span>
+                      <span
+                        style={{
+                          borderBottom: '1px solid #000000',
+                          flex: 1,
+                          paddingLeft: '8px',
+                          paddingBottom: '2px',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          minHeight: '20px',
+                        }}
+                      >
+                        {session}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                      <span
+                        style={{
+                          fontWeight: 'bold',
+                          minWidth: '50px',
+                          fontSize: '14px',
+                          paddingBottom: '2px',
+                        }}
+                      >
+                        Batch:
+                      </span>
+                      <span
+                        style={{
+                          borderBottom: '1px solid #000000',
+                          flex: 1,
+                          paddingLeft: '8px',
+                          paddingBottom: '2px',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          minHeight: '20px',
+                        }}
+                      >
+                        {batch || ''}
+                      </span>
+                    </div>
+                  </div>
                 </div>
+
                 {/* Photo box */}
                 <div
                   style={{
-                    width: '100px',
-                    height: '120px',
-                    border: '1px solid #999',
+                    width: '105px',
+                    height: '125px',
+                    border: '1px solid #888888',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginLeft: '16px',
                     flexShrink: 0,
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: '#f8f8f8',
+                    overflow: 'hidden',
                   }}
                 >
                   {photoUrl ? (
@@ -312,6 +447,7 @@ export default function IDCard({ application, documents = [] }) {
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
+                        display: 'block',
                       }}
                     />
                   ) : (
@@ -319,8 +455,9 @@ export default function IDCard({ application, documents = [] }) {
                       style={{
                         textAlign: 'center',
                         fontSize: '10px',
-                        color: '#666',
-                        padding: '8px',
+                        color: '#666666',
+                        padding: '6px',
+                        lineHeight: '1.25',
                       }}
                     >
                       Paste your recent passport size photograph
@@ -330,21 +467,64 @@ export default function IDCard({ application, documents = [] }) {
               </div>
 
               {/* Row 2: Form No, Roll No */}
-              <div style={{ display: 'flex', marginBottom: '6px' }}>
-                <span style={{ fontWeight: 'bold', minWidth: '90px' }}>Form No.: </span>
-                <span
-                  style={{
-                    borderBottom: '1px solid #000',
-                    flex: 1,
-                    marginRight: '32px',
-                  }}
-                >
-                  {idNumber}
-                </span>
-                <span style={{ fontWeight: 'bold', minWidth: '80px' }}>Roll No.: </span>
-                <span style={{ borderBottom: '1px solid #000', flex: 1 }}>
-                  {rollNumber || ''}
-                </span>
+              <div
+                style={{
+                  display: 'flex',
+                  marginBottom: '6px',
+                  alignItems: 'flex-end',
+                  gap: '24px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '85px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Form No.:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
+                    {idNumber}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '75px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Roll No.:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
+                    {rollNumber || ''}
+                  </span>
+                </div>
               </div>
 
               {/* Stacked field rows */}
@@ -360,20 +540,32 @@ export default function IDCard({ application, documents = [] }) {
                   key={i}
                   style={{
                     display: 'flex',
-                    marginBottom: '5px',
+                    marginBottom: '6px',
                     alignItems: 'flex-end',
                   }}
                 >
                   <span
                     style={{
                       fontWeight: 'bold',
-                      minWidth: '160px',
+                      minWidth: '165px',
                       flexShrink: 0,
+                      fontSize: '14px',
+                      paddingBottom: '2px',
                     }}
                   >
                     {field.label}
                   </span>
-                  <span style={{ borderBottom: '1px solid #000', flex: 1 }}>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
                     {field.value || ''}
                   </span>
                 </div>
@@ -383,32 +575,86 @@ export default function IDCard({ application, documents = [] }) {
               <div
                 style={{
                   display: 'flex',
-                  marginBottom: '5px',
+                  marginBottom: '4px',
                   alignItems: 'flex-end',
+                  gap: '16px',
                 }}
               >
-                <span style={{ fontWeight: 'bold', minWidth: '40px' }}>City: </span>
-                <span
-                  style={{
-                    borderBottom: '1px solid #000',
-                    flex: 1,
-                    marginRight: '16px',
-                  }}
-                >
-                  {city || ''}
-                </span>
-                <span style={{ fontWeight: 'bold', minWidth: '50px' }}>State: </span>
-                <span
-                  style={{
-                    borderBottom: '1px solid #000',
-                    flex: 1,
-                    marginRight: '16px',
-                  }}
-                >
-                  {state || ''}
-                </span>
-                <span style={{ fontWeight: 'bold', minWidth: '35px' }}>Pin: </span>
-                <span style={{ borderBottom: '1px solid #000', flex: 1 }}>{pin || ''}</span>
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '40px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    City:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
+                    {city || ''}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '48px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    State:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
+                    {state || ''}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', width: '160px' }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '36px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Pin:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      paddingLeft: '8px',
+                      paddingBottom: '2px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      minHeight: '20px',
+                    }}
+                  >
+                    {pin || ''}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -417,39 +663,107 @@ export default function IDCard({ application, documents = [] }) {
               style={{
                 border: '2px solid black',
                 borderRadius: '4px',
-                padding: '12px',
+                padding: '12px 14px',
                 marginBottom: '8px',
               }}
             >
-              <div style={{ display: 'flex', marginBottom: '10px' }}>
-                <span style={{ fontWeight: 'bold', minWidth: '130px' }}>Exam Centre: </span>
-                <span
-                  style={{
-                    borderBottom: '1px solid #000',
-                    flex: 1,
-                    marginRight: '32px',
-                  }}
-                ></span>
-                <span style={{ fontWeight: 'bold', minWidth: '160px' }}>
-                  Date of Examination:{' '}
-                </span>
-                <span style={{ borderBottom: '1px solid #000', flex: 1 }}></span>
+              <div
+                style={{
+                  display: 'flex',
+                  marginBottom: '16px',
+                  alignItems: 'flex-end',
+                  gap: '24px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '105px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Exam Centre:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      minHeight: '20px',
+                      paddingBottom: '2px',
+                    }}
+                  ></span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '155px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Date of Examination:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      minHeight: '20px',
+                      paddingBottom: '2px',
+                    }}
+                  ></span>
+                </div>
               </div>
-              <div style={{ display: 'flex' }}>
-                <span style={{ fontWeight: 'bold', minWidth: '180px' }}>
-                  Signature of Candidate:{' '}
-                </span>
-                <span
-                  style={{
-                    borderBottom: '1px solid #000',
-                    flex: 1,
-                    marginRight: '32px',
-                  }}
-                ></span>
-                <span style={{ fontWeight: 'bold', minWidth: '170px' }}>
-                  Signature of Principal:{' '}
-                </span>
-                <span style={{ borderBottom: '1px solid #000', flex: 1 }}></span>
+              <div
+                style={{
+                  display: 'flex',
+                  marginTop: '18px',
+                  alignItems: 'flex-end',
+                  gap: '24px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '175px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Signature of Candidate:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      minHeight: '20px',
+                      paddingBottom: '2px',
+                    }}
+                  ></span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', flex: 1 }}>
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      minWidth: '165px',
+                      fontSize: '14px',
+                      paddingBottom: '2px',
+                    }}
+                  >
+                    Signature of Principal:
+                  </span>
+                  <span
+                    style={{
+                      borderBottom: '1px solid #000000',
+                      flex: 1,
+                      minHeight: '20px',
+                      paddingBottom: '2px',
+                    }}
+                  ></span>
+                </div>
               </div>
             </div>
 
@@ -477,7 +791,7 @@ export default function IDCard({ application, documents = [] }) {
         style={{
           width: '100%',
           maxWidth: '800px',
-          marginTop: '24px',
+          marginTop: '20px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -582,7 +896,7 @@ export default function IDCard({ application, documents = [] }) {
         </button>
       </div>
 
-      {/* Spin animation for loader icons (since we don't use Tailwind here) */}
+      {/* Spin animation for loader icons */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
