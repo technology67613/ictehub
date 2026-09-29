@@ -5,7 +5,7 @@ import {
   Eye, EyeOff, Upload, Phone, Mail, MapPin, User, Calendar,
   GraduationCap, Shield, Lock, Key, Copy, Check, ExternalLink,
   RefreshCw, Loader2, Building2, HelpCircle, ArrowRight,
-  CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users, Settings, Edit3, Download
+  CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users, Settings, Edit3, Download, X
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 import IDCard from './IDCard';
