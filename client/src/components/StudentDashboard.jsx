@@ -362,15 +362,10 @@ export default function StudentDashboard({ user, handleLogout }) {
 
   // Status mapping
   const getStatusBadge = (status) => {
-    switch (status) {
-      case 'new':
-        return {
-          label: 'Application Received ✓',
-          bg: 'bg-blue-50 text-blue-700 border-blue-200',
-          icon: <Clock size={16} className="text-blue-600" />,
-          step: 1,
-        };
+    const s = String(status || '').toLowerCase();
+    switch (s) {
       case 'contacted':
+      case 'reviewing':
         return {
           label: 'Under Review',
           bg: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -378,6 +373,7 @@ export default function StudentDashboard({ user, handleLogout }) {
           step: 2,
         };
       case 'interested':
+      case 'shortlisted':
         return {
           label: 'Shortlisted 🌟',
           bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -385,26 +381,25 @@ export default function StudentDashboard({ user, handleLogout }) {
           step: 3,
         };
       case 'not-interested':
+      case 'rejected':
         return {
           label: 'Not Progressing',
           bg: 'bg-red-50 text-red-700 border-red-200',
           icon: <XCircle size={16} className="text-red-600" />,
           step: 1,
         };
+      case 'admitted':
+      case 'enrolled':
       case 'enrolled-college':
       case 'enrolled-institute':
+      case 'new':
+      case 'submitted':
+      default:
         return {
           label: 'Congratulations! Admitted 🎉',
           bg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
           icon: <Award size={16} className="text-emerald-600" />,
           step: 4,
-        };
-      default:
-        return {
-          label: 'Application Received',
-          bg: 'bg-slate-100 text-slate-700 border-slate-200',
-          icon: <Clock size={16} className="text-slate-600" />,
-          step: 1,
         };
     }
   };
