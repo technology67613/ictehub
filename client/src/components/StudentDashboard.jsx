@@ -5,12 +5,11 @@ import {
   Eye, EyeOff, Upload, Phone, Mail, MapPin, User, Calendar,
   GraduationCap, Shield, Lock, Key, Copy, Check, ExternalLink,
   RefreshCw, Loader2, Building2, HelpCircle, ArrowRight,
-  CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users, Settings
+  CreditCard, LayoutDashboard, PhoneCall, Home, UserCheck, Users, Settings, Edit3
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 import IDCard from './IDCard';
-
-const API = 'https://ictehub.onrender.com';
+import { API } from '../api';
 
 const REQUIRED_DOC_TYPES = [
   { type: 'passport_photo', label: 'Passport Size Photograph', required: true },
@@ -129,7 +128,78 @@ export default function StudentDashboard({ user, handleLogout }) {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
+  // Profile Edit Request state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [editSubmitError, setEditSubmitError] = useState('');
+  const [editSubmitSuccess, setEditSubmitSuccess] = useState('');
+
   const token = localStorage.getItem('token');
+
+  const openEditModal = () => {
+    if (!application) return;
+    const formD = application.admission_form_data || {};
+    const perm = formD.permanent_address || {};
+    const corr = formD.correspondence_address || {};
+
+    setEditForm({
+      primary_mobile: application.primary_mobile || application.phone || '',
+      alternate_mobile: application.alternate_mobile || '',
+      email: application.email || '',
+      perm_address_line1: application.perm_address_line1 || perm.address_line_1 || '',
+      perm_address_line2: application.perm_address_line2 || perm.address_line_2 || '',
+      perm_city: application.perm_city || perm.city || '',
+      perm_district: application.perm_district || perm.district || '',
+      perm_state: application.perm_state || perm.state || '',
+      perm_pin: application.perm_pin || perm.pincode || '',
+      corr_address_line1: application.corr_address_line1 || corr.address_line_1 || '',
+      corr_address_line2: application.corr_address_line2 || corr.address_line_2 || '',
+      corr_city: application.corr_city || corr.city || '',
+      corr_district: application.corr_district || corr.district || '',
+      corr_state: application.corr_state || corr.state || '',
+      corr_pin: application.corr_pin || corr.pincode || '',
+      guardian_name: application.guardian_name || formD.guardian_name || '',
+      guardian_relationship: application.guardian_relationship || formD.guardian_relationship || '',
+      guardian_mobile: application.guardian_mobile || formD.guardian_mobile || '',
+    });
+    setEditSubmitError('');
+    setShowEditModal(true);
+  };
+
+  const handleRequestEditSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingEdit(true);
+    setEditSubmitError('');
+    try {
+      const res = await fetch(`${API}/admission-applications/my/request-edit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ changes: editForm })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to submit edit request');
+      }
+
+      setApplication(prev => ({
+        ...prev,
+        edit_status: 'requested',
+        pending_changes: editForm
+      }));
+      setShowEditModal(false);
+      setEditSubmitSuccess('Your update request has been successfully submitted to the admissions office for verification.');
+      setTimeout(() => setEditSubmitSuccess(''), 7000);
+    } catch (err) {
+      setEditSubmitError(err.message);
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -569,6 +639,17 @@ export default function StudentDashboard({ user, handleLogout }) {
               <User size={16} /> View Profile
             </button>
             <button
+              onClick={openEditModal}
+              disabled={application.edit_status === 'requested'}
+              className={`px-4 py-3 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer border flex items-center justify-center gap-1.5 min-h-[44px] w-full sm:w-auto ${
+                application.edit_status === 'requested'
+                  ? 'bg-amber-400/20 text-amber-200 border-amber-300/30 cursor-not-allowed'
+                  : 'bg-white/15 hover:bg-white/25 text-white border-white/20'
+              }`}
+            >
+              <Edit3 size={16} /> {application.edit_status === 'requested' ? 'Edit In Review' : 'Request Edit'}
+            </button>
+            <button
               onClick={fetchDashboardData}
               className="p-3 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer border border-white/20 flex items-center justify-center min-h-[44px] w-full sm:w-auto"
               title="Refresh Dashboard"
@@ -577,6 +658,28 @@ export default function StudentDashboard({ user, handleLogout }) {
             </button>
           </div>
         </div>
+
+        {/* Pending Edit Request Notification Banner */}
+        {application.edit_status === 'requested' && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-900 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <Clock size={18} className="text-amber-600 shrink-0" />
+              <div>
+                <strong className="block text-amber-950 font-extrabold">Profile Update Request Under Review</strong>
+                <span>Your requested changes to contact and address details have been sent to the Buddha College of Nursing admissions office.</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 bg-amber-200/70 text-amber-800 rounded-lg font-extrabold text-[10px] uppercase tracking-wider shrink-0">
+              Pending Approval
+            </span>
+          </div>
+        )}
+        {editSubmitSuccess && (
+          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-900 shadow-xs">
+            <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+            <span>{editSubmitSuccess}</span>
+          </div>
+        )}
 
         {/* Desktop Top Tabs Navigation Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar w-full">
@@ -1583,6 +1686,201 @@ export default function StudentDashboard({ user, handleLogout }) {
         </button>
       </nav>
 
+      {/* ── Profile Edit Request Modal ── */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1E40FF] flex items-center justify-center font-bold">
+                  <Edit3 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Request Profile Correction</h3>
+                  <p className="text-[11px] font-semibold text-slate-400">Submit corrections to contact, address, or guardian details</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 border-none bg-transparent cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {editSubmitError && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs font-semibold rounded-xl border border-red-200">
+                {editSubmitError}
+              </div>
+            )}
+
+            {/* Read-only / Locked notice */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-start gap-2 text-slate-600">
+              <Lock size={15} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <strong>Locked Verification Fields:</strong> Candidate Name, Date of Birth, Gender, and Course Applied are locked for institutional integrity. To correct these fields, please present original documents in-person to the Buddha College of Nursing administrative office.
+              </div>
+            </div>
+
+            <form onSubmit={handleRequestEditSubmit} className="space-y-4 text-xs">
+              
+              {/* Contact Information */}
+              <div className="space-y-2">
+                <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF]">Contact Information</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Primary Mobile *</label>
+                    <input
+                      type="tel"
+                      value={editForm.primary_mobile || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, primary_mobile: e.target.value }))}
+                      required
+                      placeholder="10-digit mobile"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Alternate Mobile</label>
+                    <input
+                      type="tel"
+                      value={editForm.alternate_mobile || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, alternate_mobile: e.target.value }))}
+                      placeholder="Alternate phone (optional)"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={editForm.email || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="personal email"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Permanent Address */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF]">Permanent Address</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Address Line 1</label>
+                    <input
+                      type="text"
+                      value={editForm.perm_address_line1 || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, perm_address_line1: e.target.value }))}
+                      placeholder="House / Flat / Street"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">City / Town</label>
+                    <input
+                      type="text"
+                      value={editForm.perm_city || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, perm_city: e.target.value }))}
+                      placeholder="City"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">District</label>
+                    <input
+                      type="text"
+                      value={editForm.perm_district || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, perm_district: e.target.value }))}
+                      placeholder="District"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">State</label>
+                    <input
+                      type="text"
+                      value={editForm.perm_state || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, perm_state: e.target.value }))}
+                      placeholder="State"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">PIN Code</label>
+                    <input
+                      type="text"
+                      value={editForm.perm_pin || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, perm_pin: e.target.value }))}
+                      placeholder="6-digit PIN"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Guardian Information */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#1E40FF]">Guardian / Emergency Contact</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Guardian Name</label>
+                    <input
+                      type="text"
+                      value={editForm.guardian_name || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, guardian_name: e.target.value }))}
+                      placeholder="Full Name"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Relationship</label>
+                    <input
+                      type="text"
+                      value={editForm.guardian_relationship || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, guardian_relationship: e.target.value }))}
+                      placeholder="e.g. Father / Mother / Uncle"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Guardian Mobile</label>
+                    <input
+                      type="tel"
+                      value={editForm.guardian_mobile || ''}
+                      onChange={e => setEditForm(prev => ({ ...prev, guardian_mobile: e.target.value }))}
+                      placeholder="10-digit mobile"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold border-none cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingEdit}
+                  className="px-5 py-2.5 bg-[#1E40FF] hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 border-none cursor-pointer shadow-sm"
+                >
+                  {submittingEdit ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                  Submit Update Request
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+

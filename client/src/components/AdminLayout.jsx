@@ -12,7 +12,9 @@ import {
   Menu,
   X,
   User,
-  LogOut
+  LogOut,
+  IndianRupee,
+  BarChart3
 } from 'lucide-react';
 import IcteLogo from './IcteLogo';
 
@@ -29,6 +31,8 @@ const AdminLayout = ({ user, handleLogout }) => {
     { name: 'Institute Courses', path: '/admin/institute-courses', icon: GraduationCap },
     { name: 'Team', path: '/admin/team', icon: UserCog },
     { name: 'Commissions', path: '/admin/commissions', icon: DollarSign },
+    { name: 'Fees', path: '/admin/fees', icon: IndianRupee },
+    { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
     { name: 'Partner Inquiries', path: '/admin/partner-inquiries', icon: Handshake },
     { name: 'Hot Leads', path: '/admin/hot-leads', icon: Flame, isHot: true },
   ];

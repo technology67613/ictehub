@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const {
+  sendApplicationSubmittedEmail,
+  sendAdmissionStatusEmail,
+  sendAdminNewApplicationEmail
+} = require('../utils/emailService');
 
 /**
  * @route   POST /admission-applications
@@ -176,11 +181,21 @@ router.post('/', async (req, res) => {
       }
     }
 
-    return res.status(201).json({
+    const responseData = {
       ...createdApp,
       qualifications: insertedQualifications,
       application_ref: createdApp.application_ref || `BCN-${createdApp.id.substring(0, 8).toUpperCase()}`
-    });
+    };
+
+    // Fire-and-forget email notifications to student and admin
+    try {
+      sendApplicationSubmittedEmail(responseData);
+      sendAdminNewApplicationEmail(responseData);
+    } catch (e) {
+      console.error('Failed to trigger application emails:', e.message);
+    }
+
+    return res.status(201).json(responseData);
 
   } catch (error) {
     console.error('Error creating admission application:', error);
@@ -207,7 +222,8 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
           id,
           assigned_telecaller_id,
           status,
-          created_at
+          created_at,
+          admission_form_data
         )
       `)
       .order('submitted_at', { ascending: false });
@@ -443,6 +459,155 @@ router.get('/qualifications/:applicationId', protect, async (req, res) => {
 });
 
 /**
+ * @route   PUT /admission-applications/my/request-edit
+ * @desc    Student requests changes to their contact/address/guardian fields
+ * @access  Private/Student
+ */
+router.put('/my/request-edit', protect, authorize('student'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { changes } = req.body;
+
+    if (!changes || typeof changes !== 'object') {
+      return res.status(400).json({ message: 'Changes object is required.' });
+    }
+
+    // Find student application
+    let { data: apps, error: appError } = await supabase
+      .from('admission_applications')
+      .select('id, student_user_id')
+      .eq('student_user_id', req.user.id)
+      .order('submitted_at', { ascending: false });
+
+    if (!apps || apps.length === 0) {
+      // Fallback check leads
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('student_user_id', req.user.id);
+      if (leads && leads.length > 0) {
+        const leadIds = leads.map(l => l.id);
+        const { data: leadApps } = await supabase
+          .from('admission_applications')
+          .select('id, student_user_id')
+          .in('lead_id', leadIds)
+          .order('submitted_at', { ascending: false });
+        if (leadApps && leadApps.length > 0) apps = leadApps;
+      }
+    }
+
+    if (!apps || apps.length === 0) {
+      return res.status(404).json({ message: 'Admission application not found.' });
+    }
+
+    const appId = apps[0].id;
+    const allowedFields = [
+      'primary_mobile', 'alternate_mobile', 'email',
+      'perm_address_line1', 'perm_address_line2', 'perm_city', 'perm_district', 'perm_state', 'perm_pin',
+      'corr_address_line1', 'corr_address_line2', 'corr_city', 'corr_district', 'corr_state', 'corr_pin',
+      'guardian_name', 'guardian_relationship', 'guardian_mobile'
+    ];
+
+    const sanitizedChanges = {};
+    for (const key of allowedFields) {
+      if (changes[key] !== undefined) {
+        sanitizedChanges[key] = changes[key];
+      }
+    }
+
+    const { data: updated, error: updateErr } = await supabase
+      .from('admission_applications')
+      .update({
+        pending_changes: sanitizedChanges,
+        edit_status: 'requested',
+        edit_requested_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', appId)
+      .select();
+
+    if (updateErr) throw updateErr;
+
+    return res.json({ message: 'Edit request submitted successfully', application: updated[0] });
+  } catch (error) {
+    console.error('Error requesting edit:', error);
+    return res.status(500).json({ message: 'Server error requesting edit', error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /admission-applications/:id/approve-edit
+ * @desc    Approve pending student edit and merge into application
+ * @access  Private/Admin
+ */
+router.put('/:id/approve-edit', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+
+    const { data: appData, error: fetchErr } = await supabase
+      .from('admission_applications')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !appData) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+
+    const pending = appData.pending_changes || {};
+    const mergeData = {
+      ...pending,
+      edit_status: 'approved',
+      pending_changes: null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: updated, error: updateErr } = await supabase
+      .from('admission_applications')
+      .update(mergeData)
+      .eq('id', id)
+      .select('*');
+
+    if (updateErr) throw updateErr;
+
+    return res.json({ message: 'Edit approved and applied', application: updated[0] });
+  } catch (error) {
+    console.error('Error approving edit:', error);
+    return res.status(500).json({ message: 'Server error approving edit', error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /admission-applications/:id/reject-edit
+ * @desc    Reject pending student edit
+ * @access  Private/Admin
+ */
+router.put('/:id/reject-edit', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { id } = req.params;
+
+    const { data: updated, error: updateErr } = await supabase
+      .from('admission_applications')
+      .update({
+        edit_status: 'rejected',
+        pending_changes: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select('*');
+
+    if (updateErr) throw updateErr;
+
+    return res.json({ message: 'Edit rejected', application: updated[0] });
+  } catch (error) {
+    console.error('Error rejecting edit:', error);
+    return res.status(500).json({ message: 'Server error rejecting edit', error: error.message });
+  }
+});
+
+/**
  * @route   PUT /admission-applications/:id
  * @desc    Update admission application status or details (Admin or assigned Telecaller)
  * @access  Private/Admin or Telecaller
@@ -498,7 +663,18 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(404).json({ message: 'Admission application not found.' });
     }
 
-    return res.json(updatedApps[0]);
+    const updatedApp = updatedApps[0];
+
+    // Trigger email if status changed
+    if (status && status !== application.status) {
+      try {
+        sendAdmissionStatusEmail(updatedApp, status);
+      } catch (e) {
+        console.error('Failed to trigger status update email:', e.message);
+      }
+    }
+
+    return res.json(updatedApp);
   } catch (error) {
     console.error('Error updating admission application:', error);
     return res.status(500).json({ message: 'Server error updating admission application', error: error.message });

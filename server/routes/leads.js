@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { protect, authorize } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
 const autoAssignTelecaller = require('../utils/autoAssignTelecaller');
+const { sendAdminNewLeadEmail } = require('../utils/emailService');
 
 const leadsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -169,6 +170,13 @@ router.post('/', leadsLimiter, async (req, res) => {
       responsePayload.student_credentials = studentCredentials;
     }
 
+    // Fire-and-forget email notification to admin
+    try {
+      sendAdminNewLeadEmail(responsePayload);
+    } catch (e) {
+      console.error('Failed to trigger lead email notification:', e.message);
+    }
+
     return res.status(201).json(responsePayload);
   } catch (error) {
     console.error('Error creating lead:', error);
@@ -296,6 +304,40 @@ router.get('/my', protect, authorize('telecaller'), async (req, res) => {
   } catch (error) {
     console.error('Error fetching my leads:', error);
     return res.status(500).json({ message: 'Server error fetching leads', error: error.message });
+  }
+});
+
+/**
+ * @route   PUT /leads/bulk-assign
+ * @desc    Bulk assign telecaller to multiple leads (Admin only)
+ * @access  Private/Admin
+ */
+router.put('/bulk-assign', protect, authorize('admin'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const { lead_ids, telecaller_id } = req.body;
+
+    if (!lead_ids || !Array.isArray(lead_ids) || lead_ids.length === 0) {
+      return res.status(400).json({ message: 'lead_ids must be a non-empty array.' });
+    }
+
+    const updateData = {
+      assigned_telecaller_id: telecaller_id || null,
+      auto_assigned: false,
+    };
+
+    const { data, error } = await supabase
+      .from('leads')
+      .update(updateData)
+      .in('id', lead_ids)
+      .select();
+
+    if (error) throw error;
+
+    return res.json({ message: 'Leads assigned successfully', count: data?.length || 0, leads: data });
+  } catch (error) {
+    console.error('Error bulk assigning leads:', error);
+    return res.status(500).json({ message: 'Server error bulk assigning leads', error: error.message });
   }
 });
 

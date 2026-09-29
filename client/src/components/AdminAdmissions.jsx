@@ -4,10 +4,9 @@ import {
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert, Loader2,
   Filter, AlertCircle, TrendingUp, Copy, X, Users, UserCheck, Activity,
   Award, ExternalLink, Trash2, Download, Calendar, ArrowUpRight, Eye,
-  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check
+  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus
 } from 'lucide-react';
-
-const API = 'https://ictehub.onrender.com';
+import { API } from '../api';
 
 const STATUS_CONFIG = {
   'new': { label: 'New', color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
@@ -51,64 +50,70 @@ function StatusBadge({ status }) {
 function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onAssign, token }) {
   const [formData] = useState(() => {
     try {
-      if (lead.full_name || lead.perm_address_line1 || lead.admission_qualifications || lead.qualifications) {
+      let parsedForm = {};
+      try {
+        parsedForm = typeof lead.admission_form_data === 'string'
+          ? JSON.parse(lead.admission_form_data)
+          : (lead.admission_form_data || (lead.leads && typeof lead.leads.admission_form_data === 'string' ? JSON.parse(lead.leads.admission_form_data) : lead.leads?.admission_form_data) || {});
+      } catch (e) {}
+
+      if (lead.full_name || lead.perm_address_line1 || lead.admission_qualifications || lead.qualifications || lead.course || lead.program_type) {
         return {
-          full_name: lead.full_name,
-          father_name: lead.father_name,
-          mother_name: lead.mother_name,
-          dob: lead.dob,
-          gender: lead.gender,
-          nationality: lead.nationality,
-          blood_group: lead.blood_group,
-          aadhaar_number: lead.aadhaar_number,
-          photo_url: lead.photo_url,
-          primary_mobile: lead.primary_mobile,
-          alternate_mobile: lead.alternate_mobile,
-          email: lead.email,
-          program_type: lead.program_type,
-          course: lead.course,
-          specialization: lead.specialization,
-          preferred_college_type: lead.preferred_college_type,
-          academic_session: lead.academic_session,
-          category: lead.category,
+          full_name: lead.full_name || lead.name || parsedForm.full_name,
+          father_name: lead.father_name || parsedForm.father_name,
+          mother_name: lead.mother_name || parsedForm.mother_name,
+          dob: lead.dob || parsedForm.dob,
+          gender: lead.gender || parsedForm.gender,
+          nationality: lead.nationality || parsedForm.nationality,
+          blood_group: lead.blood_group || parsedForm.blood_group,
+          aadhaar_number: lead.aadhaar_number || parsedForm.aadhaar_number,
+          photo_url: lead.photo_url || parsedForm.photo_url,
+          primary_mobile: lead.primary_mobile || lead.phone || parsedForm.primary_mobile || parsedForm.phone,
+          alternate_mobile: lead.alternate_mobile || parsedForm.alternate_mobile,
+          email: lead.email || parsedForm.email,
+          program_type: lead.program_type || lead.programType || parsedForm.program_type,
+          course: lead.course || lead.courseName || parsedForm.course,
+          specialization: lead.specialization || parsedForm.specialization,
+          preferred_college_type: lead.preferred_college_type || parsedForm.preferred_college_type,
+          academic_session: lead.academic_session || parsedForm.academic_session,
+          category: lead.category || parsedForm.category,
           permanent_address: {
-            address_line_1: lead.perm_address_line1 || '',
-            address_line_2: lead.perm_address_line2 || '',
-            city: lead.perm_city || '',
-            district: lead.perm_district || '',
-            state: lead.perm_state || '',
-            pincode: lead.perm_pin || '',
+            address_line_1: lead.perm_address_line1 || parsedForm.permanent_address?.address_line_1 || '',
+            address_line_2: lead.perm_address_line2 || parsedForm.permanent_address?.address_line_2 || '',
+            city: lead.perm_city || parsedForm.permanent_address?.city || '',
+            district: lead.perm_district || parsedForm.permanent_address?.district || '',
+            state: lead.perm_state || parsedForm.permanent_address?.state || '',
+            pincode: lead.perm_pin || parsedForm.permanent_address?.pincode || '',
           },
-          same_as_permanent: lead.corr_same_as_perm !== false,
+          same_as_permanent: lead.corr_same_as_perm !== undefined ? (lead.corr_same_as_perm !== false) : (parsedForm.same_as_permanent !== false),
           correspondence_address: {
-            address_line_1: lead.corr_address_line1 || '',
-            address_line_2: lead.corr_address_line2 || '',
-            city: lead.corr_city || '',
-            district: lead.corr_district || '',
-            state: lead.corr_state || '',
-            pincode: lead.corr_pin || '',
+            address_line_1: lead.corr_address_line1 || parsedForm.correspondence_address?.address_line_1 || '',
+            address_line_2: lead.corr_address_line2 || parsedForm.correspondence_address?.address_line_2 || '',
+            city: lead.corr_city || parsedForm.correspondence_address?.city || '',
+            district: lead.corr_district || parsedForm.correspondence_address?.district || '',
+            state: lead.corr_state || parsedForm.correspondence_address?.state || '',
+            pincode: lead.corr_pin || parsedForm.correspondence_address?.pincode || '',
           },
-          guardian_name: lead.guardian_name,
-          guardian_relationship: lead.guardian_relationship,
-          guardian_mobile: lead.guardian_mobile,
-          hostel_required: lead.hostel_required ? 'Yes' : 'No',
-          hostel_location: lead.hostel_location,
-          scholarship_required: lead.scholarship_required ? 'Yes' : 'No',
-          hear_about_us: lead.heard_about_us,
-          qualifications: (lead.qualifications || lead.admission_qualifications || []).map((q, idx) => ({
+          guardian_name: lead.guardian_name || parsedForm.guardian_name,
+          guardian_relationship: lead.guardian_relationship || parsedForm.guardian_relationship,
+          guardian_mobile: lead.guardian_mobile || parsedForm.guardian_mobile,
+          hostel_required: (lead.hostel_required || parsedForm.hostel_required === 'Yes' || parsedForm.hostel_required === true) ? 'Yes' : 'No',
+          hostel_location: lead.hostel_location || parsedForm.hostel_location,
+          scholarship_required: (lead.scholarship_required || parsedForm.scholarship_required === 'Yes' || parsedForm.scholarship_required === true) ? 'Yes' : 'No',
+          hear_about_us: lead.heard_about_us || parsedForm.hear_about_us || parsedForm.heard_about_us,
+          source: lead.source || parsedForm.source,
+          qualifications: (lead.qualifications || lead.admission_qualifications || parsedForm.qualifications || []).map((q, idx) => ({
             id: q.id || `q_${idx}`,
-            level: q.examination,
-            board: q.board_institution,
-            institution: '',
-            year: q.year_of_passing,
-            percentage: q.percentage_cgpa,
+            level: q.examination || q.level,
+            board: q.board_institution || q.board,
+            institution: q.institution || '',
+            year: q.year_of_passing || q.year,
+            percentage: q.percentage_cgpa || q.percentage,
             division: q.division
           }))
         };
       }
-      return typeof lead.admission_form_data === 'string'
-        ? JSON.parse(lead.admission_form_data)
-        : lead.admission_form_data || {};
+      return parsedForm;
     } catch (e) {
       return {};
     }
@@ -122,12 +127,31 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
+  // Fee tracking state
+  const [fees, setFees] = useState([]);
+  const [loadingFees, setLoadingFees] = useState(false);
+  const [showFeeForm, setShowFeeForm] = useState(false);
+  const [feeAmount, setFeeAmount] = useState('');
+  const [feeType, setFeeType] = useState('Tuition Fee');
+  const [feeMode, setFeeMode] = useState('UPI');
+  const [feeDate, setFeeDate] = useState(new Date().toISOString().split('T')[0]);
+  const [feeRef, setFeeRef] = useState('');
+  const [feeRemarks, setFeeRemarks] = useState('');
+  const [savingFee, setSavingFee] = useState(false);
+  const [feeError, setFeeError] = useState('');
+
+  // Student Edit Request state
+  const [editStatus, setEditStatus] = useState(lead.edit_status);
+  const [pendingChanges, setPendingChanges] = useState(lead.pending_changes);
+  const [processingEdit, setProcessingEdit] = useState(false);
+  const [editMsg, setEditMsg] = useState('');
+
   const refId = (lead.id || '').substring(0, 8).toUpperCase();
   const appliedDate = lead.created_at
     ? new Date(lead.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     : 'N/A';
 
-  // Fetch documents for this lead
+  // Fetch documents and fees for this lead
   useEffect(() => {
     if (lead?.id && token) {
       setLoadingDocs(true);
@@ -147,8 +171,99 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
         .then(data => setCallLogs(Array.isArray(data) ? data : []))
         .catch(err => console.error('Error loading call logs:', err))
         .finally(() => setLoadingLogs(false));
+
+      setLoadingFees(true);
+      fetch(`${API}/fee-records/application/${lead.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setFees(Array.isArray(data) ? data : []))
+        .catch(err => console.error('Error loading fees:', err))
+        .finally(() => setLoadingFees(false));
     }
   }, [lead?.id, token]);
+
+  const handleRecordPayment = async (e) => {
+    e.preventDefault();
+    if (!feeAmount || isNaN(feeAmount) || parseFloat(feeAmount) <= 0) {
+      setFeeError('Please enter a valid payment amount.');
+      return;
+    }
+    setSavingFee(true);
+    setFeeError('');
+    try {
+      const res = await fetch(`${API}/fee-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          application_id: lead.id,
+          student_name: formData.full_name || lead.name,
+          phone: formData.primary_mobile || lead.phone,
+          amount: feeAmount,
+          fee_type: feeType,
+          payment_mode: feeMode,
+          payment_date: feeDate,
+          transaction_ref: feeRef,
+          remarks: feeRemarks
+        })
+      });
+      if (!res.ok) throw new Error('Failed to record fee');
+      const newRec = await res.json();
+      setFees(prev => [newRec, ...prev]);
+      setShowFeeForm(false);
+      setFeeAmount('');
+      setFeeRef('');
+      setFeeRemarks('');
+    } catch (err) {
+      setFeeError(err.message);
+    } finally {
+      setSavingFee(false);
+    }
+  };
+
+  const handleApproveEdit = async () => {
+    setProcessingEdit(true);
+    try {
+      const res = await fetch(`${API}/admission-applications/${lead.id}/approve-edit`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to approve edit');
+      setEditStatus('approved');
+      setPendingChanges(null);
+      setEditMsg('Changes approved and applied!');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setProcessingEdit(false);
+    }
+  };
+
+  const handleRejectEdit = async () => {
+    if (!window.confirm('Are you sure you want to reject this edit request?')) return;
+    setProcessingEdit(true);
+    try {
+      const res = await fetch(`${API}/admission-applications/${lead.id}/reject-edit`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to reject edit');
+      setEditStatus('rejected');
+      setPendingChanges(null);
+      setEditMsg('Edit request rejected.');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setProcessingEdit(false);
+    }
+  };
+
+  const totalFeesCollected = useMemo(() => {
+    return (fees || []).reduce((acc, f) => acc + (parseFloat(f.amount) || 0), 0);
+  }, [fees]);
 
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
@@ -281,6 +396,66 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
             </div>
           </div>
 
+          {/* Edit Request Alert & Review (If student requested edit) */}
+          {editStatus === 'requested' && pendingChanges && (
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={18} className="text-amber-600" />
+                  <span className="font-extrabold text-sm text-amber-900">Student Requested Profile Updates</span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/70 text-amber-800 px-2 py-0.5 rounded-md">
+                  Action Required
+                </span>
+              </div>
+              <p className="text-xs text-amber-700">
+                The student has submitted profile modifications. Review the requested changes below before approving:
+              </p>
+              
+              <div className="bg-white p-3 rounded-xl border border-amber-100 text-xs space-y-2">
+                {Object.entries(pendingChanges).map(([field, newVal]) => {
+                  const currentVal = formData[field] || lead[field] || '—';
+                  const fieldLabel = field.replace(/_/g, ' ').toUpperCase();
+                  return (
+                    <div key={field} className="flex flex-col sm:flex-row sm:items-center justify-between py-1 border-b border-slate-100 last:border-none gap-1">
+                      <span className="font-bold text-slate-500 text-[11px]">{fieldLabel}:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 line-through text-[11px]">{String(currentVal)}</span>
+                        <span className="text-slate-400">&rarr;</span>
+                        <span className="font-bold text-emerald-600">{String(newVal)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleApproveEdit}
+                  disabled={processingEdit}
+                  className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border-none"
+                >
+                  {processingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  Approve Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRejectEdit}
+                  disabled={processingEdit}
+                  className="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer border-none"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          )}
+          {editMsg && (
+            <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+              <CheckCircle2 size={14} /> {editMsg}
+            </div>
+          )}
+
           {/* Section 2: Personal Details */}
           <div className="space-y-3">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 flex items-center gap-2">
@@ -397,14 +572,14 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
             </h3>
 
             <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/70 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Program Type</span><span className="font-bold text-slate-800">{formData.program_type || 'N/A'}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Selected Course</span><span className="font-bold text-[#1E40FF]">{formData.course || 'N/A'}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Specialization</span><span className="font-bold text-slate-800">{formData.specialization || 'N/A'}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Preferred Mode</span><span className="font-bold text-slate-800">{formData.preferred_college_type || 'Both'}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Academic Session</span><span className="font-bold text-slate-800">{formData.academic_session || '2025-26'}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Hostel Required</span><span className="font-bold text-slate-800">{formData.hostel_required || 'No'} {formData.hostel_location ? `(${formData.hostel_location})` : ''}</span></div>
-              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Scholarship Required</span><span className="font-bold text-slate-800">{formData.scholarship_required || 'No'}</span></div>
-              <div className="col-span-2"><span className="text-slate-400 font-semibold block text-[10px] uppercase">Source / Reference</span><span className="font-bold text-slate-800">{formData.source || formData.hear_about_us || lead.source || 'Direct'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Program Type</span><span className="font-bold text-slate-800">{formData.program_type || lead.program_type || lead.programType || lead.admission_form_data?.program_type || 'N/A'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Selected Course</span><span className="font-bold text-[#1E40FF]">{formData.course || lead.course || lead.courseName || lead.admission_form_data?.course || 'N/A'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Specialization</span><span className="font-bold text-slate-800">{formData.specialization || lead.specialization || lead.admission_form_data?.specialization || 'N/A'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Preferred Mode</span><span className="font-bold text-slate-800">{formData.preferred_college_type || lead.preferred_college_type || lead.admission_form_data?.preferred_college_type || 'Both'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Academic Session</span><span className="font-bold text-slate-800">{formData.academic_session || lead.academic_session || lead.admission_form_data?.academic_session || '2025-26'}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Hostel Required</span><span className="font-bold text-slate-800">{formData.hostel_required || (lead.hostel_required ? 'Yes' : 'No')} {formData.hostel_location || lead.hostel_location ? `(${formData.hostel_location || lead.hostel_location})` : ''}</span></div>
+              <div><span className="text-slate-400 font-semibold block text-[10px] uppercase">Scholarship Required</span><span className="font-bold text-slate-800">{formData.scholarship_required || (lead.scholarship_required ? 'Yes' : 'No')}</span></div>
+              <div className="col-span-2"><span className="text-slate-400 font-semibold block text-[10px] uppercase">Source / Reference</span><span className="font-bold text-slate-800">{formData.source || formData.hear_about_us || lead.source || lead.heard_about_us || 'Direct'}</span></div>
             </div>
           </div>
 
@@ -551,6 +726,157 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
             )}
           </div>
 
+          {/* Section 9: Fee Records & Payment History */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <IndianRupee size={14} className="text-[#1E40FF]" /> Section 9 — Fee Records ({fees.length})
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                  Total Paid: ₹{totalFeesCollected.toLocaleString('en-IN')}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowFeeForm(prev => !prev)}
+                  className="px-2.5 py-1 bg-[#1E40FF] hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer border-none"
+                >
+                  <Plus size={13} />
+                  {showFeeForm ? 'Cancel' : 'Record Fee'}
+                </button>
+              </div>
+            </div>
+
+            {/* Inline Fee Form */}
+            {showFeeForm && (
+              <form onSubmit={handleRecordPayment} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in">
+                <div className="text-xs font-bold text-slate-700">Record New Payment</div>
+                {feeError && <div className="text-xs text-red-600 font-semibold">{feeError}</div>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Amount (₹) *</label>
+                    <input
+                      type="number"
+                      value={feeAmount}
+                      onChange={e => setFeeAmount(e.target.value)}
+                      placeholder="e.g. 25000"
+                      required
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fee Type</label>
+                    <select
+                      value={feeType}
+                      onChange={e => setFeeType(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold outline-none focus:border-blue-500"
+                    >
+                      <option value="Tuition Fee">Tuition Fee</option>
+                      <option value="Admission Fee">Admission Fee</option>
+                      <option value="Exam Fee">Exam Fee</option>
+                      <option value="Hostel Fee">Hostel Fee</option>
+                      <option value="Uniform/Kit Fee">Uniform/Kit Fee</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Payment Mode</label>
+                    <select
+                      value={feeMode}
+                      onChange={e => setFeeMode(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold outline-none focus:border-blue-500"
+                    >
+                      <option value="UPI">UPI</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Demand Draft">Demand Draft</option>
+                      <option value="Cheque">Cheque</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Payment Date</label>
+                    <input
+                      type="date"
+                      value={feeDate}
+                      onChange={e => setFeeDate(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-bold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Transaction Ref / Cheque No.</label>
+                    <input
+                      type="text"
+                      value={feeRef}
+                      onChange={e => setFeeRef(e.target.value)}
+                      placeholder="e.g. UPI Ref / Cheque # (optional)"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-semibold outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowFeeForm(false)}
+                    className="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border-none cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingFee}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 border-none cursor-pointer"
+                  >
+                    {savingFee ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                    Save Fee Record
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Fees List */}
+            {loadingFees ? (
+              <div className="p-4 text-center text-slate-400 text-xs font-semibold flex items-center justify-center gap-2">
+                <Loader2 size={16} className="animate-spin text-[#1E40FF]" /> Loading fee records...
+              </div>
+            ) : fees.length === 0 ? (
+              <div className="p-6 text-center bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-xs font-medium">
+                No fee payments recorded yet for this applicant. Click "Record Fee" to log a payment.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {fees.map(f => (
+                  <div key={f.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-slate-900 text-sm">₹{parseFloat(f.amount).toLocaleString('en-IN')}</span>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-[#1E40FF]">
+                          {f.fee_type}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded">
+                          {f.payment_mode}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
+                        <span>Receipt: <strong className="text-slate-600">{f.receipt_number || '—'}</strong></span>
+                        <span>•</span>
+                        <span>Date: {f.payment_date || '—'}</span>
+                        {f.transaction_ref && (
+                          <>
+                            <span>•</span>
+                            <span>Ref: {f.transaction_ref}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md shrink-0 border border-emerald-200">
+                      Paid
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </>
@@ -593,18 +919,27 @@ export default function AdminAdmissions({ token }) {
         if (appRes.ok) {
           const appData = await appRes.json();
           if (Array.isArray(appData) && appData.length > 0) {
-            admissionList = appData.map(app => ({
-              ...app,
-              id: app.id,
-              lead_id: app.lead_id || app.id,
-              name: app.full_name || app.name,
-              phone: app.primary_mobile || app.phone,
-              email: app.email,
-              course: app.course,
-              status: app.status || 'submitted',
-              created_at: app.submitted_at || app.created_at,
-              assigned_telecaller_id: app.leads?.assigned_telecaller_id || null,
-            }));
+            admissionList = appData.map(app => {
+              const parsedFormData = typeof app.admission_form_data === 'string'
+                ? JSON.parse(app.admission_form_data)
+                : (app.admission_form_data || (app.leads && typeof app.leads.admission_form_data === 'string' ? JSON.parse(app.leads.admission_form_data) : app.leads?.admission_form_data) || {});
+
+              return {
+                ...app,
+                id: app.id,
+                lead_id: app.lead_id || app.id,
+                name: app.full_name || app.name || parsedFormData.full_name,
+                phone: app.primary_mobile || app.phone || parsedFormData.primary_mobile || parsedFormData.phone,
+                email: app.email || parsedFormData.email,
+                course: app.course || parsedFormData.course || app.admission_form_data?.course,
+                program_type: app.program_type || parsedFormData.program_type || app.admission_form_data?.program_type,
+                academic_session: app.academic_session || parsedFormData.academic_session || app.admission_form_data?.academic_session,
+                status: app.status || 'submitted',
+                created_at: app.submitted_at || app.created_at,
+                assigned_telecaller_id: app.leads?.assigned_telecaller_id || null,
+                admission_form_data: parsedFormData,
+              };
+            });
           }
         }
       } catch (errRel) {
@@ -707,14 +1042,21 @@ export default function AdminAdmissions({ token }) {
       try {
         parsedForm = typeof l.admission_form_data === 'string'
           ? JSON.parse(l.admission_form_data)
-          : l.admission_form_data || {};
+          : (l.admission_form_data || (l.leads && typeof l.leads.admission_form_data === 'string' ? JSON.parse(l.leads.admission_form_data) : l.leads?.admission_form_data) || {});
       } catch (e) { }
+
+      const courseVal = l.course || parsedForm.course || l.admission_form_data?.course || 'N/A';
+      const programTypeVal = l.program_type || parsedForm.program_type || l.admission_form_data?.program_type || 'N/A';
+      const sessionVal = l.academic_session || parsedForm.academic_session || l.admission_form_data?.academic_session || '2025-26';
 
       return {
         ...l,
         formData: parsedForm,
-        courseName: l.course || parsedForm.course || 'N/A',
-        programType: l.program_type || parsedForm.program_type || 'N/A',
+        course: courseVal !== 'N/A' ? courseVal : (l.course || ''),
+        program_type: programTypeVal !== 'N/A' ? programTypeVal : (l.program_type || ''),
+        courseName: courseVal,
+        programType: programTypeVal,
+        academicSession: sessionVal,
         refId: (l.id || '').substring(0, 8).toUpperCase()
       };
     });
@@ -1014,12 +1356,14 @@ export default function AdminAdmissions({ token }) {
 
                       {/* Course */}
                       <td className="py-4 px-4">
-                        <span className="font-extrabold text-slate-800">{app.courseName}</span>
+                        <span className="font-extrabold text-slate-800">
+                          {app.course || app.admission_form_data?.course || app.courseName || 'N/A'}
+                        </span>
                       </td>
 
                       {/* Program Type */}
                       <td className="py-4 px-4 text-slate-600 font-bold">
-                        {app.programType}
+                        {app.program_type || app.admission_form_data?.program_type || app.programType || 'N/A'}
                       </td>
 
                       {/* Mobile */}
@@ -1036,7 +1380,14 @@ export default function AdminAdmissions({ token }) {
 
                       {/* Status */}
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <StatusBadge status={app.status} />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <StatusBadge status={app.status} />
+                          {app.edit_status === 'requested' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                              <AlertCircle size={10} /> Edit Requested
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Documents Badge */}

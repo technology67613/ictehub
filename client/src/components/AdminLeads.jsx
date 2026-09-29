@@ -3,10 +3,10 @@ import {
   Search, Phone, Mail, GraduationCap, CheckCircle2, XCircle,
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert,
   Loader2, Filter, AlertCircle, TrendingUp, Copy, X, Users,
-  UserCheck, UserMinus, Activity, Award, FileText, ExternalLink, Trash2
+  UserCheck, UserMinus, Activity, Award, FileText, ExternalLink, Trash2, CheckSquare, Square
 } from 'lucide-react';
-
-const API = 'https://ictehub.onrender.com';
+import { getFollowUpStatus } from '../utils/followUpHelper';
+import { API } from '../api';
 
 const STATUS_CONFIG = {
   'new':               { label: 'New',               color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
@@ -108,7 +108,22 @@ function LeadDrawer({ lead, colleges, telecallers, onClose, onAssign, callHistor
             </div>
             <div className="min-w-0">
               <div className="font-bold text-slate-900 text-sm truncate">{lead.name}</div>
-              <StatusBadge status={lead.status} />
+              <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <StatusBadge status={lead.status} />
+                {(() => {
+                  const fu = getFollowUpStatus(lead, history[0]);
+                  if (!fu || fu.level === 'recent') return null;
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap border"
+                      style={{ color: fu.color, backgroundColor: fu.bg, borderColor: `${fu.color}30` }}
+                    >
+                      <Clock size={10} />
+                      {fu.label}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
@@ -144,6 +159,17 @@ function LeadDrawer({ lead, colleges, telecallers, onClose, onAssign, callHistor
                 </button>
               </div>
             )}
+            <div className="pt-1">
+              <a
+                href={`https://wa.me/91${(lead.phone || '').replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Hello ${lead.name || 'Candidate'}, greetings from Buddha College of Nursing! We received your admission inquiry. How can we assist you today?`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-colors no-underline shadow-sm"
+              >
+                <MessageSquare size={14} />
+                WhatsApp Quick Chat
+              </a>
+            </div>
             {collegeNames.length > 0 && (
               <div className="flex items-start gap-3 p-3 bg-[#EEF2FF] rounded-xl border border-[#1E40FF]/10">
                 <GraduationCap size={14} className="text-[#1E40FF] shrink-0 mt-0.5" />
@@ -321,6 +347,10 @@ export default function AdminLeads({ token }) {
   const [selectedLead, setSelectedLead] = useState(null);
   const [callHistory, setCallHistory] = useState({});
   
+  const [selectedLeadIds, setSelectedLeadIds] = useState(new Set());
+  const [bulkTelecallerId, setBulkTelecallerId] = useState('');
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+
   const [savingId, setSavingId] = useState(null);
   const [savedFlash, setSavedFlash] = useState(null);
 
@@ -409,6 +439,49 @@ export default function AdminLeads({ token }) {
     }
   };
 
+  const toggleSelectLead = (id) => {
+    setSelectedLeadIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkAssign = async () => {
+    if (selectedLeadIds.size === 0) return;
+    setBulkAssigning(true);
+    try {
+      const response = await fetch(`${API}/leads/bulk-assign`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          lead_ids: Array.from(selectedLeadIds),
+          telecaller_id: bulkTelecallerId || null
+        })
+      });
+      if (!response.ok) throw new Error('Failed to bulk assign leads');
+      
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          selectedLeadIds.has(lead.id)
+            ? { ...lead, assigned_telecaller_id: bulkTelecallerId || null, auto_assigned: false }
+            : lead
+        )
+      );
+      setSelectedLeadIds(new Set());
+      setSavedFlash('bulk-assign');
+      setTimeout(() => setSavedFlash(null), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
+
   const openLead = (lead) => {
     setSelectedLead(lead);
     if (!callHistory[lead.id]) {
@@ -451,21 +524,42 @@ export default function AdminLeads({ token }) {
     document.body.removeChild(link);
   };
 
+  const needsFollowUpCount = useMemo(() => {
+    return leads.filter(l => {
+      const fu = getFollowUpStatus(l, callHistory[l.id]?.[0]);
+      return fu && (fu.level === 'urgent' || fu.level === 'soon');
+    }).length;
+  }, [leads, callHistory]);
+
   const filteredLeads = useMemo(() => {
-    return leads.filter(lead => {
+    let result = leads.filter(lead => {
       const matchesSearch = !searchVal ||
         lead.name?.toLowerCase().includes(searchVal.toLowerCase()) ||
         lead.phone?.includes(searchVal);
       
       if (!matchesSearch) return false;
       if (statusFilter === 'all') return true;
+      if (statusFilter === 'follow-up') {
+        const fu = getFollowUpStatus(lead, callHistory[lead.id]?.[0]);
+        return fu && (fu.level === 'urgent' || fu.level === 'soon');
+      }
       if (statusFilter === 'new') return lead.status === 'new';
       if (statusFilter === 'contacted') return lead.status === 'contacted';
       if (statusFilter === 'interested') return lead.status === 'interested';
       if (statusFilter === 'enrolled') return lead.status === 'enrolled-college' || lead.status === 'enrolled-institute';
       return true;
     });
-  }, [leads, searchVal, statusFilter]);
+
+    if (statusFilter === 'follow-up') {
+      result.sort((a, b) => {
+        const fuA = getFollowUpStatus(a, callHistory[a.id]?.[0])?.level === 'urgent' ? 1 : 0;
+        const fuB = getFollowUpStatus(b, callHistory[b.id]?.[0])?.level === 'urgent' ? 1 : 0;
+        return fuB - fuA;
+      });
+    }
+
+    return result;
+  }, [leads, searchVal, statusFilter, callHistory]);
 
   const statusCounts = useMemo(() => {
     return leads.reduce((acc, l) => {
@@ -546,6 +640,7 @@ export default function AdminLeads({ token }) {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
             {[
               { key: 'all', label: `All (${leads.length})` },
+              { key: 'follow-up', label: `⚠️ Needs Follow-up (${needsFollowUpCount})` },
               { key: 'new', label: `New (${statusCounts['new']})` },
               { key: 'contacted', label: `Contacted (${statusCounts['contacted']})` },
               { key: 'interested', label: `Interested (${statusCounts['interested']})` },
@@ -576,7 +671,22 @@ export default function AdminLeads({ token }) {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Table Header */}
-          <div className="hidden md:grid md:grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="hidden md:grid md:grid-cols-[36px_1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100 items-center">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={filteredLeads.length > 0 && filteredLeads.every(l => selectedLeadIds.has(l.id))}
+                onChange={() => {
+                  if (filteredLeads.length > 0 && filteredLeads.every(l => selectedLeadIds.has(l.id))) {
+                    setSelectedLeadIds(new Set());
+                  } else {
+                    setSelectedLeadIds(new Set(filteredLeads.map(l => l.id)));
+                  }
+                }}
+                className="w-4 h-4 rounded text-[#1E40FF] border-slate-300 focus:ring-[#1E40FF] cursor-pointer"
+                title="Select All"
+              />
+            </div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Lead</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Phone</div>
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">College</div>
@@ -597,6 +707,8 @@ export default function AdminLeads({ token }) {
                 const colors = avatarColor(lead.name);
                 const collegeNames = (lead.interested_college_ids || []).map(id => colleges[id]).filter(Boolean);
                 const isSelected = selectedLead?.id === lead.id;
+                const isChecked = selectedLeadIds.has(lead.id);
+                const fu = getFollowUpStatus(lead, callHistory[lead.id]?.[0]);
                 
                 const assignedTC = telecallers.find(tc => tc.id === lead.assigned_telecaller_id);
                 const assignedName = assignedTC ? (assignedTC.name || assignedTC.email) : 'Unassigned';
@@ -604,9 +716,21 @@ export default function AdminLeads({ token }) {
                 return (
                   <div
                     key={lead.id}
-                    className={`flex flex-col md:grid md:grid-cols-[1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 cursor-pointer transition-colors group ${isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-slate-50/80'}`}
+                    className={`flex flex-col md:grid md:grid-cols-[36px_1.5fr_1fr_1.2fr_0.8fr_1.2fr_auto] gap-3 items-start md:items-center px-4 py-4 md:py-3.5 cursor-pointer transition-colors group ${
+                      isChecked ? 'bg-blue-50/60' : isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-slate-50/80'
+                    }`}
                     onClick={() => openLead(lead)}
                   >
+                    {/* Row Checkbox */}
+                    <div className="shrink-0 flex items-center" onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSelectLead(lead.id)}
+                        className="w-4 h-4 rounded text-[#1E40FF] border-slate-300 focus:ring-[#1E40FF] cursor-pointer"
+                      />
+                    </div>
+
                     {/* Name + Initials */}
                     <div className="flex items-center gap-2.5 min-w-0 w-full md:w-auto">
                       <div
@@ -616,7 +740,19 @@ export default function AdminLeads({ token }) {
                         {initials(lead.name)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-slate-900 truncate">{lead.name}</div>
+                        <div className="text-sm font-semibold text-slate-900 truncate flex items-center gap-1.5">
+                          <span className="truncate">{lead.name}</span>
+                          {fu && fu.level !== 'recent' && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold whitespace-nowrap shrink-0 border"
+                              style={{ color: fu.color, backgroundColor: fu.bg, borderColor: `${fu.color}30` }}
+                              title={`Follow-up: ${fu.label}`}
+                            >
+                              <Clock size={9} />
+                              {fu.label}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">ID: #{lead.id.substring(0, 6)}</div>
                       </div>
                     </div>
@@ -687,6 +823,45 @@ export default function AdminLeads({ token }) {
             </div>
           )}
         </div>
+
+        {/* ── Sticky Bulk Action Bar ── */}
+        {selectedLeadIds.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom duration-300 border border-slate-700/60 max-w-xl w-[92%] sm:w-auto">
+            <div className="flex items-center gap-2 text-xs font-bold shrink-0">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <span>{selectedLeadIds.size} selected</span>
+            </div>
+            <div className="h-4 w-px bg-slate-700 hidden sm:block" />
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <select
+                value={bulkTelecallerId}
+                onChange={e => setBulkTelecallerId(e.target.value)}
+                className="bg-slate-800 text-white border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-blue-400 max-w-[180px]"
+              >
+                <option value="">-- Assign To --</option>
+                <option value="">Unassign / Remove</option>
+                {telecallers.map(tc => (
+                  <option key={tc.id} value={tc.id}>{tc.name || tc.email}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleBulkAssign}
+                disabled={bulkAssigning}
+                className="px-3 py-1.5 bg-[#1E40FF] hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer border-none"
+              >
+                {bulkAssigning ? <Loader2 size={13} className="animate-spin" /> : <UserCheck size={13} />}
+                Assign
+              </button>
+            </div>
+            <button
+              onClick={() => setSelectedLeadIds(new Set())}
+              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer border-none bg-transparent"
+              title="Deselect All"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
       </div>
 

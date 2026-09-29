@@ -19,6 +19,8 @@ import PartnerWithUs from './components/PartnerWithUs';
 import AdminPartnerInquiries from './components/AdminPartnerInquiries';
 import AdminInstituteLeads from './components/AdminInstituteLeads';
 import AdminAdmissions from './components/AdminAdmissions';
+import AdminFees from './components/AdminFees';
+import AdminReports from './components/AdminReports';
 import AdmissionForm from './components/AdmissionForm';
 import OfflineAdmission from './components/OfflineAdmission';
 import StudentDashboard from './components/StudentDashboard';
@@ -465,6 +467,8 @@ function App() {
             <Route path="/admin/commissions" element={<AdminCommissions token={token} />} />
             <Route path="/admin/hot-leads" element={<AdminHotLeads token={token} />} />
             <Route path="/admin/partner-inquiries" element={<AdminPartnerInquiries token={token} />} />
+            <Route path="/admin/fees" element={<AdminFees token={token} />} />
+            <Route path="/admin/reports" element={<AdminReports token={token} />} />
           </Route>
 
           {/* Telecaller Protected Routes */}

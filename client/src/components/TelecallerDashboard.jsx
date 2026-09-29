@@ -7,8 +7,8 @@ import {
   Copy, X, Users, BarChart2, Activity
 } from 'lucide-react';
 import { getCached, setCached } from '../utils/cache';
-
-const API = 'https://ictehub.onrender.com';
+import { getFollowUpStatus } from '../utils/followUpHelper';
+import { API } from '../api';
 
 const STATUS_CONFIG = {
   'new':               { label: 'New',               color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
@@ -115,7 +115,22 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
             </div>
             <div className="min-w-0">
               <div className="font-bold text-slate-900 text-sm truncate">{lead.name}</div>
-              <StatusBadge status={lead.status} />
+              <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <StatusBadge status={lead.status} />
+                {(() => {
+                  const fu = getFollowUpStatus(lead, history[0]);
+                  if (!fu || fu.level === 'recent') return null;
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap border"
+                      style={{ color: fu.color, backgroundColor: fu.bg, borderColor: `${fu.color}30` }}
+                    >
+                      <Clock size={10} />
+                      {fu.label}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
@@ -161,9 +176,9 @@ function LeadDrawer({ lead, colleges, onClose, onUpdateStatus, onSubmitLog, call
             <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Quick Actions</div>
             <div className="grid grid-cols-3 gap-2">
               <a
-                href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`}
+                href={`https://wa.me/91${(lead.phone || '').replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Hello ${lead.name || 'Candidate'}, greetings from Buddha College of Nursing! We received your admission inquiry. How can we assist you today?`)}`}
                 target="_blank" rel="noreferrer"
-                className="flex flex-col items-center gap-1.5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-colors"
+                className="flex flex-col items-center gap-1.5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-colors no-underline"
               >
                 <MessageSquare size={16} />
                 WhatsApp
@@ -485,15 +500,39 @@ export default function TelecallerDashboard() {
     e.target.style.height = e.target.scrollHeight + 'px';
   };
 
+  const needsFollowUpCount = useMemo(() => {
+    return leads.filter(l => {
+      const fu = getFollowUpStatus(l, callHistory[l.id]?.[0]);
+      return fu && (fu.level === 'urgent' || fu.level === 'soon');
+    }).length;
+  }, [leads, callHistory]);
+
   const filteredLeads = useMemo(() => {
-    return leads.filter(lead => {
+    let result = leads.filter(lead => {
       const matchesSearch = !debouncedSearch ||
         lead.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         lead.phone?.includes(debouncedSearch);
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+      
+      let matchesStatus = true;
+      if (statusFilter === 'follow-up') {
+        const fu = getFollowUpStatus(lead, callHistory[lead.id]?.[0]);
+        matchesStatus = fu && (fu.level === 'urgent' || fu.level === 'soon');
+      } else if (statusFilter !== 'all') {
+        matchesStatus = lead.status === statusFilter;
+      }
       return matchesSearch && matchesStatus;
     });
-  }, [leads, debouncedSearch, statusFilter]);
+
+    if (statusFilter === 'follow-up') {
+      result.sort((a, b) => {
+        const fuA = getFollowUpStatus(a, callHistory[a.id]?.[0])?.level === 'urgent' ? 1 : 0;
+        const fuB = getFollowUpStatus(b, callHistory[b.id]?.[0])?.level === 'urgent' ? 1 : 0;
+        return fuB - fuA;
+      });
+    }
+
+    return result;
+  }, [leads, debouncedSearch, statusFilter, callHistory]);
 
   const statusCounts = useMemo(() => {
     return leads.reduce((acc, l) => { acc[l.status] = (acc[l.status] || 0) + 1; return acc; }, {});
@@ -567,6 +606,7 @@ export default function TelecallerDashboard() {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
             {[
               { key: 'all', label: `All (${leads.length})` },
+              { key: 'follow-up', label: `⚠️ Needs Follow-up (${needsFollowUpCount})` },
               ...Object.entries(STATUS_CONFIG).map(([key, cfg]) => ({
                 key,
                 label: `${cfg.label.split(' ')[0]} (${statusCounts[key] || 0})`
@@ -612,6 +652,9 @@ export default function TelecallerDashboard() {
                 const collegeNames = (lead.interested_college_ids || []).map(id => colleges[id]).filter(Boolean);
                 const isSelected = selectedLead?.id === lead.id;
                 const historyCount = (callHistory[lead.id] || []).length;
+                const fu = getFollowUpStatus(lead, callHistory[lead.id]?.[0]);
+                const cleanPhone = (lead.phone || '').replace(/\D/g, '').slice(-10);
+                const waMsg = encodeURIComponent(`Hello ${lead.name || 'Candidate'}, greetings from Buddha College of Nursing! We received your admission inquiry. How can we assist you today?`);
 
                 return (
                   <div
@@ -628,7 +671,19 @@ export default function TelecallerDashboard() {
                         {initials(lead.name)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-slate-900 truncate">{lead.name}</div>
+                        <div className="text-sm font-semibold text-slate-900 truncate flex items-center gap-1.5">
+                          <span className="truncate">{lead.name}</span>
+                          {fu && fu.level !== 'recent' && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold whitespace-nowrap shrink-0 border"
+                              style={{ color: fu.color, backgroundColor: fu.bg, borderColor: `${fu.color}30` }}
+                              title={`Follow-up: ${fu.label}`}
+                            >
+                              <Clock size={9} />
+                              {fu.label}
+                            </span>
+                          )}
+                        </div>
                         {historyCount > 0 && (
                           <div className="text-[10px] text-slate-400 font-medium">{historyCount} call{historyCount > 1 ? 's' : ''} logged</div>
                         )}
@@ -669,16 +724,16 @@ export default function TelecallerDashboard() {
                     {/* Quick action buttons */}
                     <div className="flex items-center justify-end gap-1.5 shrink-0 w-full md:w-auto border-t border-slate-100/50 md:border-none pt-3 md:pt-0 mt-1 md:mt-0" onClick={e => e.stopPropagation()}>
                       <a
-                        href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`}
+                        href={`https://wa.me/91${cleanPhone}?text=${waMsg}`}
                         target="_blank" rel="noreferrer"
-                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
-                        title="WhatsApp"
+                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors no-underline"
+                        title="Quick WhatsApp"
                       >
                         <MessageSquare size={13} />
                       </a>
                       <a
                         href={`tel:${lead.phone}`}
-                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                        className="w-9 h-9 md:w-7 md:h-7 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors no-underline"
                         title="Call"
                       >
                         <PhoneCall size={13} />
