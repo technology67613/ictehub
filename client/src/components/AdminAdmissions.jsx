@@ -4,7 +4,7 @@ import {
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert, Loader2,
   Filter, AlertCircle, TrendingUp, Copy, X, Users, UserCheck, Activity,
   Award, ExternalLink, Trash2, Download, Calendar, ArrowUpRight, Eye,
-  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus, Upload
+  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus, Upload, Image as ImageIcon
 } from 'lucide-react';
 import { API } from '../api';
 
@@ -302,8 +302,8 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
 
   const handleUploadAdmitCard = async (e) => {
     e.preventDefault();
-    if (!admitCardFile || !examName) {
-      setAdmitCardError('Please provide Exam Name and select a PDF file.');
+    if (!admitCardFile) {
+      setAdmitCardError('Please choose a PDF or Image file to upload.');
       return;
     }
     setSavingAdmitCard(true);
@@ -332,6 +332,8 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
         throw new Error('Student User ID not found for this application. Cannot issue admit card.');
       }
 
+      const finalExamName = examName.trim() || `${formData.course || lead.course || 'Semester'} Exam Admit Card`;
+
       const admitRes = await fetch(`${API}/admit-cards`, {
         method: 'POST',
         headers: {
@@ -341,8 +343,8 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
         body: JSON.stringify({
           student_user_id: studentId,
           application_id: lead.id,
-          academic_session: examSession,
-          exam_name: examName,
+          academic_session: examSession || formData.academic_session || lead.academic_session || '',
+          exam_name: finalExamName,
           exam_date: examDate || null,
           file_url: uploadData.url,
           file_name: admitCardFile.name
@@ -784,7 +786,13 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
                 <FileText size={14} className="text-[#1E40FF]" /> Admit Cards
               </h3>
               <button
-                onClick={() => setShowAdmitCardForm(!showAdmitCardForm)}
+                onClick={() => {
+                  if (!showAdmitCardForm) {
+                    if (!examName) setExamName(`${formData.course || lead.course || 'Semester'} Exam Admit Card`);
+                    if (!examSession) setExamSession(formData.academic_session || lead.academic_session || '2025-28');
+                  }
+                  setShowAdmitCardForm(!showAdmitCardForm);
+                }}
                 className="px-3 py-1.5 bg-[#1E40FF]/10 text-[#1E40FF] hover:bg-[#1E40FF]/20 rounded-xl font-bold text-[10px] uppercase tracking-wide transition-colors flex items-center gap-1 cursor-pointer border-none"
               >
                 {showAdmitCardForm ? <X size={12} /> : <Plus size={12} />}
@@ -797,14 +805,13 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
                 <form onSubmit={handleUploadAdmitCard} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Exam Name *</label>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Exam Name</label>
                       <input
                         type="text"
                         value={examName}
                         onChange={(e) => setExamName(e.target.value)}
                         placeholder="e.g. GNM First Year Exam"
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
-                        required
                       />
                     </div>
                     <div>
@@ -827,12 +834,12 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Upload PDF * (Max 10MB)</label>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Upload File * (PDF or Image, Max 10MB)</label>
                       <input
                         type="file"
-                        accept="application/pdf"
+                        accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
                         onChange={(e) => setAdmitCardFile(e.target.files[0])}
-                        className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-[#1E40FF]/10 file:text-[#1E40FF] hover:file:bg-[#1E40FF]/20"
+                        className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-[#1E40FF]/10 file:text-[#1E40FF] hover:file:bg-[#1E40FF]/20 cursor-pointer"
                         required
                       />
                     </div>
@@ -864,45 +871,54 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {admitCards.map((ac) => (
-                  <div key={ac.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-col justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-extrabold text-[10px] shrink-0">
-                        PDF
+                {admitCards.map((ac) => {
+                  const isImg = (ac.file_url || ac.file_name || '').match(/\.(jpg|jpeg|png|webp)/i);
+                  return (
+                    <div key={ac.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-col justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-3">
+                        {isImg ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative flex items-center justify-center">
+                            <img src={ac.file_url} alt="Admit Card Thumbnail" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-extrabold text-[10px] shrink-0">
+                            PDF
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-slate-800 truncate" title={ac.exam_name}>
+                            {ac.exam_name}
+                          </div>
+                          <div className="text-[10px] text-slate-500 font-medium">
+                            {ac.academic_session ? `Session: ${ac.academic_session} ` : ''}
+                            {ac.exam_date ? `• Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : ''}
+                          </div>
+                          <div className="text-[9px] text-slate-400 mt-0.5">
+                            Uploaded: {new Date(ac.created_at).toLocaleDateString('en-IN')}
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-bold text-slate-800 truncate" title={ac.exam_name}>
-                          {ac.exam_name}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-medium">
-                          {ac.academic_session ? `Session: ${ac.academic_session} • ` : ''}
-                          {ac.exam_date ? `Exam Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : ''}
-                        </div>
-                        <div className="text-[9px] text-slate-400 mt-0.5">
-                          Uploaded: {new Date(ac.created_at).toLocaleDateString('en-IN')}
-                        </div>
+                      <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-200/60">
+                        <a
+                          href={ac.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 bg-white hover:bg-blue-50 text-[#1E40FF] border border-slate-200 rounded-lg font-bold text-[11px] no-underline inline-flex items-center gap-1"
+                        >
+                          <ExternalLink size={12} /> View
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAdmitCard(ac.id)}
+                          className="p-1 bg-white hover:bg-red-50 text-red-500 border border-slate-200 rounded-lg cursor-pointer"
+                          title="Delete Admit Card"
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-200/60">
-                      <a
-                        href={ac.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2 py-1 bg-white hover:bg-blue-50 text-[#1E40FF] border border-slate-200 rounded-lg font-bold text-[11px] no-underline inline-flex items-center gap-1"
-                      >
-                        <ExternalLink size={12} /> View
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteAdmitCard(ac.id)}
-                        className="p-1 bg-white hover:bg-red-50 text-red-500 border border-slate-200 rounded-lg cursor-pointer"
-                        title="Delete Admit Card"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1463,48 +1463,57 @@ export default function StudentDashboard({ user, handleLogout }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              {admitCards.map((ac) => (
-                <div key={ac.id} className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-sm flex flex-col justify-between gap-4 transition-all hover:border-[#1E40FF]/30 hover:shadow-md">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-extrabold text-xs shrink-0 shadow-inner">
-                      PDF
+              {admitCards.map((ac) => {
+                const isImg = (ac.file_url || ac.file_name || '').match(/\.(jpg|jpeg|png|webp)/i);
+                return (
+                  <div key={ac.id} className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-sm flex flex-col justify-between gap-4 transition-all hover:border-[#1E40FF]/30 hover:shadow-md">
+                    <div className="flex items-start gap-4">
+                      {isImg ? (
+                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative shadow-inner">
+                          <img src={ac.file_url} alt="Admit Card Preview" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-extrabold text-xs shrink-0 shadow-inner">
+                          PDF
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-extrabold text-lg text-slate-900 truncate" title={ac.exam_name}>
+                          {ac.exam_name}
+                        </div>
+                        <div className="text-sm font-semibold text-slate-600 mt-1">
+                          {ac.exam_date ? `Exam Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : 'Exam Date: Not specified'}
+                        </div>
+                        <div className="text-xs font-medium text-slate-500 mt-0.5">
+                          {ac.academic_session ? `Academic Session: ${ac.academic_session}` : ''}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-extrabold text-lg text-slate-900 truncate" title={ac.exam_name}>
-                        {ac.exam_name}
-                      </div>
-                      <div className="text-sm font-semibold text-slate-600 mt-1">
-                        {ac.exam_date ? `Exam Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : 'Exam Date: Not specified'}
-                      </div>
-                      <div className="text-xs font-medium text-slate-500 mt-0.5">
-                        {ac.academic_session ? `Academic Session: ${ac.academic_session}` : ''}
-                      </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-2 pt-3 border-t border-slate-100 mt-2">
+                      <a
+                        href={ac.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-3 bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-none rounded-xl flex items-center justify-center gap-2 w-full sm:flex-1 no-underline"
+                      >
+                        <Download size={16} /> Download Admit Card
+                      </a>
+                      <a
+                        href={ac.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto no-underline"
+                      >
+                        <ExternalLink size={16} /> Print / View
+                      </a>
+                    </div>
+                    <div className="text-[10px] font-medium text-slate-400 text-center sm:text-left">
+                      Uploaded on {new Date(ac.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-3 border-t border-slate-100 mt-2">
-                    <a
-                      href={ac.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-3 bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-none rounded-xl flex items-center justify-center gap-2 w-full sm:flex-1 no-underline"
-                    >
-                      <Download size={16} /> Download Admit Card
-                    </a>
-                    <a
-                      href={ac.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto no-underline"
-                    >
-                      <ExternalLink size={16} /> Print
-                    </a>
-                  </div>
-                  <div className="text-[10px] font-medium text-slate-400 text-center sm:text-left">
-                    Uploaded on {new Date(ac.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
