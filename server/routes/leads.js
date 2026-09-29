@@ -380,7 +380,7 @@ router.put('/:id', protect, async (req, res) => {
 
     const updateData = {};
     if (status !== undefined) {
-      const allowedStatus = ['new', 'contacted', 'interested', 'not-interested', 'enrolled-college', 'enrolled-institute'];
+      const allowedStatus = ['new', 'submitted', 'contacted', 'reviewing', 'interested', 'shortlisted', 'not-interested', 'admitted', 'enrolled', 'enrolled-college', 'enrolled-institute'];
       if (!allowedStatus.includes(status)) {
         return res.status(400).json({ message: 'Invalid status value.' });
       }

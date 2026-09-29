@@ -9,10 +9,15 @@ import {
 import { API } from '../api';
 
 const STATUS_CONFIG = {
-  'new': { label: 'New', color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
+  'new': { label: 'New / Applied', color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
+  'submitted': { label: 'Submitted', color: '#64748B', bg: '#F1F5F9', icon: AlertCircle },
   'contacted': { label: 'Contacted', color: '#3B82F6', bg: '#EFF6FF', icon: Phone },
+  'reviewing': { label: 'Under Review', color: '#3B82F6', bg: '#EFF6FF', icon: Clock },
   'interested': { label: 'Interested', color: '#F59E0B', bg: '#FFFBEB', icon: PhoneCall },
+  'shortlisted': { label: 'Shortlisted', color: '#F59E0B', bg: '#FFFBEB', icon: Award },
   'not-interested': { label: 'Not Interested', color: '#EF4444', bg: '#FEF2F2', icon: XCircle },
+  'admitted': { label: 'Admitted 🎉', color: '#10B981', bg: '#ECFDF5', icon: Award },
+  'enrolled': { label: 'Admitted 🎉', color: '#10B981', bg: '#ECFDF5', icon: Award },
   'enrolled-college': { label: 'Enrolled (College)', color: '#10B981', bg: '#ECFDF5', icon: Award },
   'enrolled-institute': { label: 'Enrolled (Inst.)', color: '#10B981', bg: '#ECFDF5', icon: Award },
 };
@@ -510,12 +515,15 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
                   disabled={updatingStatus}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
                 >
-                  <option value="new">New</option>
+                  <option value="new">1. Applied (New)</option>
+                  <option value="reviewing">2. Reviewing (Document Verification)</option>
+                  <option value="shortlisted">3. Shortlisted (Eligibility Confirmed)</option>
+                  <option value="admitted">4. Admitted 🎉 (Seat Confirmed)</option>
+                  <option value="enrolled-college">Enrolled (College)</option>
+                  <option value="enrolled-institute">Enrolled (Institute)</option>
                   <option value="contacted">Contacted</option>
                   <option value="interested">Interested</option>
                   <option value="not-interested">Not Interested</option>
-                  <option value="enrolled-college">Enrolled (College)</option>
-                  <option value="enrolled-institute">Enrolled (Institute)</option>
                 </select>
                 {updatingStatus && <Loader2 size={16} className="animate-spin text-[#1E40FF] shrink-0" />}
               </div>
@@ -1283,7 +1291,23 @@ export default function AdminAdmissions({ token }) {
 
   const handleStatusChange = async (leadId, newStatus) => {
     try {
-      const res = await fetch(`${API}/leads/${leadId}`, {
+      // 1. Try updating admission_applications table if leadId is an application UUID
+      try {
+        await fetch(`${API}/admission-applications/${leadId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: newStatus, application_status: newStatus })
+        });
+      } catch (e) {}
+
+      // 2. Also update lead status in leads table
+      const currentItem = leads.find(l => l.id === leadId || l.lead_id === leadId);
+      const actualLeadId = currentItem?.lead_id || leadId;
+
+      await fetch(`${API}/leads/${actualLeadId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1291,11 +1315,10 @@ export default function AdminAdmissions({ token }) {
         },
         body: JSON.stringify({ status: newStatus })
       });
-      if (res.ok) {
-        setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
-        if (selectedLead?.id === leadId) {
-          setSelectedLead(prev => prev ? { ...prev, status: newStatus } : null);
-        }
+
+      setLeads(prev => prev.map(l => (l.id === leadId || l.lead_id === leadId) ? { ...l, status: newStatus, application_status: newStatus } : l));
+      if (selectedLead && (selectedLead.id === leadId || selectedLead.lead_id === leadId)) {
+        setSelectedLead(prev => prev ? { ...prev, status: newStatus, application_status: newStatus } : null);
       }
     } catch (err) {
       console.error('Error updating status:', err);
