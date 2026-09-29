@@ -162,6 +162,52 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
   const [processingEdit, setProcessingEdit] = useState(false);
   const [editMsg, setEditMsg] = useState('');
 
+  // Roll Number & Batch management state
+  const [rollInput, setRollInput] = useState(lead.roll_number || lead.rollNo || formData?.roll_number || '');
+  const [batchInput, setBatchInput] = useState(lead.batch || formData?.batch || lead.academic_session || formData?.academic_session || '2023-26');
+  const [savingRollBatch, setSavingRollBatch] = useState(false);
+  const [saveRollBatchMsg, setSaveRollBatchMsg] = useState('');
+
+  const handleSaveRollAndBatch = async () => {
+    setSavingRollBatch(true);
+    setSaveRollBatchMsg('');
+    try {
+      // Update admission_applications table
+      await fetch(`${API}/admission-applications/${lead.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          roll_number: rollInput,
+          batch: batchInput
+        })
+      });
+
+      // Update leads table if applicable
+      const targetLeadId = lead.lead_id || lead.id;
+      await fetch(`${API}/leads/${targetLeadId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          roll_number: rollInput,
+          batch: batchInput
+        })
+      });
+
+      setSaveRollBatchMsg('Roll No & Batch updated successfully!');
+      setTimeout(() => setSaveRollBatchMsg(''), 4000);
+    } catch (err) {
+      console.error('Error saving Roll No & Batch:', err);
+    } finally {
+      setSavingRollBatch(false);
+    }
+  };
+
   const refId = (lead.id || '').substring(0, 8).toUpperCase();
   const appliedDate = lead.created_at
     ? new Date(lead.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -505,46 +551,88 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
 
           {/* Section 1: Header Actions & Management */}
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Application Pipeline Status</label>
-              <div className="flex items-center gap-2">
-                <select
-                  value={lead.status}
-                  onChange={handleStatusSelect}
-                  disabled={updatingStatus}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
-                >
-                  <option value="new">1. Applied (New)</option>
-                  <option value="reviewing">2. Reviewing (Document Verification)</option>
-                  <option value="shortlisted">3. Shortlisted (Eligibility Confirmed)</option>
-                  <option value="admitted">4. Admitted 🎉 (Seat Confirmed)</option>
-                  <option value="enrolled-college">Enrolled (College)</option>
-                  <option value="enrolled-institute">Enrolled (Institute)</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="interested">Interested</option>
-                  <option value="not-interested">Not Interested</option>
-                </select>
-                {updatingStatus && <Loader2 size={16} className="animate-spin text-[#1E40FF] shrink-0" />}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Application Pipeline Status</label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={lead.status}
+                    onChange={handleStatusSelect}
+                    disabled={updatingStatus}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                  >
+                    <option value="new">1. Applied (New)</option>
+                    <option value="reviewing">2. Reviewing (Document Verification)</option>
+                    <option value="shortlisted">3. Shortlisted (Eligibility Confirmed)</option>
+                    <option value="admitted">4. Admitted 🎉 (Seat Confirmed)</option>
+                    <option value="enrolled-college">Enrolled (College)</option>
+                    <option value="enrolled-institute">Enrolled (Institute)</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="interested">Interested</option>
+                    <option value="not-interested">Not Interested</option>
+                  </select>
+                  {updatingStatus && <Loader2 size={16} className="animate-spin text-[#1E40FF] shrink-0" />}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Assigned Telecaller</label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={lead.assigned_telecaller_id || ''}
+                    onChange={handleTelecallerSelect}
+                    disabled={assigning}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                  >
+                    <option value="">-- Unassigned --</option>
+                    {telecallers.map(t => (
+                      <option key={t.id} value={t.id}>{t.name || t.email}</option>
+                    ))}
+                  </select>
+                  {assigning && <Loader2 size={16} className="animate-spin text-[#1E40FF] shrink-0" />}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Assigned Telecaller</label>
-              <div className="flex items-center gap-2">
-                <select
-                  value={lead.assigned_telecaller_id || ''}
-                  onChange={handleTelecallerSelect}
-                  disabled={assigning}
+            {/* Roll Number & Batch Controls */}
+            <div className="pt-3 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+              <div>
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Roll Number</label>
+                <input
+                  type="text"
+                  value={rollInput}
+                  onChange={(e) => setRollInput(e.target.value)}
+                  placeholder="e.g. 23/Oct/BUDDA/GNM1 548"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
-                >
-                  <option value="">-- Unassigned --</option>
-                  {telecallers.map(t => (
-                    <option key={t.id} value={t.id}>{t.name || t.email}</option>
-                  ))}
-                </select>
-                {assigning && <Loader2 size={16} className="animate-spin text-[#1E40FF] shrink-0" />}
+                />
               </div>
+              <div>
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Batch</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={batchInput}
+                    onChange={(e) => setBatchInput(e.target.value)}
+                    placeholder="e.g. 2023-26"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveRollAndBatch}
+                    disabled={savingRollBatch}
+                    className="px-3.5 py-2 bg-[#1E40FF] hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 cursor-pointer border-none flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-xs"
+                  >
+                    {savingRollBatch ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                    Save
+                  </button>
+                </div>
+              </div>
+              {saveRollBatchMsg && (
+                <div className="sm:col-span-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  {saveRollBatchMsg}
+                </div>
+              )}
             </div>
           </div>
 

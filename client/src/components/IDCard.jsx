@@ -44,8 +44,8 @@ export default function IDCard({ application, documents = [] }) {
   const motherName = appData.mother_name || formData.mother_name || '';
   const course = appData.course || formData.course || '';
   const session = appData.academic_session || formData.academic_session || '';
-  const batch = appData.batch || '';
-  const rollNumber = appData.roll_number || '';
+  const batch = appData.batch || formData.batch || session || '';
+  const rollNumber = appData.roll_number || formData.roll_number || appData.rollNo || formData.rollNo || '';
   const dobFormatted = formatDisplayDob(appData.dob || formData.dob);
   const primaryMobile = appData.primary_mobile || formData.primary_mobile || application?.phone || '';
   const city = appData.perm_city || formData.city || '';
@@ -682,117 +682,7 @@ export default function IDCard({ application, documents = [] }) {
               </table>
             </div>
 
-            {/* ── BOTTOM SECTION ── */}
-            <div
-              style={{
-                border: '2px solid #000000',
-                borderRadius: '4px',
-                padding: '12px 14px',
-                marginBottom: '8px',
-              }}
-            >
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  marginBottom: '16px',
-                }}
-              >
-                <tbody>
-                  <tr>
-                    <td
-                      style={{
-                        width: '105px',
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        padding: '4px 0',
-                        verticalAlign: 'bottom',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Exam Centre:
-                    </td>
-                    <td
-                      style={{
-                        borderBottom: '1px solid #000000',
-                        padding: '4px 8px',
-                        verticalAlign: 'bottom',
-                        height: '24px',
-                      }}
-                    ></td>
-                    <td style={{ width: '24px' }}></td>
-                    <td
-                      style={{
-                        width: '155px',
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        padding: '4px 0',
-                        verticalAlign: 'bottom',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Date of Examination:
-                    </td>
-                    <td
-                      style={{
-                        borderBottom: '1px solid #000000',
-                        padding: '4px 8px',
-                        verticalAlign: 'bottom',
-                        height: '24px',
-                      }}
-                    ></td>
-                  </tr>
-                </tbody>
-              </table>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }}>
-                <tbody>
-                  <tr>
-                    <td
-                      style={{
-                        width: '175px',
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        padding: '4px 0',
-                        verticalAlign: 'bottom',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Signature of Candidate:
-                    </td>
-                    <td
-                      style={{
-                        borderBottom: '1px solid #000000',
-                        padding: '4px 8px',
-                        verticalAlign: 'bottom',
-                        height: '24px',
-                      }}
-                    ></td>
-                    <td style={{ width: '24px' }}></td>
-                    <td
-                      style={{
-                        width: '165px',
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        padding: '4px 0',
-                        verticalAlign: 'bottom',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Signature of Principal:
-                    </td>
-                    <td
-                      style={{
-                        borderBottom: '1px solid #000000',
-                        padding: '4px 8px',
-                        verticalAlign: 'bottom',
-                        height: '24px',
-                      }}
-                    ></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
 
             {/* ── FOOTER NOTE ── */}
             <div
