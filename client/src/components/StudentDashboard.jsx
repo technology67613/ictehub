@@ -563,7 +563,17 @@ export default function StudentDashboard({ user, handleLogout }) {
   }
 
   const formData = application.admission_form_data || {};
-  const statusInfo = getStatusBadge(application.application_status || application.status);
+  const rawStatusList = [application.status, application.application_status, application.leads?.status].filter(Boolean);
+  const effectiveStatus = (
+    rawStatusList.find(s => ['enrolled-college', 'enrolled-institute', 'enrolled', 'admitted'].includes(s.toLowerCase())) ||
+    rawStatusList.find(s => ['shortlisted', 'interested'].includes(s.toLowerCase())) ||
+    rawStatusList.find(s => ['reviewing', 'contacted'].includes(s.toLowerCase())) ||
+    (admitCards.length > 0 ? 'admitted' : null) ||
+    application.status ||
+    application.application_status ||
+    'new'
+  );
+  const statusInfo = getStatusBadge(effectiveStatus);
   const appIdShort = (application.id || '').substring(0, 8).toUpperCase();
   const appliedDate = application.created_at
     ? new Date(application.created_at).toLocaleString('en-IN', {

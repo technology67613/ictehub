@@ -277,7 +277,8 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
       .from('admission_applications')
       .select(`
         *,
-        admission_qualifications (*)
+        admission_qualifications (*),
+        leads (status)
       `)
       .eq('student_user_id', req.user.id)
       .order('submitted_at', { ascending: false });
@@ -290,7 +291,7 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
     if (!apps || apps.length === 0) {
       const { data: leads } = await supabase
         .from('leads')
-        .select('id')
+        .select('id, status')
         .eq('student_user_id', req.user.id);
 
       if (leads && leads.length > 0) {
@@ -299,7 +300,8 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
           .from('admission_applications')
           .select(`
             *,
-            admission_qualifications (*)
+            admission_qualifications (*),
+            leads (status)
           `)
           .in('lead_id', leadIds)
           .order('submitted_at', { ascending: false });
@@ -318,7 +320,8 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
           .from('admission_applications')
           .select(`
             *,
-            admission_qualifications (*)
+            admission_qualifications (*),
+            leads (status)
           `)
           .eq('primary_mobile', userPhone)
           .order('submitted_at', { ascending: false });
@@ -334,6 +337,9 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
     }
 
     const application = apps[0];
+    if (application.leads?.status) {
+      application.status = application.leads.status;
+    }
 
     // Ensure qualifications are sorted
     if (Array.isArray(application.admission_qualifications)) {
