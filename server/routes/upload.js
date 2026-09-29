@@ -77,8 +77,14 @@ router.post('/', optionalProtect, (req, res, next) => {
       }
       bucketName = 'admission-documents';
       folder = 'documents';
+    } else if (type === 'admit-card') {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Authentication required: Only admins can upload admit cards.' });
+      }
+      bucketName = 'admit-cards';
+      folder = 'admit-cards';
     } else {
-      return res.status(400).json({ message: 'Invalid upload type. Supported types: college-logo, profile-picture, admission-document' });
+      return res.status(400).json({ message: 'Invalid upload type. Supported types: college-logo, profile-picture, admission-document, admit-card' });
     }
 
     // Generate a unique file name

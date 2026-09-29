@@ -101,6 +101,7 @@ export default function StudentDashboard({ user, handleLogout }) {
   const [application, setApplication] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [admitCards, setAdmitCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -324,6 +325,19 @@ export default function StudentDashboard({ user, handleLogout }) {
         }
       } catch (tErr) {
         console.error('Error fetching timeline:', tErr);
+      }
+
+      // 4. Fetch Admit Cards
+      try {
+        const admitRes = await fetch(`${API}/admit-cards/my`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (admitRes.ok) {
+          const admitData = await admitRes.json();
+          setAdmitCards(Array.isArray(admitData) ? admitData : []);
+        }
+      } catch (aErr) {
+        console.error('Error fetching admit cards:', aErr);
       }
 
     } catch (err) {
@@ -688,6 +702,7 @@ export default function StudentDashboard({ user, handleLogout }) {
             { id: 'idcard', label: 'Student ID Card', icon: <CreditCard size={15} />, badge: 'Official' },
             { id: 'overview', label: 'Application & Course', icon: <FileText size={15} /> },
             { id: 'documents', label: 'Documents', icon: <Upload size={15} />, count: documents.length },
+            { id: 'admit-cards', label: 'Admit Card', icon: <FileText size={15} /> },
             { id: 'security', label: 'Account Security', icon: <Lock size={15} /> },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
@@ -1414,6 +1429,84 @@ export default function StudentDashboard({ user, handleLogout }) {
               );
             })}
           </div>
+        </section>
+        )}
+
+        {/* ADMIT CARD SECTION */}
+        {(activeTab === 'all' || activeTab === 'admit-cards') && (
+        <section id="admit-cards-section" className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-8 space-y-6 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                <FileText className="text-[#1E40FF]" size={22} /> Admit Card
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Download your official admit card for examinations.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 text-xs sm:text-sm rounded-xl p-3.5 font-semibold flex items-center gap-2 mb-4 shadow-sm">
+            <AlertCircle size={18} className="text-[#1E40FF] shrink-0" />
+            <span>Important: Bring a printed copy of your admit card to the examination hall along with a valid photo ID.</span>
+          </div>
+
+          {admitCards.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200/60 text-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-2">
+                <FileText size={32} className="text-slate-400" />
+              </div>
+              <h4 className="text-base font-extrabold text-slate-800">Admit Card Not Available Yet</h4>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
+                Your admit card will appear here once uploaded by the college. You will be able to download it from here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              {admitCards.map((ac) => (
+                <div key={ac.id} className="p-5 rounded-2xl border border-slate-200/80 bg-white shadow-sm flex flex-col justify-between gap-4 transition-all hover:border-[#1E40FF]/30 hover:shadow-md">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-extrabold text-xs shrink-0 shadow-inner">
+                      PDF
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-extrabold text-lg text-slate-900 truncate" title={ac.exam_name}>
+                        {ac.exam_name}
+                      </div>
+                      <div className="text-sm font-semibold text-slate-600 mt-1">
+                        {ac.exam_date ? `Exam Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : 'Exam Date: Not specified'}
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 mt-0.5">
+                        {ac.academic_session ? `Academic Session: ${ac.academic_session}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-3 border-t border-slate-100 mt-2">
+                    <a
+                      href={ac.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 bg-[#1E40FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-none rounded-xl flex items-center justify-center gap-2 w-full sm:flex-1 no-underline"
+                    >
+                      <Download size={16} /> Download Admit Card
+                    </a>
+                    <a
+                      href={ac.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto no-underline"
+                    >
+                      <ExternalLink size={16} /> Print
+                    </a>
+                  </div>
+                  <div className="text-[10px] font-medium text-slate-400 text-center sm:text-left">
+                    Uploaded on {new Date(ac.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
         )}
 

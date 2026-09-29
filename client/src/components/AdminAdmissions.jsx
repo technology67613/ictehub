@@ -140,6 +140,17 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
   const [savingFee, setSavingFee] = useState(false);
   const [feeError, setFeeError] = useState('');
 
+  // Admit Card state
+  const [admitCards, setAdmitCards] = useState([]);
+  const [loadingAdmitCards, setLoadingAdmitCards] = useState(false);
+  const [showAdmitCardForm, setShowAdmitCardForm] = useState(false);
+  const [admitCardFile, setAdmitCardFile] = useState(null);
+  const [examName, setExamName] = useState('');
+  const [examSession, setExamSession] = useState('');
+  const [examDate, setExamDate] = useState('');
+  const [savingAdmitCard, setSavingAdmitCard] = useState(false);
+  const [admitCardError, setAdmitCardError] = useState('');
+
   // Student Edit Request state
   const [editStatus, setEditStatus] = useState(lead.edit_status);
   const [pendingChanges, setPendingChanges] = useState(lead.pending_changes);
@@ -180,6 +191,15 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
         .then(data => setFees(Array.isArray(data) ? data : []))
         .catch(err => console.error('Error loading fees:', err))
         .finally(() => setLoadingFees(false));
+
+      setLoadingAdmitCards(true);
+      fetch(`${API}/admit-cards?student_user_id=${lead.student_user_id || (lead.leads?.student_user_id) || ''}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setAdmitCards(Array.isArray(data) ? data : []))
+        .catch(err => console.error('Error loading admit cards:', err))
+        .finally(() => setLoadingAdmitCards(false));
     }
   }, [lead?.id, token]);
 
@@ -277,6 +297,89 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
       }
     } catch (err) {
       console.error('Error deleting document:', err);
+    }
+  };
+
+  const handleUploadAdmitCard = async (e) => {
+    e.preventDefault();
+    if (!admitCardFile || !examName) {
+      setAdmitCardError('Please provide Exam Name and select a PDF file.');
+      return;
+    }
+    setSavingAdmitCard(true);
+    setAdmitCardError('');
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', admitCardFile);
+      formDataUpload.append('type', 'admit-card');
+
+      const uploadRes = await fetch(`${API}/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataUpload
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json();
+        throw new Error(errData.message || 'Upload failed');
+      }
+
+      const uploadData = await uploadRes.json();
+
+      const studentId = lead.student_user_id || lead.leads?.student_user_id;
+      if (!studentId) {
+        throw new Error('Student User ID not found for this application. Cannot issue admit card.');
+      }
+
+      const admitRes = await fetch(`${API}/admit-cards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          student_user_id: studentId,
+          application_id: lead.id,
+          academic_session: examSession,
+          exam_name: examName,
+          exam_date: examDate || null,
+          file_url: uploadData.url,
+          file_name: admitCardFile.name
+        })
+      });
+
+      if (!admitRes.ok) {
+        const errData = await admitRes.json();
+        throw new Error(errData.message || 'Failed to save admit card');
+      }
+
+      const newAdmitCard = await admitRes.json();
+      setAdmitCards(prev => [newAdmitCard, ...prev]);
+      setShowAdmitCardForm(false);
+      setExamName('');
+      setExamSession('');
+      setExamDate('');
+      setAdmitCardFile(null);
+    } catch (err) {
+      setAdmitCardError(err.message);
+    } finally {
+      setSavingAdmitCard(false);
+    }
+  };
+
+  const handleDeleteAdmitCard = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this admit card?')) return;
+    try {
+      const res = await fetch(`${API}/admit-cards/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setAdmitCards(prev => prev.filter(a => a.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting admit card:', err);
     }
   };
 
@@ -670,6 +773,136 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* Admit Cards Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <FileText size={14} className="text-[#1E40FF]" /> Admit Cards
+              </h3>
+              <button
+                onClick={() => setShowAdmitCardForm(!showAdmitCardForm)}
+                className="px-3 py-1.5 bg-[#1E40FF]/10 text-[#1E40FF] hover:bg-[#1E40FF]/20 rounded-xl font-bold text-[10px] uppercase tracking-wide transition-colors flex items-center gap-1 cursor-pointer border-none"
+              >
+                {showAdmitCardForm ? <X size={12} /> : <Plus size={12} />}
+                {showAdmitCardForm ? 'Cancel' : 'Upload Admit Card'}
+              </button>
+            </div>
+
+            {showAdmitCardForm && (
+              <div className="bg-[#1E40FF]/5 border border-[#1E40FF]/20 rounded-xl p-4 animate-in slide-in-from-top-2">
+                <form onSubmit={handleUploadAdmitCard} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Exam Name *</label>
+                      <input
+                        type="text"
+                        value={examName}
+                        onChange={(e) => setExamName(e.target.value)}
+                        placeholder="e.g. GNM First Year Exam"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Academic Session</label>
+                      <input
+                        type="text"
+                        value={examSession}
+                        onChange={(e) => setExamSession(e.target.value)}
+                        placeholder="e.g. 2025-28"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Exam Date</label>
+                      <input
+                        type="date"
+                        value={examDate}
+                        onChange={(e) => setExamDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold text-xs text-slate-800 focus:ring-2 focus:ring-[#1E40FF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1.5">Upload PDF * (Max 10MB)</label>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(e) => setAdmitCardFile(e.target.files[0])}
+                        className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-[#1E40FF]/10 file:text-[#1E40FF] hover:file:bg-[#1E40FF]/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {admitCardError && <div className="text-red-500 text-xs font-bold">{admitCardError}</div>}
+
+                  <div className="flex justify-end pt-2 border-t border-[#1E40FF]/10">
+                    <button
+                      type="submit"
+                      disabled={savingAdmitCard}
+                      className="px-4 py-2 bg-[#1E40FF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {savingAdmitCard ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                      Save Admit Card
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {loadingAdmitCards ? (
+              <div className="p-4 text-center text-slate-400 text-xs font-semibold flex items-center justify-center gap-2">
+                <Loader2 size={14} className="animate-spin" /> Loading admit cards...
+              </div>
+            ) : admitCards.length === 0 ? (
+              <div className="p-4 text-center bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-xs font-medium">
+                No admit cards uploaded yet
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {admitCards.map((ac) => (
+                  <div key={ac.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-col justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-extrabold text-[10px] shrink-0">
+                        PDF
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-slate-800 truncate" title={ac.exam_name}>
+                          {ac.exam_name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          {ac.academic_session ? `Session: ${ac.academic_session} • ` : ''}
+                          {ac.exam_date ? `Exam Date: ${new Date(ac.exam_date).toLocaleDateString('en-IN')}` : ''}
+                        </div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">
+                          Uploaded: {new Date(ac.created_at).toLocaleDateString('en-IN')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-200/60">
+                      <a
+                        href={ac.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-1 bg-white hover:bg-blue-50 text-[#1E40FF] border border-slate-200 rounded-lg font-bold text-[11px] no-underline inline-flex items-center gap-1"
+                      >
+                        <ExternalLink size={12} /> View
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAdmitCard(ac.id)}
+                        className="p-1 bg-white hover:bg-red-50 text-red-500 border border-slate-200 rounded-lg cursor-pointer"
+                        title="Delete Admit Card"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

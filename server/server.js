@@ -19,6 +19,7 @@ const admissionDocumentsRoutes = require('./routes/admission-documents');
 const admissionApplicationsRoutes = require('./routes/admission-applications');
 const feeRecordsRoutes = require('./routes/fee-records');
 const reportsRoutes = require('./routes/reports');
+const admitCardsRoutes = require('./routes/admit-cards');
 const { protect, authorize } = require('./middleware/auth');
 
 const app = express();
@@ -56,6 +57,7 @@ app.use('/admission-documents', admissionDocumentsRoutes);
 app.use('/admission-applications', admissionApplicationsRoutes);
 app.use('/fee-records', feeRecordsRoutes);
 app.use('/reports', reportsRoutes);
+app.use('/admit-cards', admitCardsRoutes);
 
 // Test Route
 app.get('/health', (req, res) => {
