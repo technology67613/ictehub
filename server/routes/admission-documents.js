@@ -59,24 +59,93 @@ router.get('/:leadId', protect, async (req, res) => {
   try {
     const supabase = req.supabase || req.app.get('supabase');
     const { leadId } = req.params;
+
     if (req.user.role !== 'admin') {
       const { data: lead } = await supabase
         .from('leads')
         .select('assigned_telecaller_id')
         .eq('id', leadId)
-        .single();
-      if (!lead || lead.assigned_telecaller_id !== req.user.id) {
+        .maybeSingle();
+      if (lead && lead.assigned_telecaller_id && lead.assigned_telecaller_id !== req.user.id) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
-    const { data, error } = await supabase
+
+    // 1. Try finding documents in admission_documents table by lead_id
+    let { data, error } = await supabase
       .from('admission_documents')
       .select('*')
       .eq('lead_id', leadId)
       .order('uploaded_at', { ascending: false });
+
     if (error) throw error;
+
+    // 2. Fallback: Check if leadId is an application ID or linked lead
+    if ((!data || data.length === 0) && leadId) {
+      const { data: appData } = await supabase
+        .from('admission_applications')
+        .select('id, lead_id, student_user_id, admission_form_data')
+        .or(`id.eq.${leadId},lead_id.eq.${leadId}`)
+        .maybeSingle();
+
+      if (appData) {
+        if (appData.lead_id && appData.lead_id !== leadId) {
+          const { data: leadDocs } = await supabase
+            .from('admission_documents')
+            .select('*')
+            .eq('lead_id', appData.lead_id)
+            .order('uploaded_at', { ascending: false });
+          if (leadDocs && leadDocs.length > 0) {
+            data = leadDocs;
+          }
+        }
+
+        // 3. Fallback: Parse documents stored inside admission_form_data JSONB if table rows don't exist
+        if ((!data || data.length === 0) && appData.admission_form_data) {
+          try {
+            let parsedForm = typeof appData.admission_form_data === 'string'
+              ? JSON.parse(appData.admission_form_data)
+              : appData.admission_form_data;
+
+            if (parsedForm && parsedForm.documents && typeof parsedForm.documents === 'object') {
+              const formDocs = Object.entries(parsedForm.documents).map(([docType, docMeta]) => {
+                if (typeof docMeta === 'string' && docMeta) {
+                  return {
+                    id: `json-${docType}`,
+                    lead_id: leadId,
+                    document_type: docType,
+                    document_name: docType.replace(/_/g, ' ').toUpperCase(),
+                    file_url: docMeta,
+                    uploaded_at: new Date().toISOString()
+                  };
+                } else if (docMeta && docMeta.file_url) {
+                  return {
+                    id: `json-${docType}`,
+                    lead_id: leadId,
+                    document_type: docType,
+                    document_name: docMeta.document_name || docType.replace(/_/g, ' ').toUpperCase(),
+                    file_url: docMeta.file_url,
+                    file_size: docMeta.file_size || null,
+                    uploaded_at: docMeta.uploaded_at || new Date().toISOString()
+                  };
+                }
+                return null;
+              }).filter(Boolean);
+
+              if (formDocs.length > 0) {
+                data = formDocs;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing admission_form_data documents:', e);
+          }
+        }
+      }
+    }
+
     res.json(data || []);
   } catch (err) {
+    console.error('Error fetching admission documents:', err);
     res.status(500).json({ error: err.message });
   }
 });

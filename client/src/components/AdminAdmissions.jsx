@@ -166,11 +166,50 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
   useEffect(() => {
     if (lead?.id && token) {
       setLoadingDocs(true);
-      fetch(`${API}/admission-documents/${lead.id}`, {
+      const targetId = lead.id;
+      const altId = lead.lead_id || lead.leads?.id;
+
+      fetch(`${API}/admission-documents/${targetId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => res.json())
-        .then(data => setDocuments(Array.isArray(data) ? data : []))
+        .then(async data => {
+          let docsList = Array.isArray(data) ? data : [];
+          if (docsList.length === 0 && altId && altId !== targetId) {
+            try {
+              const altRes = await fetch(`${API}/admission-documents/${altId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const altData = await altRes.json();
+              if (Array.isArray(altData) && altData.length > 0) {
+                docsList = altData;
+              }
+            } catch (e) { }
+          }
+          // Client-side fallback: check formData.documents inside admission_form_data JSON if API returns empty array
+          if (docsList.length === 0 && formData && formData.documents && typeof formData.documents === 'object') {
+            docsList = Object.entries(formData.documents).map(([docType, docMeta]) => {
+              if (typeof docMeta === 'string' && docMeta) {
+                return {
+                  id: `json-${docType}`,
+                  document_type: docType,
+                  document_name: docType.replace(/_/g, ' ').toUpperCase(),
+                  file_url: docMeta
+                };
+              } else if (docMeta && docMeta.file_url) {
+                return {
+                  id: `json-${docType}`,
+                  document_type: docType,
+                  document_name: docMeta.document_name || docType.replace(/_/g, ' ').toUpperCase(),
+                  file_url: docMeta.file_url,
+                  file_size: docMeta.file_size
+                };
+              }
+              return null;
+            }).filter(Boolean);
+          }
+          setDocuments(docsList);
+        })
         .catch(err => console.error('Error loading documents:', err))
         .finally(() => setLoadingDocs(false));
 
