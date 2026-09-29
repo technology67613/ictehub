@@ -4,7 +4,7 @@ import {
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert, Loader2,
   Filter, AlertCircle, TrendingUp, Copy, X, Users, UserCheck, Activity,
   Award, ExternalLink, Trash2, Download, Calendar, ArrowUpRight, Eye,
-  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus
+  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus, Upload
 } from 'lucide-react';
 import { API } from '../api';
 
