@@ -87,17 +87,42 @@ router.get('/my', protect, authorize('student'), async (req, res) => {
   try {
     const supabase = req.app.get('supabase');
     
-    const { data, error } = await supabase
+    // 1. Try finding admit cards by student_user_id
+    let { data, error } = await supabase
       .from('admit_cards')
       .select('*')
       .eq('student_user_id', req.user.id)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      throw error;
+    if (error) throw error;
+
+    // 2. Fallback: check if student has applications/leads and query by application_id
+    if ((!data || data.length === 0) && req.user) {
+      const { data: apps } = await supabase
+        .from('admission_applications')
+        .select('id, lead_id')
+        .or(`student_user_id.eq.${req.user.id},primary_mobile.eq.${req.user.phone || ''}`);
+
+      if (apps && apps.length > 0) {
+        const appIds = apps.map(a => a.id).filter(Boolean);
+        const leadIds = apps.map(a => a.lead_id).filter(Boolean);
+        const allIds = [...new Set([...appIds, ...leadIds])];
+
+        if (allIds.length > 0) {
+          const { data: appCards } = await supabase
+            .from('admit_cards')
+            .select('*')
+            .in('application_id', allIds)
+            .order('created_at', { ascending: false });
+
+          if (appCards && appCards.length > 0) {
+            data = appCards;
+          }
+        }
+      }
     }
 
-    return res.json(data);
+    return res.json(data || []);
   } catch (error) {
     console.error('Error fetching student admit cards:', error);
     return res.status(500).json({ message: 'Server error fetching your admit cards', error: error.message });

@@ -564,15 +564,25 @@ export default function StudentDashboard({ user, handleLogout }) {
 
   const formData = application.admission_form_data || {};
   const rawStatusList = [application.status, application.application_status, application.leads?.status].filter(Boolean);
-  const effectiveStatus = (
-    rawStatusList.find(s => ['enrolled-college', 'enrolled-institute', 'enrolled', 'admitted'].includes(s.toLowerCase())) ||
-    rawStatusList.find(s => ['shortlisted', 'interested'].includes(s.toLowerCase())) ||
-    rawStatusList.find(s => ['reviewing', 'contacted'].includes(s.toLowerCase())) ||
-    (admitCards.length > 0 ? 'admitted' : null) ||
-    application.status ||
-    application.application_status ||
-    'new'
-  );
+  
+  const isNotProgressing = rawStatusList.some(s => ['not-interested', 'rejected'].includes(s.toLowerCase()));
+  const isExplicitAdmitted = rawStatusList.some(s => ['enrolled-college', 'enrolled-institute', 'enrolled', 'admitted'].includes(s.toLowerCase()));
+  const isShortlisted = rawStatusList.some(s => ['shortlisted', 'interested'].includes(s.toLowerCase()));
+  const isReviewing = rawStatusList.some(s => ['reviewing', 'contacted'].includes(s.toLowerCase()));
+
+  let effectiveStatus = 'admitted';
+  if (isNotProgressing) {
+    effectiveStatus = 'not-interested';
+  } else if (isExplicitAdmitted || admitCards.length > 0) {
+    effectiveStatus = 'admitted';
+  } else if (isShortlisted) {
+    effectiveStatus = 'shortlisted';
+  } else if (isReviewing) {
+    effectiveStatus = 'reviewing';
+  } else {
+    effectiveStatus = 'admitted';
+  }
+
   const statusInfo = getStatusBadge(effectiveStatus);
   const appIdShort = (application.id || '').substring(0, 8).toUpperCase();
   const appliedDate = application.created_at
