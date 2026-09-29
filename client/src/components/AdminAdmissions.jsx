@@ -1508,10 +1508,10 @@ export default function AdminAdmissions({ token }) {
 
       {/* Filter & Search Bar */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
 
           {/* Search */}
-          <div className="relative lg:col-span-2">
+          <div className="relative sm:col-span-2 lg:col-span-2">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -1523,7 +1523,7 @@ export default function AdminAdmissions({ token }) {
           </div>
 
           {/* Status Filter */}
-          <div>
+          <div className="lg:col-span-1">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -1538,7 +1538,7 @@ export default function AdminAdmissions({ token }) {
           </div>
 
           {/* Course Filter */}
-          <div>
+          <div className="lg:col-span-1">
             <select
               value={courseFilter}
               onChange={(e) => setCourseFilter(e.target.value)}
@@ -1552,20 +1552,20 @@ export default function AdminAdmissions({ token }) {
           </div>
 
           {/* Date Range Inputs */}
-          <div className="flex items-center gap-2">
+          <div className="sm:col-span-2 lg:col-span-2 flex items-center gap-1.5 min-w-0">
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
+              className="w-full min-w-0 px-2.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
               title="From Date"
             />
-            <span className="text-slate-400 font-bold text-xs">-</span>
+            <span className="text-slate-400 font-bold text-xs shrink-0">-</span>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
+              className="w-full min-w-0 px-2.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700"
               title="To Date"
             />
           </div>
