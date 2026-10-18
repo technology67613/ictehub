@@ -4,7 +4,8 @@ import {
   PhoneCall, MessageSquare, ChevronRight, Clock, ShieldAlert, Loader2,
   Filter, AlertCircle, TrendingUp, Copy, X, Users, UserCheck, Activity,
   Award, ExternalLink, Trash2, Download, Calendar, ArrowUpRight, Eye,
-  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus, Upload, Image as ImageIcon
+  Building, RefreshCw, User, MapPin, BookOpen, Shield, Check, IndianRupee, Plus, Upload, Image as ImageIcon,
+  UserPlus
 } from 'lucide-react';
 import { API } from '../api';
 
@@ -1267,6 +1268,52 @@ function AdmissionDetailDrawer({ lead, telecallers, onClose, onStatusChange, onA
   );
 }
 
+// ─── Helper: generate academic session options ───────────────────────────────
+function getSessionOptions(course) {
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear - 1, currentYear, currentYear + 1];
+  if (course === 'ANM') {
+    return years.map(y => `${y}-${String(y + 2).slice(-2)}`);
+  } else if (course === 'GNM') {
+    return years.map(y => `${y}-${String(y + 3).slice(-2)}`);
+  }
+  return years.map(y => `${y}-${String(y + 1).slice(-2)}`);
+}
+
+// ─── Helper: DOB string to DDMMYYYY password ─────────────────────────────────
+function dobToPassword(dob) {
+  if (!dob) return '';
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(d.getFullYear());
+  return `${dd}${mm}${yyyy}`;
+}
+
+const ADD_STUDENT_INITIAL = {
+  full_name: '',
+  phone: '',
+  email: '',
+  course: 'ANM',
+  academic_session: '',
+  father_name: '',
+  mother_name: '',
+  dob: '',
+  gender: 'Female',
+  blood_group: 'O+',
+  category: 'General',
+  primary_mobile: '',
+  address_line_1: '',
+  city: '',
+  district: '',
+  state: '',
+  pin: '',
+  guardian_name: '',
+  guardian_relationship: '',
+  guardian_mobile: '',
+};
+
 // ─── Main AdminAdmissions View ──────────────────────────────────────────────
 export default function AdminAdmissions({ token }) {
   const [leads, setLeads] = useState([]);
@@ -1285,6 +1332,13 @@ export default function AdminAdmissions({ token }) {
 
   // Document counts state per lead: { [leadId]: number }
   const [docCounts, setDocCounts] = useState({});
+
+  // Add Student Modal state
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [addStudentForm, setAddStudentForm] = useState(ADD_STUDENT_INITIAL);
+  const [addStudentSubmitting, setAddStudentSubmitting] = useState(false);
+  const [addStudentError, setAddStudentError] = useState('');
+  const [addStudentSuccess, setAddStudentSuccess] = useState(null); // { login, password }
 
   useEffect(() => {
     fetchLeads();
@@ -1543,6 +1597,121 @@ export default function AdminAdmissions({ token }) {
     document.body.removeChild(link);
   };
 
+  // ── Add Student: auto-session when course changes ───────────────────────
+  const handleAddStudentCourseChange = (course) => {
+    const sessions = getSessionOptions(course);
+    setAddStudentForm(prev => ({
+      ...prev,
+      course,
+      academic_session: sessions[1] || sessions[0] || ''
+    }));
+  };
+
+  // ── Add Student: submit ──────────────────────────────────────────────────
+  const handleAddStudentSubmit = async (e) => {
+    e.preventDefault();
+    setAddStudentError('');
+    setAddStudentSuccess(null);
+
+    const { full_name, phone, dob, course, academic_session, father_name, mother_name, gender, blood_group, primary_mobile } = addStudentForm;
+
+    // Basic validation
+    if (!full_name.trim()) return setAddStudentError('Full Name is required.');
+    if (!/^[6-9]\d{9}$/.test(phone.trim())) return setAddStudentError('Phone must be a valid 10-digit Indian mobile number.');
+    if (!course) return setAddStudentError('Course is required.');
+    if (!academic_session) return setAddStudentError('Academic Session is required.');
+    if (!father_name.trim()) return setAddStudentError("Father's Name is required.");
+    if (!mother_name.trim()) return setAddStudentError("Mother's Name is required.");
+    if (!dob) return setAddStudentError('Date of Birth is required.');
+    if (!gender) return setAddStudentError('Gender is required.');
+    if (!blood_group) return setAddStudentError('Blood Group is required.');
+    const pm = (primary_mobile || phone).trim();
+    if (!/^[6-9]\d{9}$/.test(pm)) return setAddStudentError('Primary Mobile must be a valid 10-digit number.');
+
+    setAddStudentSubmitting(true);
+    try {
+      // 1. POST /leads
+      const leadRes = await fetch(`${API}/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: full_name.trim(),
+          phone: phone.trim(),
+          email: addStudentForm.email.trim() || null,
+          source: 'admin_added'
+        })
+      });
+      const leadData = await leadRes.json();
+      if (!leadRes.ok) throw new Error(leadData.message || 'Failed to create lead.');
+      const newLeadId = leadData.id;
+
+      // 2. POST /admission-applications
+      const appPayload = {
+        lead_id: newLeadId,
+        course,
+        academic_session,
+        program_type: 'Nursing',
+        preferred_college_type: 'offline',
+        category: addStudentForm.category || 'General',
+        full_name: full_name.trim(),
+        father_name: father_name.trim(),
+        mother_name: mother_name.trim(),
+        dob,
+        gender,
+        blood_group,
+        primary_mobile: pm,
+        email: addStudentForm.email.trim() || null,
+        perm_address_line1: addStudentForm.address_line_1 || null,
+        perm_city: addStudentForm.city || null,
+        perm_district: addStudentForm.district || null,
+        perm_state: addStudentForm.state || null,
+        perm_pin: addStudentForm.pin || null,
+        guardian_name: addStudentForm.guardian_name || null,
+        guardian_relationship: addStudentForm.guardian_relationship || null,
+        guardian_mobile: addStudentForm.guardian_mobile || null,
+        application_type: 'online',
+        source: 'admin_added',
+      };
+
+      const appRes = await fetch(`${API}/admission-applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(appPayload)
+      });
+      if (!appRes.ok) {
+        const appErr = await appRes.json();
+        throw new Error(appErr.message || 'Failed to create admission application.');
+      }
+
+      // 3. Auto-create student account
+      const studentEmail = `${phone.trim()}@student.ictehub`;
+      const studentPassword = dobToPassword(dob);
+      const userRes = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: full_name.trim(),
+          email: studentEmail,
+          password: studentPassword,
+          role: 'student'
+        })
+      });
+      // If user already exists (409/400), we still show a partial success
+      if (!userRes.ok && userRes.status !== 400) {
+        const userErr = await userRes.json();
+        throw new Error(userErr.message || 'Failed to create student account.');
+      }
+
+      // 4. Success
+      setAddStudentSuccess({ login: studentEmail, password: studentPassword });
+      fetchLeads(); // refresh list
+    } catch (err) {
+      setAddStudentError(err.message);
+    } finally {
+      setAddStudentSubmitting(false);
+    }
+  };
+
   // Stats
   const totalCount = applications.length;
   const pendingCount = applications.filter(a => a.status === 'new').length;
@@ -1566,12 +1735,20 @@ export default function AdminAdmissions({ token }) {
           </p>
         </div>
 
-        <button
-          onClick={handleExportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
-        >
-          <Download size={16} /> Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setAddStudentForm(prev => ({ ...ADD_STUDENT_INITIAL, academic_session: getSessionOptions('ANM')[1] || '' })); setAddStudentError(''); setAddStudentSuccess(null); setShowAddStudentModal(true); }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
+          >
+            <UserPlus size={16} /> + Add Student
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
+          >
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats Row (4 Cards) */}
@@ -1827,6 +2004,241 @@ export default function AdminAdmissions({ token }) {
           onAssign={handleAssignTelecaller}
           token={token}
         />
+      )}
+
+      {/* ── Add Student Modal ──────────────────────────────────────────── */}
+      {showAddStudentModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            onClick={() => { if (!addStudentSubmitting) { setShowAddStudentModal(false); setAddStudentSuccess(null); } }}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="pointer-events-auto bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">
+                    <UserPlus size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-extrabold text-slate-900">Add Student Manually</h2>
+                    <p className="text-[11px] text-slate-400 font-medium">Admin fills on behalf of student</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowAddStudentModal(false); setAddStudentSuccess(null); }}
+                  disabled={addStudentSubmitting}
+                  className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 cursor-pointer border-none bg-transparent transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-7 custom-scrollbar">
+                {addStudentSuccess ? (
+                  <div className="flex flex-col items-center text-center py-8 animate-in fade-in zoom-in-95">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-5">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-slate-900 mb-2">Student Added Successfully!</h3>
+                    <p className="text-sm text-slate-500 mb-6">Share these credentials with the student:</p>
+                    <div className="w-full bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left space-y-3 max-w-sm">
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">Login (Email)</span>
+                        <code className="text-sm font-bold text-[#1E40FF] break-all">{addStudentSuccess.login}</code>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">Password (DOB as DDMMYYYY)</span>
+                        <code className="text-sm font-bold text-slate-800">{addStudentSuccess.password}</code>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 max-w-sm">Student can log in at the portal and change their password after first login.</p>
+                    <button
+                      onClick={() => { setShowAddStudentModal(false); setAddStudentSuccess(null); setAddStudentForm(ADD_STUDENT_INITIAL); }}
+                      className="mt-6 px-6 py-2.5 bg-black hover:bg-slate-800 text-white rounded-xl text-sm font-bold cursor-pointer border-none transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : (
+                  <form id="add-student-form" onSubmit={handleAddStudentSubmit} className="space-y-6">
+
+                    {addStudentError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl p-3 flex items-center gap-2">
+                        <AlertCircle size={14} className="shrink-0" /> {addStudentError}
+                      </div>
+                    )}
+
+                    {/* Section: Course Info */}
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Course Information</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Course <span className="text-red-500">*</span></label>
+                          <select
+                            value={addStudentForm.course}
+                            onChange={e => handleAddStudentCourseChange(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black"
+                          >
+                            <option value="ANM">ANM</option>
+                            <option value="GNM">GNM</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Academic Session <span className="text-red-500">*</span></label>
+                          <select
+                            value={addStudentForm.academic_session}
+                            onChange={e => setAddStudentForm(prev => ({ ...prev, academic_session: e.target.value }))}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black"
+                          >
+                            {getSessionOptions(addStudentForm.course).map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section: Personal Details */}
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Personal Details</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Full Name <span className="text-red-500">*</span></label>
+                          <input type="text" value={addStudentForm.full_name} onChange={e => setAddStudentForm(prev => ({ ...prev, full_name: e.target.value }))} placeholder="e.g. Priya Sharma" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Father's Name <span className="text-red-500">*</span></label>
+                          <input type="text" value={addStudentForm.father_name} onChange={e => setAddStudentForm(prev => ({ ...prev, father_name: e.target.value }))} placeholder="Father's full name" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Mother's Name <span className="text-red-500">*</span></label>
+                          <input type="text" value={addStudentForm.mother_name} onChange={e => setAddStudentForm(prev => ({ ...prev, mother_name: e.target.value }))} placeholder="Mother's full name" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Date of Birth <span className="text-red-500">*</span></label>
+                          <input type="date" value={addStudentForm.dob} onChange={e => setAddStudentForm(prev => ({ ...prev, dob: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Gender <span className="text-red-500">*</span></label>
+                          <select value={addStudentForm.gender} onChange={e => setAddStudentForm(prev => ({ ...prev, gender: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black">
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Blood Group <span className="text-red-500">*</span></label>
+                          <select value={addStudentForm.blood_group} onChange={e => setAddStudentForm(prev => ({ ...prev, blood_group: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black">
+                            {['A+','A-','B+','B-','O+','O-','AB+','AB-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Category</label>
+                          <select value={addStudentForm.category} onChange={e => setAddStudentForm(prev => ({ ...prev, category: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black">
+                            {['General','OBC','SC','ST','EWS'].map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section: Contact */}
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Contact</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Phone Number <span className="text-red-500">*</span></label>
+                          <input type="tel" value={addStudentForm.phone} onChange={e => setAddStudentForm(prev => ({ ...prev, phone: e.target.value, primary_mobile: e.target.value }))} placeholder="10-digit mobile" maxLength={10} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Primary Mobile <span className="text-red-500">*</span></label>
+                          <input type="tel" value={addStudentForm.primary_mobile} onChange={e => setAddStudentForm(prev => ({ ...prev, primary_mobile: e.target.value }))} placeholder="May be same as phone" maxLength={10} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Email <span className="text-slate-400">(optional)</span></label>
+                          <input type="email" value={addStudentForm.email} onChange={e => setAddStudentForm(prev => ({ ...prev, email: e.target.value }))} placeholder="student@example.com" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section: Address */}
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Address <span className="text-slate-400">(optional)</span></h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Address Line 1</label>
+                          <input type="text" value={addStudentForm.address_line_1} onChange={e => setAddStudentForm(prev => ({ ...prev, address_line_1: e.target.value }))} placeholder="House No., Street, Locality" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">City</label>
+                          <input type="text" value={addStudentForm.city} onChange={e => setAddStudentForm(prev => ({ ...prev, city: e.target.value }))} placeholder="City" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">District</label>
+                          <input type="text" value={addStudentForm.district} onChange={e => setAddStudentForm(prev => ({ ...prev, district: e.target.value }))} placeholder="District" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">State</label>
+                          <input type="text" value={addStudentForm.state} onChange={e => setAddStudentForm(prev => ({ ...prev, state: e.target.value }))} placeholder="State" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">PIN Code</label>
+                          <input type="text" value={addStudentForm.pin} onChange={e => setAddStudentForm(prev => ({ ...prev, pin: e.target.value }))} placeholder="6-digit PIN" maxLength={6} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section: Guardian */}
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Guardian Details <span className="text-slate-400">(optional)</span></h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Guardian Name</label>
+                          <input type="text" value={addStudentForm.guardian_name} onChange={e => setAddStudentForm(prev => ({ ...prev, guardian_name: e.target.value }))} placeholder="Guardian's name" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Relationship</label>
+                          <input type="text" value={addStudentForm.guardian_relationship} onChange={e => setAddStudentForm(prev => ({ ...prev, guardian_relationship: e.target.value }))} placeholder="e.g. Father" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 block mb-1">Guardian Mobile</label>
+                          <input type="tel" value={addStudentForm.guardian_mobile} onChange={e => setAddStudentForm(prev => ({ ...prev, guardian_mobile: e.target.value }))} placeholder="10-digit mobile" maxLength={10} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-black" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </form>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              {!addStudentSuccess && (
+                <div className="px-7 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50/50">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddStudentModal(false)}
+                    disabled={addStudentSubmitting}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 cursor-pointer bg-transparent transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    form="add-student-form"
+                    disabled={addStudentSubmitting}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider cursor-pointer border-none transition-colors disabled:opacity-50"
+                  >
+                    {addStudentSubmitting ? <><Loader2 size={14} className="animate-spin" /> Adding...</> : <><UserPlus size={14} /> Add Student</>}
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </>
       )}
 
     </div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Briefcase, Calculator, Award, Check, 
   Send, BookOpen, ArrowRight, Search, Atom, User, MonitorPlay, MapPin, Clock, Calendar
@@ -12,7 +11,6 @@ import { getLeadSource } from '../utils/tracking';
 import { getCached, setCached } from '../utils/cache';
 
 const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
-  const navigate = useNavigate();
   const [colleges, setColleges] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [preselectedCollegeId, setPreselectedCollegeId] = useState(null);
@@ -508,20 +506,12 @@ const HomePage = ({ setView, setSearchQuery, setActiveMode }) => {
                       {course.fees !== null && course.fees !== undefined ? `₹${course.fees.toLocaleString('en-IN')}` : '—'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => navigate(`/apply?course=${encodeURIComponent(course.name)}`)}
-                      className="px-4 py-2 bg-[#1E40FF] hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
-                    >
-                      Apply Now
-                    </button>
-                    <button
-                      onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
-                    >
-                      Enquire
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => { setPreselectedCourseId(course.id); setIsInstModalOpen(true); }}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors border-none cursor-pointer"
+                  >
+                    Enquire
+                  </button>
                 </div>
               </div>
             ))}
