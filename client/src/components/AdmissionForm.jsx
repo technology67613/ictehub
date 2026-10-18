@@ -257,7 +257,7 @@ function uploadWithProgress(file, type, token, onProgress) {
   });
 }
 
-export default function AdmissionForm() {
+export default function AdmissionForm({ adminMode = false, onAdminSubmitSuccess = null }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -310,15 +310,35 @@ export default function AdmissionForm() {
 
         const paramCourse = searchParams.get('course');
         if (!paramCourse) {
-          // Redirect to homepage if no course parameter specified
-          navigate('/', { replace: true });
+          if (!adminMode) {
+            // Redirect to homepage if no course parameter specified
+            navigate('/', { replace: true });
+            return;
+          }
+          if (list.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              course: prev.course && list.some(c => (c.name || c.title) === prev.course) ? prev.course : (list[0].name || list[0].title),
+              program_type: list[0].program_type || list[0].category || 'Nursing'
+            }));
+          }
           return;
         }
 
         const matched = list.find(c => (c.name || c.title || '').toLowerCase() === paramCourse.trim().toLowerCase());
         if (!matched) {
-          // Redirect to homepage if course is invalid / not found in institute courses
-          navigate('/', { replace: true });
+          if (!adminMode) {
+            // Redirect to homepage if course is invalid / not found in institute courses
+            navigate('/', { replace: true });
+            return;
+          }
+          if (list.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              course: list[0].name || list[0].title,
+              program_type: list[0].program_type || list[0].category || 'Nursing'
+            }));
+          }
           return;
         }
 
@@ -333,27 +353,29 @@ export default function AdmissionForm() {
       })
       .finally(() => setLoadingCourses(false));
 
-    const savedDraft = localStorage.getItem('admission_draft');
-    if (savedDraft) {
-      try {
-        const parsed = JSON.parse(savedDraft);
-        if (parsed && parsed.formData) {
-          setDraftBannerVisible(true);
+    if (!adminMode) {
+      const savedDraft = localStorage.getItem('admission_draft');
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          if (parsed && parsed.formData) {
+            setDraftBannerVisible(true);
+          }
+        } catch (e) {
+          localStorage.removeItem('admission_draft');
         }
-      } catch (e) {
-        localStorage.removeItem('admission_draft');
       }
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, adminMode]);
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
-    if (submittedLead) return;
+    if (submittedLead || adminMode) return;
     const interval = setInterval(() => {
       saveDraftToLocalStorage(formData, currentStep, false);
     }, 30000);
     return () => clearInterval(interval);
-  }, [formData, currentStep, submittedLead]);
+  }, [formData, currentStep, submittedLead, adminMode]);
 
   const saveDraftToLocalStorage = (dataToSave, stepToSave, showToastMsg = true) => {
     if (submittedLead) return;
@@ -911,12 +933,24 @@ export default function AdmissionForm() {
       }
 
       // 5. Clear draft from localStorage
-      localStorage.removeItem('admission_draft');
-      setSubmittedLead({
-        ...resData,
-        application_ref: applicationRef
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!adminMode) {
+        localStorage.removeItem('admission_draft');
+      }
+
+      if (adminMode && onAdminSubmitSuccess) {
+        onAdminSubmitSuccess({
+          studentName: formData.full_name,
+          phone: formData.primary_mobile,
+          password: formatDobToDDMMYYYY(formData.dob) || formData.primary_mobile.trim(),
+          applicationRef: applicationRef
+        });
+      } else {
+        setSubmittedLead({
+          ...resData,
+          application_ref: applicationRef
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err) {
       setErrors({ submit: err.message || 'Server error. Please try again.' });
     } finally {
@@ -1148,7 +1182,7 @@ export default function AdmissionForm() {
       )}
 
       {/* Saved Draft Banner */}
-      {draftBannerVisible && (
+      {!adminMode && draftBannerVisible && (
         <div className="max-w-5xl mx-auto mb-6 bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-blue-700">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
@@ -1190,52 +1224,54 @@ export default function AdmissionForm() {
         </div>
 
         {/* Choice Banner — Side-by-Side Visual Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Online Application Card */}
-          <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl border border-indigo-800/40 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20 pointer-events-none" />
-            <div className="relative z-10 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
-                <Laptop size={24} />
+        {!adminMode && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Online Application Card */}
+            <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl border border-indigo-800/40 flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute right-0 top-0 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl translate-x-20 -translate-y-20 pointer-events-none" />
+              <div className="relative z-10 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
+                  <Laptop size={24} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 block mb-1">Recommended • Online Portal</span>
+                  <h3 className="text-lg font-black text-white">Fill Online Application Form</h3>
+                  <p className="text-slate-300 text-xs mt-1 leading-relaxed">Complete all 8 application steps digitally from any device with auto-saving drafts and instant tracking.</p>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300 block mb-1">Recommended • Online Portal</span>
-                <h3 className="text-lg font-black text-white">Fill Online Application Form</h3>
-                <p className="text-slate-300 text-xs mt-1 leading-relaxed">Complete all 8 application steps digitally from any device with auto-saving drafts and instant tracking.</p>
+              <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">✓ Complete Digitally</span>
+                <div className="px-4 py-2 rounded-xl bg-white text-[#1E40FF] font-extrabold text-xs shadow-md">
+                  ✓ Active Form
+                </div>
               </div>
             </div>
-            <div className="relative z-10 mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">✓ Complete Digitally</span>
-              <div className="px-4 py-2 rounded-xl bg-white text-[#1E40FF] font-extrabold text-xs shadow-md">
-                ✓ Active Form
-              </div>
-            </div>
-          </div>
 
-          {/* Offline Application Card */}
-          <div className="bg-white text-slate-800 rounded-3xl p-6 shadow-md border border-slate-200 flex flex-col justify-between relative overflow-hidden hover:border-indigo-300 transition-all">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
-                <FileText size={24} />
+            {/* Offline Application Card */}
+            <div className="bg-white text-slate-800 rounded-3xl p-6 shadow-md border border-slate-200 flex flex-col justify-between relative overflow-hidden hover:border-indigo-300 transition-all">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-200">
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 block mb-1">Physical Form Download</span>
+                  <h3 className="text-lg font-black text-slate-900">Download & Submit Physical Form</h3>
+                  <p className="text-slate-500 text-xs mt-1 leading-relaxed">Print official paper form, fill by hand, sign, and upload scanned copy along with supporting documents.</p>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 block mb-1">Physical Form Download</span>
-                <h3 className="text-lg font-black text-slate-900">Download & Submit Physical Form</h3>
-                <p className="text-slate-500 text-xs mt-1 leading-relaxed">Print official paper form, fill by hand, sign, and upload scanned copy along with supporting documents.</p>
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400">PDF Application</span>
+                <button
+                  type="button"
+                  onClick={() => navigate('/apply/offline')}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors cursor-pointer border-none"
+                >
+                  Download & Upload ↗
+                </button>
               </div>
-            </div>
-            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400">PDF Application</span>
-              <button
-                type="button"
-                onClick={() => navigate('/apply/offline')}
-                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition-colors cursor-pointer border-none"
-              >
-                Download & Upload ↗
-              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Main Portal Header */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -1251,15 +1287,17 @@ export default function AdmissionForm() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={handleManualSaveDraft}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
-            >
-              <Save size={16} className="text-[#1E40FF]" /> Save as Draft
-            </button>
-          </div>
+          {!adminMode && (
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={handleManualSaveDraft}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer"
+              >
+                <Save size={16} className="text-[#1E40FF]" /> Save as Draft
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Horizontal Pill Progress Bar & Step Tracker */}
@@ -2343,7 +2381,7 @@ export default function AdmissionForm() {
                     : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 cursor-pointer'
                 }`}
               >
-                {submitting ? (submittingProgress || 'Submitting Application...') : 'Submit Application'}
+                {submitting ? (submittingProgress || 'Submitting Application...') : (adminMode ? 'Submit & Create Student Account' : 'Submit Application')}
               </button>
             )}
           </div>
@@ -2351,7 +2389,7 @@ export default function AdmissionForm() {
         </form>
 
         {/* Subtle Bottom Right Draft Timestamp */}
-        {lastSavedTime && (
+        {!adminMode && lastSavedTime && (
           <div className="fixed bottom-4 right-4 z-50 bg-slate-900/90 text-white text-[11px] font-bold px-3.5 py-2 rounded-full shadow-xl backdrop-blur-md flex items-center gap-2 border border-white/10 animate-in fade-in">
             <CheckCircle2 size={14} className="text-emerald-400" /> Draft saved at {lastSavedTime}
           </div>
